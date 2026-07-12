@@ -1,0 +1,43 @@
+[project]
+name = "aqip-agents-impl"
+version = "0.1.0"
+description = "AQIP agent implementations (tiers 1-4)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "aqip-core",
+    "aqip-portability",
+    "aqip-events",
+    "aqip-llm",
+    "aqip-state",
+    "aqip-observability",
+    "aqip-compute",
+    "aqip-agents",
+    "aqip-tools",
+    "aqip-vector",
+    "aqip-kg",
+    "aqip-storage",
+    "httpx>=0.27",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+]
+
+[tool.uv.sources]
+aqip-core = { workspace = true }
+aqip-portability = { workspace = true }
+aqip-events = { workspace = true }
+aqip-llm = { workspace = true }
+aqip-state = { workspace = true }
+aqip-observability = { workspace = true }
+aqip-compute = { workspace = true }
+aqip-agents = { workspace = true }
+aqip-tools = { workspace = true }
+aqip-vector = { workspace = true }
+aqip-kg = { workspace = true }
+aqip-storage = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

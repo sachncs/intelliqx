@@ -1,0 +1,31 @@
+[project]
+name = "aqip-agents"
+version = "0.1.0"
+description = "AQIP agent base class and decorators"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pydantic>=2.7",
+    "aqip-core",
+    "aqip-portability",
+    "aqip-events",
+    "aqip-llm",
+    "aqip-state",
+    "aqip-observability",
+    "aqip-compute",
+]
+
+[tool.uv.sources]
+aqip-core = { workspace = true }
+aqip-portability = { workspace = true }
+aqip-events = { workspace = true }
+aqip-llm = { workspace = true }
+aqip-state = { workspace = true }
+aqip-observability = { workspace = true }
+aqip-compute = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aqip_agents"]

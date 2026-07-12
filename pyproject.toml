@@ -1,0 +1,98 @@
+[project]
+name = "aqip"
+version = "0.1.0"
+description = "Autonomous QA Intelligence Platform"
+requires-python = ">=3.12,<3.13"
+readme = "README.md"
+dependencies = [
+    "aqip-core",
+    "aqip-portability",
+    "aqip-events",
+    "aqip-storage",
+    "aqip-vector",
+    "aqip-kg",
+    "aqip-state",
+    "aqip-llm",
+    "aqip-compute",
+    "aqip-observability",
+    "aqip-tools",
+    "aqip-agents",
+    "aqip-tenant",
+    "aqip-sdk",
+    "aqip-agents-impl",
+]
+
+[tool.uv.sources]
+aqip-core = { workspace = true }
+aqip-portability = { workspace = true }
+aqip-events = { workspace = true }
+aqip-storage = { workspace = true }
+aqip-vector = { workspace = true }
+aqip-kg = { workspace = true }
+aqip-state = { workspace = true }
+aqip-llm = { workspace = true }
+aqip-compute = { workspace = true }
+aqip-observability = { workspace = true }
+aqip-tools = { workspace = true }
+aqip-agents = { workspace = true }
+aqip-tenant = { workspace = true }
+aqip-sdk = { workspace = true }
+aqip-agents-impl = { workspace = true }
+
+[tool.uv.workspace]
+members = [
+    "libs/aqip-core",
+    "libs/aqip-portability",
+    "libs/aqip-events",
+    "libs/aqip-storage",
+    "libs/aqip-vector",
+    "libs/aqip-kg",
+    "libs/aqip-state",
+    "libs/aqip-llm",
+    "libs/aqip-compute",
+    "libs/aqip-observability",
+    "libs/aqip-tools",
+    "libs/aqip-agents",
+    "libs/aqip-tenant",
+    "libs/aqip-sdk",
+    "agents",
+    "tests",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501", "UP042", "UP046", "B905", "RUF005"]
+
+[tool.mypy]
+python_version = "3.12"
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+pythonpath = ["."]
+markers = [
+    "unit: unit tests",
+    "integration: integration tests",
+    "contract: contract tests",
+    "e2e: end-to-end tests",
+    "cross_cloud: cross-cloud parity tests",
+    "slow: slow tests",
+]
+
+[tool.coverage.run]
+source = ["libs", "agents"]
+omit = ["*/tests/*", "*/__init__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false

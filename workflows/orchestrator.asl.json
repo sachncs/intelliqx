@@ -1,0 +1,60 @@
+{
+  "Comment": "AQIP Orchestrator workflow (Phase 1). Mirrors the in-process orchestrator in agents/tier1/orchestrator.py.",
+  "StartAt": "Planner",
+  "States": {
+    "Planner": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:aqip-planner",
+      "ResultPath": "$.plan",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Next": "ParallelAgents"
+    },
+    "ParallelAgents": {
+      "Type": "Map",
+      "ItemsPath": "$.plan.nodes",
+      "MaxConcurrency": 4,
+      "Iterator": {
+        "StartAt": "ResolveDeps",
+        "States": {
+          "ResolveDeps": {
+            "Type": "Pass",
+            "Next": "InvokeAgent"
+          },
+          "InvokeAgent": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:aqip-agent-dispatcher",
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.results",
+      "Next": "PersistResults"
+    },
+    "PersistResults": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:aqip-persist-results",
+      "ResultPath": "$.persist",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Next": "EmitRunCompleted"
+    },
+    "EmitRunCompleted": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:aqip-emit-run-completed",
+      "End": true
+    }
+  }
+}

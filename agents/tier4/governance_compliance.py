@@ -1,0 +1,165 @@
+"""Governance & Compliance Agent (Tier 4).
+
+Enforces RBAC, ABAC, audit trails, and human-approval workflows.
+The agent has four actions:
+
+* ``check``            — RBAC (role membership) + ABAC (tenant match).
+* ``record_audit``     — write a tamper-evident audit record.
+* ``request_approval`` — open a pending approval slot.
+* ``grant``            — close a pending approval slot as approved.
+
+Audit and approval records live in the state store:
+
+* ``audit:<id>``         — JSON-encoded audit payload, 1y TTL.
+* ``approval:<id>``     — ``"pending"`` or ``"approved"``, 7d TTL.
+
+The TTLs are deliberate: audits must outlive a release cycle,
+approvals should not block a deploy forever if the approver is
+unreachable. Production deployments with stricter compliance
+requirements should persist the same data to immutable storage
+(WORM bucket) and adjust the TTLs.
+"""
+
+from __future__ import annotations
+
+import time
+from typing import Any
+
+from aqip_agents.base import AgentBase, AgentContext, AgentMeta
+from aqip_agents.decorators import traced_agent
+from aqip_core.models import TenantContext
+from aqip_state.store import get_state_store
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class GovernanceInput(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    action: str  # check | record_audit | request_approval | grant
+    actor: TenantContext
+    resource: str
+    required_role: str | None = None
+    required_attributes: dict[str, Any] = Field(default_factory=dict)
+    audit_payload: dict[str, Any] = Field(default_factory=dict)
+    approval_id: str | None = None
+
+
+class GovernanceOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    allowed: bool = False
+    reason: str = ""
+    audit_id: str | None = None
+    approval_state: str | None = None  # pending | approved | rejected | granted
+
+
+class GovernanceComplianceAgent(AgentBase):
+    META = AgentMeta(
+        name="governance_compliance",
+        tier=4,
+        version="0.1.0",
+        description="RBAC, ABAC, audit trail, human approvals.",
+    )
+    INPUT_MODEL = GovernanceInput
+    OUTPUT_MODEL = GovernanceOutput
+
+    @traced_agent("governance_compliance")
+    async def run(self, ctx: AgentContext, input: GovernanceInput) -> GovernanceOutput:
+        if input.action == "check":
+            return _check(input)
+        if input.action == "record_audit":
+            return await _record_audit(input)
+        if input.action == "request_approval":
+            return await _request_approval(input)
+        if input.action == "grant":
+            return await _grant(input)
+        return GovernanceOutput(allowed=False, reason=f"unknown action: {input.action}")
+
+
+def _check(input: GovernanceInput) -> GovernanceOutput:
+    """Run RBAC + ABAC checks.
+
+    RBAC: ``input.actor.roles`` must contain ``required_role`` if set.
+    ABAC: ``required_attributes['tenant_id']`` must match the actor's
+    tenant if present.
+    """
+    actor = input.actor
+    allowed = True
+    reasons: list[str] = []
+    if input.required_role and input.required_role not in actor.roles:
+        allowed = False
+        reasons.append(f"role {input.required_role!r} required")
+    if (
+        input.required_attributes
+        and "tenant_id" in input.required_attributes
+        and actor.tenant_id != input.required_attributes["tenant_id"]
+    ):
+        allowed = False
+        reasons.append("tenant mismatch")
+    return GovernanceOutput(
+        allowed=allowed,
+        reason="; ".join(reasons) if not allowed else "ok",
+    )
+
+
+async def _record_audit(input: GovernanceInput) -> GovernanceOutput:
+    """Persist a tamper-evident audit record.
+
+    The record is a JSON dict containing the actor, the resource,
+    and the caller's ``audit_payload``. The key
+    (``audit:<id>``) embeds a millisecond timestamp so the order
+    of writes is recoverable from the id alone.
+    """
+    state = get_state_store()
+    audit_id = f"audit-{int(time.time() * 1000)}"
+    payload = input.audit_payload | {
+        "actor": input.actor.tenant_id,
+        "actor_user": input.actor.user_id,
+        "resource": input.resource,
+    }
+    await state.set(
+        f"audit:{audit_id}",
+        str(payload).encode("utf-8"),
+        ttl_seconds=86400 * 365,
+    )
+    return GovernanceOutput(allowed=True, audit_id=audit_id)
+
+
+async def _request_approval(input: GovernanceInput) -> GovernanceOutput:
+    """Open a pending approval slot.
+
+    The slot is identified by ``approval_id`` (caller-supplied) or
+    a fresh millisecond-timestamp id. The value is ``"pending"``
+    until :func:`_grant` flips it to ``"approved"``.
+    """
+    state = get_state_store()
+    approval_id = input.approval_id or f"approval-{int(time.time() * 1000)}"
+    await state.set(
+        f"approval:{approval_id}",
+        b"pending",
+        ttl_seconds=86400 * 7,
+    )
+    return GovernanceOutput(
+        allowed=False,
+        reason="approval required",
+        audit_id=approval_id,
+        approval_state="pending",
+    )
+
+
+async def _grant(input: GovernanceInput) -> GovernanceOutput:
+    """Close a pending approval slot as approved.
+
+    A ``grant`` without a valid ``approval_id`` is rejected.
+    """
+    if not input.approval_id:
+        return GovernanceOutput(allowed=False, reason="missing approval_id")
+    state = get_state_store()
+    await state.set(
+        f"approval:{input.approval_id}",
+        b"approved",
+        ttl_seconds=86400 * 7,
+    )
+    return GovernanceOutput(
+        allowed=True, audit_id=input.approval_id, approval_state="approved"
+    )

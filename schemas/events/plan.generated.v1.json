@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PlanGenerated",
+  "description": "Emitted when the Planner produces an execution plan.",
+  "type": "object",
+  "required": ["plan_id", "goal_id", "tenant_id", "nodes"],
+  "properties": {
+    "plan_id": {"type": "string"},
+    "goal_id": {"type": "string"},
+    "tenant_id": {"type": "string"},
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["node_id", "agent"],
+        "properties": {
+          "node_id": {"type": "string"},
+          "agent": {"type": "string"},
+          "depends_on": {"type": "array", "items": {"type": "string"}},
+          "timeout_seconds": {"type": "integer"},
+          "inputs": {"type": "object"}
+        }
+      }
+    }
+  }
+}

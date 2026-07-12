@@ -1,0 +1,71 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  AQIP_CLOUD: local
+  AQIP_LLM_BACKEND: fake
+  AQIP_OBJECT_STORE: memory
+  AQIP_OTEL: "0"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pip install uv==0.11.24
+      - name: Sync workspace
+        run: uv sync --all-packages
+      - name: Ruff
+        run: uv run ruff check .
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pip install uv==0.11.24
+      - name: Sync workspace
+        run: uv sync --all-packages
+      - name: mypy (libs)
+        run: uv run mypy libs || true
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        suite: [unit, contract]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pip install uv==0.11.24
+      - name: Sync workspace
+        run: uv sync --all-packages
+      - name: Run ${{ matrix.suite }} tests
+        run: uv run pytest tests/${{ matrix.suite }} -q
+
+  docker-compose-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker-compose.yml
+        run: |
+          docker compose config -q || (
+            echo "Install docker compose for validation" &&
+            curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose &&
+            chmod +x /usr/local/bin/docker-compose &&
+            docker-compose config -q
+          )

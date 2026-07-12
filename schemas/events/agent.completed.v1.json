@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentCompleted",
+  "description": "Emitted when an agent invocation succeeds.",
+  "type": "object",
+  "required": ["agent_name", "run_id", "tenant_id", "status"],
+  "properties": {
+    "agent_name": {"type": "string"},
+    "run_id": {"type": "string"},
+    "tenant_id": {"type": "string"},
+    "status": {"type": "string", "enum": ["ok", "timeout", "error", "not_found"]},
+    "duration_ms": {"type": "integer"},
+    "output": {"type": "object"}
+  }
+}

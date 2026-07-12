@@ -1,0 +1,28 @@
+"""Modal infrastructure.
+
+This module is a placeholder for the Phase 2 implementation. The Modal app
+defines Tier 1 agents as modal.Functions and mounts the agent container image.
+"""
+
+# Reference skeleton (uncomment in Phase 2):
+#
+# import modal
+#
+# app = modal.App("aqip-tier1")
+#
+# image = (
+#     modal.Image.debian_slim(python_version="3.12")
+#     .pip_install_from_pyproject("pyproject.toml")
+# )
+#
+# @app.function(image=image, secrets=[modal.Secret.from_name("aqip-secrets")])
+# @modal.web_endpoint(method="POST")
+# async def goal_endpoint(payload: dict) -> dict:
+#     from agents import register_all, register_compute_handlers
+#     register_all()
+#     register_compute_handlers()
+#     from agents.tier1.planner import PlannerAgent
+#     from aqip_compute.runtime import InvocationRequest
+#     agent = PlannerAgent()
+#     out = await agent.invoke(InvocationRequest(agent_name="planner", input=payload, tenant_id=payload.get("tenant_id", "default")))
+#     return out

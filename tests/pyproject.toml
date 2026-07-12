@@ -1,0 +1,50 @@
+[project]
+name = "aqip-tests"
+version = "0.1.0"
+description = "AQIP test suite (cross-package)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "pytest-timeout>=2.3",
+    "httpx>=0.27",
+    "jsonschema>=4.22",
+    "aqip-core",
+    "aqip-portability",
+    "aqip-events",
+    "aqip-storage",
+    "aqip-vector",
+    "aqip-kg",
+    "aqip-state",
+    "aqip-llm",
+    "aqip-compute",
+    "aqip-observability",
+    "aqip-tools",
+    "aqip-agents",
+    "aqip-tenant",
+    "aqip-sdk",
+]
+
+[tool.uv.sources]
+aqip-core = { workspace = true }
+aqip-portability = { workspace = true }
+aqip-events = { workspace = true }
+aqip-storage = { workspace = true }
+aqip-vector = { workspace = true }
+aqip-kg = { workspace = true }
+aqip-state = { workspace = true }
+aqip-llm = { workspace = true }
+aqip-compute = { workspace = true }
+aqip-observability = { workspace = true }
+aqip-tools = { workspace = true }
+aqip-agents = { workspace = true }
+aqip-tenant = { workspace = true }
+aqip-sdk = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tests"]

@@ -1,0 +1,75 @@
+"""Shared pytest fixtures.
+
+The platform uses a constellation of module-level singletons
+(:class:`aqip_state.store.InMemoryStateStore`,
+:class:`aqip_storage.store.InMemoryObjectStore`,
+:class:`aqip_events.bus.InMemoryEventBus`, the LLM client, the
+metrics registry, the agent registry, the compute runtime, the
+tool manager, the vector index, the knowledge graph, and the
+event registry). All of them have reset helpers; the
+``_reset_singletons`` autouse fixture calls every one before each
+test so the suite is order-independent.
+
+A tiny ``anyio_backend`` fixture is provided for tests that use
+``pytest-anyio``; the platform currently uses ``pytest-asyncio``,
+but having the fixture here makes future migration trivial.
+"""
+
+from __future__ import annotations
+
+import os
+
+import pytest
+
+# Set sane defaults before any application code is imported so the
+# in-process adapters behave the same way in every test session.
+os.environ.setdefault("AQIP_CLOUD", "local")
+os.environ.setdefault("AQIP_LLM_BACKEND", "fake")
+os.environ.setdefault("AQIP_OBJECT_STORE", "memory")
+os.environ.setdefault("AQIP_OTEL", "0")
+
+
+@pytest.fixture(autouse=True)
+def _reset_singletons():
+    """Reset every module-level singleton to a clean state per test.
+
+    Without this, tests that mutate a singleton (e.g. the metrics
+    registry) would leak state to the next test. We call every
+    known ``reset_*`` helper here.
+    """
+    from aqip_compute.runtime import reset_compute_runtime
+    from aqip_events.bus import reset_event_bus
+    from aqip_events.schemas import EventRegistry
+    from aqip_kg.graph import reset_kg
+    from aqip_llm.client import reset_llm_client
+    from aqip_observability.metrics import reset_metrics
+    from aqip_observability.tracing import reset_tracer
+    from aqip_portability.adapter import reset_adapter_cache
+    from aqip_state.store import reset_state_store
+    from aqip_storage.store import reset_object_store
+    from aqip_tools.manager import reset_tool_manager
+    from aqip_vector.index import reset_vector_index
+
+    reset_compute_runtime()
+    reset_event_bus()
+    reset_kg()
+    reset_llm_client()
+    reset_metrics()
+    reset_tracer()
+    reset_adapter_cache()
+    reset_state_store()
+    reset_object_store()
+    reset_tool_manager()
+    reset_vector_index()
+    EventRegistry._contracts.clear()
+    yield
+
+
+@pytest.fixture
+def anyio_backend():
+    """Stub for future ``pytest-anyio`` migration.
+
+    Currently the platform uses ``pytest-asyncio``; this fixture
+    exists so adding a test that uses ``anyio`` won't fail.
+    """
+    return "asyncio"
