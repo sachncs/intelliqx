@@ -1,4 +1,4 @@
-"""Tests for aqip-tools."""
+"""Tests for intelliqx-tools."""
 
 
 import pytest

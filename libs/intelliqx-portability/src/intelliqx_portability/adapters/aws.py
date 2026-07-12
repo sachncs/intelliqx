@@ -1,8 +1,8 @@
 """AWS cloud adapter.
 
 The adapter itself does not import ``boto3``; cloud-specific SDK access
-lives in feature-specific libs (e.g. ``aqip-storage.aws``,
-``aqip-events.aws``). The adapter just exposes the resolved config and
+lives in feature-specific libs (e.g. ``intelliqx-storage.aws``,
+``intelliqx-events.aws``). The adapter just exposes the resolved config and
 a typed entry point for AWS-specific helpers.
 """
 

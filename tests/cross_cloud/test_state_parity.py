@@ -1,4 +1,4 @@
-"""Cross-cloud parity tests for aqip-state."""
+"""Cross-cloud parity tests for intelliqx-state."""
 
 import pytest
 from intelliqx_state.aws import ElastiCacheStateStore

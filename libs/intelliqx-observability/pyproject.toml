@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-observability"
 version = "0.1.0"
-description = "AQIP observability (OTel + structured logging)"
+description = "IntelliqX observability (OTel + structured logging)"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",

@@ -1,9 +1,9 @@
-# AQIP Event Taxonomy
+# IntelliqX Event Taxonomy
 
 This document describes the event topics the Tier 1 agents publish
 and consume. Every event is an instance of a class defined in
 `agents/tier1/events.py` and carries an
-:class:`aqip_core.events.EventMetadata` envelope.
+:class:`intelliqx_core.events.EventMetadata` envelope.
 
 ## Event topics
 
@@ -29,7 +29,7 @@ Queue) treat topics.
 
 ## Envelope
 
-Every event is wrapped in an :class:`aqip_core.events.EventEnvelope`
+Every event is wrapped in an :class:`intelliqx_core.events.EventEnvelope`
 for the wire format. The envelope's ``metadata`` field is what
 audit, tracing, and governance consume; the rest of the envelope
 is opaque to those subsystems.

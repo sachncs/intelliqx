@@ -1,4 +1,4 @@
-"""Modal Queue adapter for AQIP event bus.
+"""Modal Queue adapter for IntelliqX event bus.
 
 Each event topic maps to a named ``modal.Queue``. The Modal SDK is
 lazy-imported; when it is missing the adapter falls back to an

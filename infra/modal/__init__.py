@@ -8,14 +8,14 @@ defines Tier 1 agents as modal.Functions and mounts the agent container image.
 #
 # import modal
 #
-# app = modal.App("aqip-tier1")
+# app = modal.App("intelliqx-tier1")
 #
 # image = (
 #     modal.Image.debian_slim(python_version="3.12")
 #     .pip_install_from_pyproject("pyproject.toml")
 # )
 #
-# @app.function(image=image, secrets=[modal.Secret.from_name("aqip-secrets")])
+# @app.function(image=image, secrets=[modal.Secret.from_name("intelliqx-secrets")])
 # @modal.web_endpoint(method="POST")
 # async def goal_endpoint(payload: dict) -> dict:
 #     from agents import register_all, register_compute_handlers

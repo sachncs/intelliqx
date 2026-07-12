@@ -224,7 +224,7 @@ _INSTANCE: VectorIndex | None = None
 def get_vector_index() -> VectorIndex:
     """Return the singleton vector index.
 
-    Defaults to a 768-dimensional in-memory index (the size AQIP uses
+    Defaults to a 768-dimensional in-memory index (the size IntelliqX uses
     for most embedding models). Production should construct a
     :class:`ZvecIndex` once at startup and call :func:`set_vector_index`.
     """
@@ -232,7 +232,7 @@ def get_vector_index() -> VectorIndex:
     if _INSTANCE is None:
         import os
 
-        dim = int(os.environ.get("AQIP_VECTOR_DIM", "768"))
+        dim = int(os.environ.get("INTELLIQX_VECTOR_DIM", "768"))
         _INSTANCE = InMemoryVectorIndex(dim=dim)
     return _INSTANCE
 

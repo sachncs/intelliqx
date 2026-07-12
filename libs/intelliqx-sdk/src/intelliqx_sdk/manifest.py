@@ -13,7 +13,7 @@ Attributes:
     description: One-line summary; shown in marketplace listings.
     author: Display name for the author / vendor.
     input_schema / output_schema: Optional JSON Schemas.
-    capabilities: Tags used by :class:`aqip_tools.registry.find_by_capability`.
+    capabilities: Tags used by :class:`intelliqx_tools.registry.find_by_capability`.
     permissions: Strings describing what the agent is allowed to do
         (``"net"``, ``"fs"``, ``"subprocess"``). The runtime enforces
         these against the sandbox.

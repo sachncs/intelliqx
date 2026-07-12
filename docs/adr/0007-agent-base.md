@@ -8,4 +8,4 @@
   - Cons: any cross-cutting change touches the base class.
 
 ## References
-- Phase 0 plan: `libs/aqip-agents/`
+- Phase 0 plan: `libs/intelliqx-agents/`

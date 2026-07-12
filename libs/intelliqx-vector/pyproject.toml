@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-vector"
 version = "0.1.0"
-description = "AQIP vector index (zvec) abstraction"
+description = "IntelliqX vector index (zvec) abstraction"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",

@@ -28,13 +28,13 @@
 ## 1.2 Architecture
 
 - **API Gateway** → `/v1/goals` (POST), `/v1/runs/{id}` (GET).
-- **Step Functions** state machine `AQIPPlannerOrchestrator` with states:
+- **Step Functions** state machine `IntelliqXPlannerOrchestrator` with states:
   - `Planner` (Lambda) → emit `plan.generated` → store plan in S3 + Redis.
   - `ParallelAgentMap` → for each plan node, invoke target agent Lambda.
   - `WaitForCompletion` (Step Functions callback pattern).
   - `Critic` (Lambda) — optional in v1, deferred to Phase 3.
   - `PersistResults` (Lambda).
-- **EventBridge** bus `aqip.bus` carries `goal.received`, `plan.generated`, `agent.invoked`, `agent.completed`, `agent.failed`, `run.completed`.
+- **EventBridge** bus `intelliqx.bus` carries `goal.received`, `plan.generated`, `agent.invoked`, `agent.completed`, `agent.failed`, `run.completed`.
 - **SQS** queues per agent with DLQ.
 - **Redis (ElastiCache)** as the live blackboard.
 - **DynamoDB** for run/plan/audit tables.

@@ -1,33 +1,33 @@
-# AQIP Multi-Cloud Matrix
+# IntelliqX Multi-Cloud Matrix
 
 The platform supports three deployment targets: AWS, GCP, and
-Modal. Each lib under `libs/aqip-*` exposes a cloud-specific
+Modal. Each lib under `libs/intelliqx-*` exposes a cloud-specific
 adapter that satisfies the same interface, so agent code is
 portable without changes. The matrix below maps each lib to its
 adapters.
 
 | Lib | Abstract | AWS | GCP | Modal | Local / Dev |
 |---|---|---|---|---|---|
-| `aqip-events` | `EventBus` | `AWSEventBridgeBus` (EventBridge + SQS) | `GCPPubSubBus` (Pub/Sub) | `ModalQueueBus` (`modal.Queue`) | `InMemoryEventBus` |
-| `aqip-storage` | `ObjectStore` | `S3ObjectStore` | `GCSObjectStore` | `ModalVolumeObjectStore` | `InMemoryObjectStore` / `LocalFileSystemObjectStore` |
-| `aqip-state` | `StateStore` | `ElastiCacheStateStore` | `MemorystoreStateStore` | `ModalDictStateStore` | `InMemoryStateStore` |
-| `aqip-vector` | `VectorIndex` (Protocol) | `ZvecIndex` (persisted to S3 / GCS / Volume) | (same zvec binary) | (same zvec binary) | `InMemoryVectorIndex` |
-| `aqip-llm` | `LLMClient` | `BedrockLLMClient` | `VertexLLMClient` | `VLLMModalLLMClient` | `FakeLLMClient` |
-| `aqip-compute` | `ComputeRuntime` | `AWSLambdaComputeRuntime` | `GCPFunctionsComputeRuntime` | `ModalComputeRuntime` | `InProcessComputeRuntime` |
-| `aqip-portability` | `CloudAdapter` | `AWSAdapter` | `GCPAdapter` | `ModalAdapter` | `LocalAdapter` |
+| `intelliqx-events` | `EventBus` | `AWSEventBridgeBus` (EventBridge + SQS) | `GCPPubSubBus` (Pub/Sub) | `ModalQueueBus` (`modal.Queue`) | `InMemoryEventBus` |
+| `intelliqx-storage` | `ObjectStore` | `S3ObjectStore` | `GCSObjectStore` | `ModalVolumeObjectStore` | `InMemoryObjectStore` / `LocalFileSystemObjectStore` |
+| `intelliqx-state` | `StateStore` | `ElastiCacheStateStore` | `MemorystoreStateStore` | `ModalDictStateStore` | `InMemoryStateStore` |
+| `intelliqx-vector` | `VectorIndex` (Protocol) | `ZvecIndex` (persisted to S3 / GCS / Volume) | (same zvec binary) | (same zvec binary) | `InMemoryVectorIndex` |
+| `intelliqx-llm` | `LLMClient` | `BedrockLLMClient` | `VertexLLMClient` | `VLLMModalLLMClient` | `FakeLLMClient` |
+| `intelliqx-compute` | `ComputeRuntime` | `AWSLambdaComputeRuntime` | `GCPFunctionsComputeRuntime` | `ModalComputeRuntime` | `InProcessComputeRuntime` |
+| `intelliqx-portability` | `CloudAdapter` | `AWSAdapter` | `GCPAdapter` | `ModalAdapter` | `LocalAdapter` |
 
 ## Selection mechanism
 
 The active profile is controlled by environment variables:
 
-* `AQIP_CLOUD` (default `local`) — selects the `CloudAdapter`. Drives
+* `INTELLIQX_CLOUD` (default `local`) — selects the `CloudAdapter`. Drives
   nothing on its own; consumers read it indirectly via
-  `aqip_portability.get_adapter()`.
-* `AQIP_LLM_BACKEND` (default `fake`) — selects the LLM backend.
-  See `aqip_llm.client.get_llm_client`.
-* `AQIP_OBJECT_STORE` (default `memory`, or `fs:<path>`) — selects
-  the object store. See `aqip_storage.store.get_object_store`.
-* `AQIP_VECTOR_DIM` (default `768`) — sets the in-memory vector
+  `intelliqx_portability.get_adapter()`.
+* `INTELLIQX_LLM_BACKEND` (default `fake`) — selects the LLM backend.
+  See `intelliqx_llm.client.get_llm_client`.
+* `INTELLIQX_OBJECT_STORE` (default `memory`, or `fs:<path>`) — selects
+  the object store. See `intelliqx_storage.store.get_object_store`.
+* `INTELLIQX_VECTOR_DIM` (default `768`) — sets the in-memory vector
   index's dimension. The zvec index takes its dimension at
   construction time.
 
@@ -53,11 +53,11 @@ A platform deployment can mix and match libs across clouds —
 e.g. AWS Lambda for compute, GCS for object storage, Modal for
 vLLM. The integration is straightforward:
 
-1. `AQIP_CLOUD=aws` selects the AWS compute adapter.
+1. `INTELLIQX_CLOUD=aws` selects the AWS compute adapter.
 2. The `S3ObjectStore` is constructed explicitly in application
-   bootstrap; the `AQIP_OBJECT_STORE` env var is ignored.
+   bootstrap; the `INTELLIQX_OBJECT_STORE` env var is ignored.
 3. The `VLLMModalLLMClient` is constructed explicitly with a
-   `AQIP_VLLM_URL` env var; the global `get_llm_client` is unused.
+   `INTELLIQX_VLLM_URL` env var; the global `get_llm_client` is unused.
 
 This pattern is documented for production deployments; the
 default scaffolding (and all tests) uses one cloud per

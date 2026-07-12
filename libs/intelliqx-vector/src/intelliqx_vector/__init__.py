@@ -1,4 +1,4 @@
-"""Vector index abstraction for AQIP.
+"""Vector index abstraction for IntelliqX.
 
 A small async surface that hides whether the underlying engine is the
 in-memory numpy implementation (tests / small datasets) or the
@@ -8,7 +8,7 @@ twice:
 * :class:`InMemoryVectorIndex` — pure numpy, dependency-free, used
   for tests and for low-cardinality datasets.
 * :class:`ZvecIndex` — Alibaba's zvec embedded vector DB, persisted
-  to the AQIP object store. Reference: https://github.com/alibaba/zvec
+  to the IntelliqX object store. Reference: https://github.com/alibaba/zvec
 
 Both implementations:
 
@@ -18,7 +18,7 @@ Both implementations:
 
 The default production model is zvec; :func:`get_vector_index` returns
 the in-memory index for tests and the zvec index for prod. The
-``AQIP_VECTOR_DIM`` env var configures the in-memory dim.
+``INTELLIQX_VECTOR_DIM`` env var configures the in-memory dim.
 """
 
 from intelliqx_vector.index import (

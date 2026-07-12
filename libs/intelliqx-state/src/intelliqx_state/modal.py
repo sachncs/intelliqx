@@ -1,4 +1,4 @@
-"""Modal ``Dict`` adapter for AQIP state store.
+"""Modal ``Dict`` adapter for IntelliqX state store.
 
 Uses ``modal.Dict`` — an in-memory, per-app key/value store that
 Modal persists across invocations. Important caveats:

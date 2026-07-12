@@ -1,6 +1,6 @@
 # Phase 0 — Foundations
 
-**Goal**: Stand up the AQIP monorepo, portability layer, shared libs, local infra config, and CI so every subsequent phase can build on a verified base.
+**Goal**: Stand up the IntelliqX monorepo, portability layer, shared libs, local infra config, and CI so every subsequent phase can build on a verified base.
 
 **Status**: PENDING
 
@@ -11,7 +11,7 @@
 | Area | Deliverable |
 |---|---|
 | Monorepo | `uv` workspace with `libs/`, `agents/`, `services/`, `workflows/`, `tests/`, `docs/`, `infra/`, `config/` |
-| Shared libs | `aqip-core`, `aqip-agents`, `aqip-portability`, `aqip-events`, `aqip-storage`, `aqip-vector` (zvec), `aqip-kg` (DuckDB+Parquet), `aqip-llm`, `aqip-state`, `aqip-compute`, `aqip-observability`, `aqip-tools` |
+| Shared libs | `intelliqx-core`, `intelliqx-agents`, `intelliqx-portability`, `intelliqx-events`, `intelliqx-storage`, `intelliqx-vector` (zvec), `intelliqx-kg` (DuckDB+Parquet), `intelliqx-llm`, `intelliqx-state`, `intelliqx-compute`, `intelliqx-observability`, `intelliqx-tools` |
 | Local infra | `docker-compose.yml` (Redpanda, Redis, MinIO, LiteLLM, Temporal, Jaeger, Prometheus, Grafana) and in-process test adapters |
 | CI | GitHub Actions: lint (ruff), typecheck (mypy), unit tests (pytest), contract tests |
 | Schemas | Event JSON Schemas, OpenAPI 3.1, KG parquet schema v1 |
@@ -20,7 +20,7 @@
 ## 0.2 Architecture decisions locked in this phase
 
 - **ADR-0001**: Python 3.12+ monorepo managed by `uv` workspaces.
-- **ADR-0002**: Multi-cloud portability via `aqip-portability` (no direct boto3/google-cloud/modal in agent code).
+- **ADR-0002**: Multi-cloud portability via `intelliqx-portability` (no direct boto3/google-cloud/modal in agent code).
 - **ADR-0003**: zvec as the embedded vector store; persisted to object storage per cloud.
 - **ADR-0004**: Knowledge Graph as Parquet files + DuckDB queries (no managed graph DB).
 - **ADR-0005**: Pub/Sub semantics for event bus; EventBridge+SQS / Pub/Sub / modal.Queue.
@@ -31,18 +31,18 @@
 - [ ] `pyproject.toml` workspace + per-package `pyproject.toml`s
 - [ ] `Dockerfile.agent` template (multi-stage, distroless runtime)
 - [ ] `docker-compose.yml`, `docker-compose.observability.yml`
-- [ ] `aqip-portability` (CloudAdapter + 3 impls + local impl)
-- [ ] `aqip-core` (Pydantic models, enums, errors, event base)
-- [ ] `aqip-events` (EventBus interface + 3 cloud impls + in-memory impl)
-- [ ] `aqip-storage` (ObjectStore interface + 3 cloud impls + local filesystem impl)
-- [ ] `aqip-vector` (VectorIndex interface + zvec impl + persistence)
-- [ ] `aqip-kg` (KG query API on DuckDB+Parquet)
-- [ ] `aqip-state` (Redis client + Upstash client + in-memory impl)
-- [ ] `aqip-llm` (LLMClient interface + adapters: litellm, bedrock, vertex, vllm, fake)
-- [ ] `aqip-compute` (ComputeRuntime interface + 3 cloud adapters + local subprocess)
-- [ ] `aqip-observability` (OTel + LangSmith + structured logging)
-- [ ] `aqip-agents` (AgentBase + decorators)
-- [ ] `aqip-tools` (ToolManager + MCP scaffolding)
+- [ ] `intelliqx-portability` (CloudAdapter + 3 impls + local impl)
+- [ ] `intelliqx-core` (Pydantic models, enums, errors, event base)
+- [ ] `intelliqx-events` (EventBus interface + 3 cloud impls + in-memory impl)
+- [ ] `intelliqx-storage` (ObjectStore interface + 3 cloud impls + local filesystem impl)
+- [ ] `intelliqx-vector` (VectorIndex interface + zvec impl + persistence)
+- [ ] `intelliqx-kg` (KG query API on DuckDB+Parquet)
+- [ ] `intelliqx-state` (Redis client + Upstash client + in-memory impl)
+- [ ] `intelliqx-llm` (LLMClient interface + adapters: litellm, bedrock, vertex, vllm, fake)
+- [ ] `intelliqx-compute` (ComputeRuntime interface + 3 cloud adapters + local subprocess)
+- [ ] `intelliqx-observability` (OTel + LangSmith + structured logging)
+- [ ] `intelliqx-agents` (AgentBase + decorators)
+- [ ] `intelliqx-tools` (ToolManager + MCP scaffolding)
 - [ ] Schemas: `schemas/events/*.json`, `schemas/openapi.yaml`, `schemas/kg/v1.json`
 - [ ] GitHub Actions: `.github/workflows/ci.yaml`
 - [ ] ADRs: `docs/adr/0001..0010.md`
@@ -65,7 +65,7 @@
 
 - Any concrete agent implementation (deferred to Phases 1–4).
 - Cloud deployments (Phases 1, 2, 7).
-- Real LLM calls in tests (use `aqip-llm.fake`).
+- Real LLM calls in tests (use `intelliqx-llm.fake`).
 
 ## 0.6 Risks
 

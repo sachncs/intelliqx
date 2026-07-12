@@ -1,4 +1,4 @@
-"""Tests for aqip-state."""
+"""Tests for intelliqx-state."""
 
 import asyncio
 

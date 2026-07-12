@@ -1,4 +1,4 @@
-"""Tests for aqip-kg."""
+"""Tests for intelliqx-kg."""
 
 import pytest
 from intelliqx_kg.graph import Edge, KnowledgeGraph, Node, get_kg

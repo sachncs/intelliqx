@@ -1,7 +1,7 @@
 services:
   redpanda:
     image: redpandadata/redpanda:v24.1.7
-    container_name: aqip-redpanda
+    container_name: intelliqx-redpanda
     command:
       - redpanda
       - start
@@ -24,7 +24,7 @@ services:
 
   redis:
     image: redis:7.2-alpine
-    container_name: aqip-redis
+    container_name: intelliqx-redis
     command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
@@ -36,11 +36,11 @@ services:
 
   minio:
     image: minio/minio:RELEASE.2024-06-29T01-20-47Z
-    container_name: aqip-minio
+    container_name: intelliqx-minio
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
-      MINIO_ROOT_USER: aqip
-      MINIO_ROOT_PASSWORD: aqip-secret
+      MINIO_ROOT_USER: intelliqx
+      MINIO_ROOT_PASSWORD: intelliqx-secret
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -52,7 +52,7 @@ services:
 
   litellm:
     image: ghcr.io/berriai/litellm:main-stable
-    container_name: aqip-litellm
+    container_name: intelliqx-litellm
     command: ["--config", "/app/config.yaml", "--port", "4000"]
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-fake}
@@ -65,7 +65,7 @@ services:
 
   temporal:
     image: temporalio/auto-setup:1.23
-    container_name: aqip-temporal
+    container_name: intelliqx-temporal
     environment:
       DB: sqlite
       SQLITE_PRAGMA: journal_mode=WAL
@@ -76,7 +76,7 @@ services:
 
   jaeger:
     image: jaegertracing/all-in-one:1.57
-    container_name: aqip-jaeger
+    container_name: intelliqx-jaeger
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
     ports:
@@ -87,7 +87,7 @@ services:
 
   prometheus:
     image: prom/prometheus:v2.52.0
-    container_name: aqip-prometheus
+    container_name: intelliqx-prometheus
     volumes:
       - ./infra/local/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
@@ -96,9 +96,9 @@ services:
 
   grafana:
     image: grafana/grafana:10.4.2
-    container_name: aqip-grafana
+    container_name: intelliqx-grafana
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: aqip
+      GF_SECURITY_ADMIN_PASSWORD: intelliqx
     ports:
       - "3000:3000"
     profiles: ["observability"]

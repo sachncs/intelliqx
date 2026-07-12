@@ -1,4 +1,4 @@
-"""GCP Vertex AI LLM adapter for AQIP.
+"""GCP Vertex AI LLM adapter for IntelliqX.
 
 Lazy-imports ``vertexai``. Falls back to a deterministic mock with
 ``[vertex-fallback:]`` prefix when the SDK or credentials are
@@ -34,7 +34,7 @@ class VertexLLMClient(LLMClient):
         model: str | None = None,
     ) -> None:
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
-        self.region = region or os.environ.get("AQIP_GCP_REGION", "us-central1")
+        self.region = region or os.environ.get("INTELLIQX_GCP_REGION", "us-central1")
         self.model = model or self.DEFAULT_MODEL
         self._client = None
         self._available = self._try_init()

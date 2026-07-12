@@ -22,8 +22,8 @@ def _setup_test_world(profile: str):
 
 
 def _swap_cloud_profile(monkeypatch, profile: str):
-    """Set AQIP_CLOUD and force adapter re-resolution."""
-    monkeypatch.setenv("AQIP_CLOUD", profile)
+    """Set INTELLIQX_CLOUD and force adapter re-resolution."""
+    monkeypatch.setenv("INTELLIQX_CLOUD", profile)
 
 
 @pytest.mark.cross_cloud

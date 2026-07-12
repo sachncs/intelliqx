@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-compute"
 version = "0.1.0"
-description = "AQIP compute runtime abstraction"
+description = "IntelliqX compute runtime abstraction"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",

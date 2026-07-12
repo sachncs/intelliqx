@@ -1,4 +1,4 @@
-"""Shared Pydantic models for AQIP.
+"""Shared Pydantic models for IntelliqX.
 
 Every model in this module uses ``extra="forbid"`` by default to keep the
 platform's input boundary explicit: unknown fields fail validation rather

@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-tools"
 version = "0.1.0"
-description = "AQIP tool manager + MCP gateway"
+description = "IntelliqX tool manager + MCP gateway"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",

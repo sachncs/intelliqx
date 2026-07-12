@@ -1,4 +1,4 @@
-"""Tests for aqip-storage."""
+"""Tests for intelliqx-storage."""
 
 from pathlib import Path
 
@@ -72,7 +72,7 @@ async def test_local_fs_not_found(tmp_path: Path):
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_get_object_store_singleton_default(monkeypatch):
-    monkeypatch.delenv("AQIP_OBJECT_STORE", raising=False)
+    monkeypatch.delenv("INTELLIQX_OBJECT_STORE", raising=False)
     s = get_object_store()
     assert isinstance(s, InMemoryObjectStore)
 
@@ -80,7 +80,7 @@ async def test_get_object_store_singleton_default(monkeypatch):
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_get_object_store_singleton_fs(monkeypatch, tmp_path: Path):
-    monkeypatch.setenv("AQIP_OBJECT_STORE", f"fs:{tmp_path}")
+    monkeypatch.setenv("INTELLIQX_OBJECT_STORE", f"fs:{tmp_path}")
     s = get_object_store()
     assert isinstance(s, LocalFileSystemObjectStore)
     await s.put("k", b"v")

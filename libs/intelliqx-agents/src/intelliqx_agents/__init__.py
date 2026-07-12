@@ -1,4 +1,4 @@
-"""Agent framework for AQIP.
+"""Agent framework for IntelliqX.
 
 The agent framework is the spine of the platform. It defines:
 
@@ -18,8 +18,8 @@ The agent framework is the spine of the platform. It defines:
   ``run_id`` attributes.
 
 The framework is intentionally **storage- and compute-agnostic**.
-Agents call into :mod:`aqip_storage`, :mod:`aqip_state`,
-:mod:`aqip_events`, and :mod:`aqip_compute` singletons; the same
+Agents call into :mod:`intelliqx_storage`, :mod:`intelliqx_state`,
+:mod:`intelliqx_events`, and :mod:`intelliqx_compute` singletons; the same
 agent code runs in any deployment.
 """
 

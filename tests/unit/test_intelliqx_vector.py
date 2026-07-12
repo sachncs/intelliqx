@@ -1,4 +1,4 @@
-"""Tests for aqip-vector."""
+"""Tests for intelliqx-vector."""
 
 import pytest
 from intelliqx_vector.index import (

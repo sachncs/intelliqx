@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-tenant"
 version = "0.1.0"
-description = "AQIP tenant context and isolation middleware"
+description = "IntelliqX tenant context and isolation middleware"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",

@@ -1,14 +1,14 @@
 """Tool manager — MCP-compatible tool gateway.
 
-AQIP agents call external systems (GitHub, Jira, Slack, PagerDuty,
+IntelliqX agents call external systems (GitHub, Jira, Slack, PagerDuty,
 sandboxed shell) through a single interface
-(:class:`aqip_tools.manager.ToolManager`). The manager handles:
+(:class:`intelliqx_tools.manager.ToolManager`). The manager handles:
 
 * **Discovery** via :class:`ToolRegistry` (name + capabilities + rate
   limits).
 * **Routing** to a registered async handler.
 * **Rate limiting** via a per-tool token bucket (see
-  :class:`aqip_tools.rate_limit.RateLimiter`).
+  :class:`intelliqx_tools.rate_limit.RateLimiter`).
 * **Failure isolation** — exceptions in a handler are caught and
   returned as a structured :class:`ToolInvocationResult` with
   ``status="error"``; the agent's main flow keeps running.

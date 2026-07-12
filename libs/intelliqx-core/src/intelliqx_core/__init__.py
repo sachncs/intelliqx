@@ -1,11 +1,11 @@
-"""AQIP shared core.
+"""IntelliqX shared core.
 
 Provides the value objects, enums, error hierarchy, and event envelope
-primitives used by every other AQIP library and every agent.
+primitives used by every other IntelliqX library and every agent.
 
 The core is intentionally tiny and dependency-free (only Pydantic and the
-ULID library). Higher-level libraries (``aqip-events``, ``aqip-state``,
-``aqip-storage`` …) build on these primitives.
+ULID library). Higher-level libraries (``intelliqx-events``, ``intelliqx-state``,
+``intelliqx-storage`` …) build on these primitives.
 
 Design notes:
 
@@ -17,15 +17,15 @@ Design notes:
 * Identifiers are 26-character Crockford-base32 ULIDs (see ``ids.py``).
   They are lexicographically sortable by creation time, which makes event
   streams and audit logs self-ordering without extra metadata.
-* The error hierarchy is rooted at ``AQIPError`` so callers may catch the
+* The error hierarchy is rooted at ``IntelliqxError`` so callers may catch the
   whole family with a single ``except`` while still being able to
   distinguish specific failure modes by their concrete type.
 """
 
 from intelliqx_core.errors import (
-    AQIPError,
     CloudConfigError,
     ContractError,
+    IntelliqxError,
     NotFoundError,
     ValidationError,
 )
@@ -43,7 +43,6 @@ from intelliqx_core.models import (
 )
 
 __all__ = [
-    "AQIPError",
     "AgentCapability",
     "AgentRef",
     "BaseEvent",
@@ -54,6 +53,7 @@ __all__ = [
     "EventMetadata",
     "Goal",
     "HealthStatus",
+    "IntelliqxError",
     "NotFoundError",
     "PlanNode",
     "RunStatus",

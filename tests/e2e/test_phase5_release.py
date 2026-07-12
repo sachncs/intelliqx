@@ -148,7 +148,7 @@ async def test_v1_release_report_generated():
     )
     md = out["markdown"]
     js = out["json_payload"]
-    assert "AQIP Run Report" in md
+    assert "IntelliqX Run Report" in md
     assert "r-v1-final" in md
     assert js["summary"]["total"] == 50
 

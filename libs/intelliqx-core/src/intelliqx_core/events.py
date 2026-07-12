@@ -1,4 +1,4 @@
-"""Event base classes for AQIP.
+"""Event base classes for IntelliqX.
 
 The event system is the cross-agent backbone of the platform. Every
 event carries an :class:`EventMetadata` envelope (tenant ID, producer,

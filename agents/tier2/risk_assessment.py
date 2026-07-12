@@ -16,7 +16,7 @@ labels are derived from the score:
 * ``>= 0.25`` → ``"medium"``
 * else       → ``"low"``
 
-The weights were tuned against a small corpus of historical AQIP
+The weights were tuned against a small corpus of historical IntelliqX
 releases; production deployments should re-calibrate by capturing
 the post-release incident rate per ``priority`` band.
 """

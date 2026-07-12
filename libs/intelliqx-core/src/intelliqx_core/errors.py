@@ -1,6 +1,6 @@
-"""Error types for AQIP.
+"""Error types for IntelliqX.
 
-The hierarchy is rooted at :class:`AQIPError` so callers may catch the
+The hierarchy is rooted at :class:`IntelliqxError` so callers may catch the
 whole family with a single ``except`` while still being able to
 distinguish specific failure modes by their concrete type.
 """
@@ -8,8 +8,8 @@ distinguish specific failure modes by their concrete type.
 from __future__ import annotations
 
 
-class AQIPError(Exception):
-    """Base class for all AQIP-raised exceptions.
+class IntelliqxError(Exception):
+    """Base error class for IntelliqX.
 
     Catching this catches every domain-level error in the platform. Concrete
     subclasses add specificity; lib code should raise the most specific
@@ -17,16 +17,16 @@ class AQIPError(Exception):
     """
 
 
-class CloudConfigError(AQIPError):
+class CloudConfigError(IntelliqxError):
     """Raised when the cloud adapter cannot resolve its configuration.
 
-    Examples: missing ``AQIP_CLOUD`` env var, unrecognised provider string,
+    Examples: missing ``INTELLIQX_CLOUD`` env var, unrecognised provider string,
     or a ``CloudConfig`` that is missing required fields for the chosen
     provider (e.g. GCP without ``project_id``).
     """
 
 
-class ContractError(AQIPError):
+class ContractError(IntelliqxError):
     """Raised when a contract — event schema, MCP tool interface, or
     marketplace manifest — is violated.
 
@@ -36,7 +36,7 @@ class ContractError(AQIPError):
     """
 
 
-class NotFoundError(AQIPError):
+class NotFoundError(IntelliqxError):
     """Raised when a requested resource does not exist.
 
     Object-store and state-store adapters translate backend-specific
@@ -45,7 +45,7 @@ class NotFoundError(AQIPError):
     """
 
 
-class ValidationError(AQIPError):
+class ValidationError(IntelliqxError):
     """Raised when an input fails internal validation.
 
     Distinct from :class:`ContractError`: ``ValidationError`` is for

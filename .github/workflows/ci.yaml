@@ -6,10 +6,10 @@ on:
   pull_request:
 
 env:
-  AQIP_CLOUD: local
-  AQIP_LLM_BACKEND: fake
-  AQIP_OBJECT_STORE: memory
-  AQIP_OTEL: "0"
+  INTELLIQX_CLOUD: local
+  INTELLIQX_LLM_BACKEND: fake
+  INTELLIQX_OBJECT_STORE: memory
+  INTELLIQX_OTEL: "0"
 
 jobs:
   lint:

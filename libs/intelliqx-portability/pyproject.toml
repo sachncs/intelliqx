@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-portability"
 version = "0.1.0"
-description = "AQIP cloud portability adapter"
+description = "IntelliqX cloud portability adapter"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",

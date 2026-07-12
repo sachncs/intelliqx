@@ -1,4 +1,4 @@
-"""Tests for aqip-sdk."""
+"""Tests for intelliqx-sdk."""
 
 from pathlib import Path
 

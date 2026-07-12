@@ -31,7 +31,7 @@ class InvocationRequest(BaseModel):
 
     Attributes:
         agent_name: Registry key for the agent to invoke. Used as
-            the Lambda function name (``aqip-{agent_name}``) in AWS
+            the Lambda function name (``intelliqx-{agent_name}``) in AWS
             and as the URL path component on GCP.
         input: JSON-serialisable dict of agent input.
         tenant_id: Tenant scope; flows into :class:`AgentContext`.

@@ -5,7 +5,7 @@ propagates naturally through async tasks and thread-pool workers within
 the same logical request scope. We deliberately avoid
 :data:`threading.local` because:
 
-* AQIP agents are async; ``contextvars`` are the standard way to pass
+* IntelliqX agents are async; ``contextvars`` are the standard way to pass
   per-task state.
 * Thread pools used by ``asyncio.to_thread`` need to see the same
   context as the parent task — ``threading.local`` does not support
@@ -23,7 +23,7 @@ from intelliqx_core.models import TenantContext
 # Single, package-wide ContextVar. The default of ``None`` is intentional:
 # code that needs a tenant must either receive one or set one explicitly.
 _CTX: contextvars.ContextVar[TenantContext | None] = contextvars.ContextVar(
-    "aqip_tenant_ctx", default=None
+    "intelliqx_tenant_ctx", default=None
 )
 
 
@@ -69,7 +69,7 @@ class TenantResolver:
     * A signed JWT whose claims include ``tid`` (tenant id, required),
       ``sub`` (user id, optional), ``roles`` (list or comma-separated
       string, optional), and ``trace_id`` (optional).
-    * Plain HTTP headers (``X-AQIP-Tenant``, ``X-AQIP-User``,
+    * Plain HTTP headers (``X-IntelliqX-Tenant``, ``X-IntelliqX-User``,
       ``X-Trace-Id``). Used by service-to-service callers and the local
       dev API.
     """
@@ -114,15 +114,15 @@ class TenantResolver:
             A new :class:`TenantContext`.
 
         Raises:
-            ValueError: If ``X-AQIP-Tenant`` is missing.
+            ValueError: If ``X-IntelliqX-Tenant`` is missing.
         """
         # Normalise once for case-insensitive lookups.
         lower = {k.lower(): v for k, v in headers.items()}
-        tid = lower.get("x-aqip-tenant")
+        tid = lower.get("x-intelliqx-tenant")
         if not tid:
-            raise ValueError("Missing X-AQIP-Tenant header")
+            raise ValueError("Missing X-IntelliqX-Tenant header")
         return TenantContext(
             tenant_id=tid,
-            user_id=lower.get("x-aqip-user"),
+            user_id=lower.get("x-intelliqx-user"),
             trace_id=lower.get("x-trace-id"),
         )

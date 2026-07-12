@@ -1,4 +1,4 @@
-"""Structured logging for AQIP.
+"""Structured logging for IntelliqX.
 
 The platform uses ``structlog`` because it gives us JSON output in
 production and pretty console output in development from the same code
@@ -30,12 +30,12 @@ def configure_logging(level: str = "INFO", json_logs: bool | None = None) -> Non
             back to ``INFO``.
         json_logs: If ``True``, emit JSON log lines (production).
             If ``False``, emit pretty colored output (dev). If
-            ``None`` (default), read the ``AQIP_LOGS_JSON`` env var:
+            ``None`` (default), read the ``INTELLIQX_LOGS_JSON`` env var:
             ``"1"`` enables JSON, anything else uses pretty output.
     """
     log_level = getattr(logging, level.upper(), logging.INFO)
     if json_logs is None:
-        json_logs = os.environ.get("AQIP_LOGS_JSON", "0") == "1"
+        json_logs = os.environ.get("INTELLIQX_LOGS_JSON", "0") == "1"
     # Processor order matters: each entry is a transformation that
     # receives the event dict produced by earlier processors.
     processors: list = [

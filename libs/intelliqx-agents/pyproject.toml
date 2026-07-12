@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-agents"
 version = "0.1.0"
-description = "AQIP agent base class and decorators"
+description = "IntelliqX agent base class and decorators"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",

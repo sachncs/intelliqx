@@ -19,10 +19,10 @@ class ModalComputeRuntime(ComputeRuntime):
     """Invokes agents via Modal Functions.
 
     Args:
-        app_name: Modal app name. Defaults to ``"aqip"``.
+        app_name: Modal app name. Defaults to ``"intelliqx"``.
     """
 
-    def __init__(self, app_name: str = "aqip") -> None:
+    def __init__(self, app_name: str = "intelliqx") -> None:
         self.app_name = app_name
         self._modal_app = None
         # agent_name -> modal.Function handle

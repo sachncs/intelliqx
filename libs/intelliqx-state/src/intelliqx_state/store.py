@@ -1,7 +1,7 @@
 """State store interface and in-memory implementation.
 
 The :class:`StateStore` interface models a small subset of Redis that
-covers everything AQIP needs: simple get/set/delete, increment, hash
+covers everything IntelliqX needs: simple get/set/delete, increment, hash
 fields, and list push/pop. The interface is **async-only** so callers
 don't accidentally make a blocking call inside an event loop.
 

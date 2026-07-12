@@ -1,4 +1,4 @@
-"""AWS Bedrock LLM adapter for AQIP.
+"""AWS Bedrock LLM adapter for IntelliqX.
 
 Lazy-imports ``boto3``. If the SDK is missing or credentials are
 unavailable, every method falls back to a deterministic mock so
@@ -27,7 +27,7 @@ class BedrockLLMClient(LLMClient):
 
     Default model: ``anthropic.claude-3-5-sonnet-20240620-v1:0``. The
     model is overridable per-request via
-    :class:`~aqip_llm.client.CompletionRequest.model`.
+    :class:`~intelliqx_llm.client.CompletionRequest.model`.
 
     The request body is the Anthropic messages format. Bedrock
     requires ``anthropic_version`` and accepts a top-level

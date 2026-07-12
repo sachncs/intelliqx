@@ -1,4 +1,4 @@
-"""GCS (Google Cloud Storage) adapter for AQIP object store.
+"""GCS (Google Cloud Storage) adapter for IntelliqX object store.
 
 Lazy-imports ``google-cloud-storage``. Same pattern as the S3 adapter:
 ``_available`` flips to ``True`` only when the SDK and credentials are

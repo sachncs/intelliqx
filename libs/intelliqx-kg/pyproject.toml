@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-kg"
 version = "0.1.0"
-description = "AQIP Knowledge Graph: Parquet + DuckDB"
+description = "IntelliqX Knowledge Graph: Parquet + DuckDB"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",

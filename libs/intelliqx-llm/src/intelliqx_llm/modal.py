@@ -34,12 +34,12 @@ class VLLMModalLLMClient(LLMClient):
 
     Args:
         endpoint_url: The base URL of the vLLM server. Defaults to
-            the ``AQIP_VLLM_URL`` env var.
+            the ``INTELLIQX_VLLM_URL`` env var.
         model: The model name to send in requests.
     """
 
     def __init__(self, endpoint_url: str | None = None, model: str = "Qwen/Qwen2.5-72B-Instruct") -> None:
-        self.endpoint_url = endpoint_url or os.environ.get("AQIP_VLLM_URL", "")
+        self.endpoint_url = endpoint_url or os.environ.get("INTELLIQX_VLLM_URL", "")
         self.model = model
         self._client = None
         # "Available" here means a real endpoint is configured; the

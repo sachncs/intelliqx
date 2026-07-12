@@ -1,6 +1,6 @@
-"""GCP Memorystore Redis adapter for AQIP state store.
+"""GCP Memorystore Redis adapter for IntelliqX state store.
 
-Same protocol as :class:`aqip_state.aws.ElastiCacheStateStore`; the only
+Same protocol as :class:`intelliqx_state.aws.ElastiCacheStateStore`; the only
 difference is the configuration: Memorystore Redis uses the GCP
 project for IAM rather than AWS IAM, but the Redis protocol is
 identical. The adapter does not abstract the IAM layer; the caller

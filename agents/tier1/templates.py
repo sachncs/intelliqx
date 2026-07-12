@@ -2,8 +2,8 @@
 
 A small catalog of pre-built plan templates, indexed by the goal's
 ``kind`` field. The Planner Agent consults this table to translate a
-:class:`~aqip_core.models.Goal` into a list of
-:class:`~aqip_core.models.PlanNode` records that the Orchestrator
+:class:`~intelliqx_core.models.Goal` into a list of
+:class:`~intelliqx_core.models.PlanNode` records that the Orchestrator
 can execute.
 
 The templates intentionally have **no LLM dependency** — they are

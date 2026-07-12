@@ -1,4 +1,4 @@
-"""AWS S3 adapter for AQIP object store.
+"""AWS S3 adapter for IntelliqX object store.
 
 Lazy-imports ``boto3``. If the SDK is missing or AWS credentials are
 not available, ``_available`` stays ``False`` and every method
@@ -24,7 +24,7 @@ class S3ObjectStore(ObjectStore):
         bucket: S3 bucket name.
         region: AWS region. Defaults to ``us-east-1``.
         prefix: Optional key prefix. Useful for sharing a bucket
-            across environments (e.g. ``"prod/aqip/"``).
+            across environments (e.g. ``"prod/intelliqx/"``).
     """
 
     def __init__(self, bucket: str, region: str | None = None, prefix: str = "") -> None:

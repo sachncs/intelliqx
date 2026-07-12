@@ -1,4 +1,4 @@
-# AQIP Agent Catalog
+# IntelliqX Agent Catalog
 
 This is the canonical list of every agent shipped with the platform,
 by tier. Use it as a reference when wiring plans or selecting
@@ -46,7 +46,7 @@ The function is idempotent and safe to call from anywhere.
 
 The :func:`agents.register_compute_handlers` function performs the
 same registrations against the
-:class:`aqip_compute.runtime.InProcessComputeRuntime` so the
+:class:`intelliqx_compute.runtime.InProcessComputeRuntime` so the
 Orchestrator can dispatch to any agent by name. Tests call both
 functions in a conftest fixture.
 

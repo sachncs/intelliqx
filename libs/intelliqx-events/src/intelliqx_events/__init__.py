@@ -1,4 +1,4 @@
-"""Event bus abstraction for AQIP.
+"""Event bus abstraction for IntelliqX.
 
 The platform's cross-agent backbone. The :class:`EventBus` interface
 is intentionally small — ``publish`` and ``subscribe`` plus lifecycle

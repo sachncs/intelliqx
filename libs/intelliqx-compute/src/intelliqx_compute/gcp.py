@@ -1,7 +1,7 @@
-"""GCP Cloud Functions / Cloud Run compute adapter for AQIP.
+"""GCP Cloud Functions / Cloud Run compute adapter for IntelliqX.
 
 Each agent is deployed as a function URL named
-``aqip-{agent_name}`` and exposed as an HTTP-triggered function.
+``intelliqx-{agent_name}`` and exposed as an HTTP-triggered function.
 The adapter POSTs the request payload as JSON and parses the
 response the same way.
 """
@@ -20,13 +20,13 @@ class GCPFunctionsComputeRuntime(ComputeRuntime):
     Args:
         project_id: GCP project id. Defaults to ``GOOGLE_CLOUD_PROJECT``
             env var, then ``"intelliqx-local"``.
-        region: GCP region. Defaults to ``AQIP_GCP_REGION``, then
+        region: GCP region. Defaults to ``INTELLIQX_GCP_REGION``, then
             ``us-central-1``.
     """
 
     def __init__(self, project_id: str | None = None, region: str | None = None) -> None:
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
-        self.region = region or os.environ.get("AQIP_GCP_REGION", "us-central1")
+        self.region = region or os.environ.get("INTELLIQX_GCP_REGION", "us-central1")
         self._available = False
 
     async def invoke(self, request: InvocationRequest) -> InvocationResponse:
@@ -40,7 +40,7 @@ class GCPFunctionsComputeRuntime(ComputeRuntime):
                 status="not_found",
                 error=str(e),
             )
-        url = f"https://{self.region}-{self.project_id}.cloudfunctions.net/aqip-{request.agent_name}"
+        url = f"https://{self.region}-{self.project_id}.cloudfunctions.net/intelliqx-{request.agent_name}"
         start = time.monotonic()
         try:
             async with httpx.AsyncClient(timeout=request.timeout_seconds) as client:

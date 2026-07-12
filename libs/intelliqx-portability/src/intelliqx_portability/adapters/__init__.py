@@ -2,7 +2,7 @@
 
 The actual adapter classes live in ``aws.py``, ``gcp.py``, ``modal.py``,
 and ``local.py``. They are imported lazily by
-:func:`aqip_portability.adapter.get_adapter` to keep import latency low
+:func:`intelliqx_portability.adapter.get_adapter` to keep import latency low
 when the platform is running on a single cloud.
 """
 

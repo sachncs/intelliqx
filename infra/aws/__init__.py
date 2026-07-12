@@ -1,1 +1,1 @@
-"""AQIP AWS infrastructure."""
+"""IntelliqX AWS infrastructure."""

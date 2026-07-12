@@ -1,7 +1,7 @@
 """Tool Manager Agent (Tier 1).
 
 Provides a tool invocation gateway. Registers and routes to
-MCP-compatible tools via :class:`aqip_tools.manager.ToolManager`.
+MCP-compatible tools via :class:`intelliqx_tools.manager.ToolManager`.
 Ships with five starter tools used by tests and the default dev
 profile: GitHub issue creation, Jira ticket creation, Slack
 message posting, PagerDuty alert, and a sandboxed local shell.
@@ -39,7 +39,7 @@ class ToolOutput(BaseModel):
     Attributes:
         tool: Echoed tool name.
         status: One of ``"ok"``, ``"not_found"``, ``"error"``
-            (returned by :class:`aqip_tools.manager.ToolManager`).
+            (returned by :class:`intelliqx_tools.manager.ToolManager`).
         output: Tool-specific output.
         error: Error message on failure.
     """
@@ -94,7 +94,7 @@ async def _pagerduty_alert(payload: dict[str, Any]) -> dict[str, Any]:
     return {
         "incident_key": payload.get("incident_key", "INC-1"),
         "status": "triggered",
-        "service": payload.get("service", "aqip"),
+        "service": payload.get("service", "intelliqx"),
     }
 
 

@@ -61,7 +61,7 @@ class EnvironmentAgent(AgentBase):
 
     @traced_agent("environment")
     async def run(self, ctx: AgentContext, input: EnvironmentInput) -> EnvironmentOutput:
-        # Lazy imports keep ``aqip-agents`` importable on machines
+        # Lazy imports keep ``intelliqx-agents`` importable on machines
         # without FastAPI installed (e.g. the Lambda Layer that
         # only runs the Orchestrator).
         import httpx

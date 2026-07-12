@@ -6,8 +6,8 @@ zvec is an embedded vector database (C++/Rust core with Python
 bindings). The :class:`ZvecIndex` adapter:
 
 * Opens or creates a zvec Collection at a local path (one collection
-  per AQIP vector index).
-* Persists a JSON manifest to the AQIP object store after every
+  per IntelliqX vector index).
+* Persists a JSON manifest to the IntelliqX object store after every
   batch so the index can be re-opened on cold start without
   re-embedding the corpus.
 * Supports the HNSW index by default. (zvec also supports IVF and
@@ -15,7 +15,7 @@ bindings). The :class:`ZvecIndex` adapter:
   callers with specific latency/recall trade-offs.)
 
 The class uses ``VECTOR_FP32`` storage and 32-bit floats throughout
-because (a) the embeddings AQIP produces (Bedrock Titan, vLLM Qwen,
+because (a) the embeddings IntelliqX produces (Bedrock Titan, vLLM Qwen,
 etc.) are fp32, and (b) the storage cost stays manageable even at
 millions of vectors.
 """
@@ -44,7 +44,7 @@ class ZvecIndex:
         collection_name: zvec collection name. Different collections
             live in separate paths on disk and in storage.
         local_root: Local directory where zvec stores its files.
-            Defaults to ``$TMPDIR/aqip_zvec_{collection_name}``.
+            Defaults to ``$TMPDIR/intelliqx_zvec_{collection_name}``.
         index_type: Reserved for future use. Currently only ``hnsw``
             is exercised; left as a constructor arg for forward
             compatibility.
@@ -58,7 +58,7 @@ class ZvecIndex:
         dim: int,
         *,
         storage: ObjectStore | None = None,
-        collection_name: str = "aqip_vectors",
+        collection_name: str = "intelliqx_vectors",
         local_root: Path | str | None = None,
         index_type: str = "hnsw",
     ) -> None:
@@ -72,7 +72,7 @@ class ZvecIndex:
         self._storage = storage or get_object_store()
         self._collection_name = collection_name
         self._local_root = (
-            Path(local_root or tempfile.gettempdir()) / f"aqip_zvec_{collection_name}"
+            Path(local_root or tempfile.gettempdir()) / f"intelliqx_zvec_{collection_name}"
         )
         self._local_root.mkdir(parents=True, exist_ok=True)
         self._index_type = index_type

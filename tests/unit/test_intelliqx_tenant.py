@@ -1,4 +1,4 @@
-"""Tests for aqip-tenant."""
+"""Tests for intelliqx-tenant."""
 
 import pytest
 from intelliqx_core.models import TenantContext
@@ -22,7 +22,7 @@ def test_resolver_from_jwt_missing():
 
 @pytest.mark.unit
 def test_resolver_from_headers():
-    t = TenantResolver.from_headers({"X-AQIP-Tenant": "t1", "X-AQIP-User": "u1"})
+    t = TenantResolver.from_headers({"X-IntelliqX-Tenant": "t1", "X-IntelliqX-User": "u1"})
     assert t.tenant_id == "t1"
     assert t.user_id == "u1"
 

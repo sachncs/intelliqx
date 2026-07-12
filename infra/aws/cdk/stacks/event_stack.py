@@ -6,4 +6,4 @@ from aws_cdk import Stack
 
 
 class EventStack(Stack):
-    """Event bus and queues for AQIP."""
+    """Event bus and queues for IntelliqX."""

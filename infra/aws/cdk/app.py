@@ -1,4 +1,4 @@
-"""AWS CDK app for AQIP Phase 1.
+"""AWS CDK app for IntelliqX Phase 1.
 
 Stacks:
 - ApiStack: API Gateway + Lambda
@@ -22,14 +22,14 @@ def build_app() -> App:
     env_name = app.node.try_get_context("env") or "dev"
     region = app.node.try_get_context("region") or "us-east-1"
 
-    storage = StorageStack(app, f"aqip-storage-{env_name}", env_name=env_name, region=region)
-    events = EventStack(app, f"aqip-events-{env_name}", env_name=env_name, region=region, storage=storage)
+    storage = StorageStack(app, f"intelliqx-storage-{env_name}", env_name=env_name, region=region)
+    events = EventStack(app, f"intelliqx-events-{env_name}", env_name=env_name, region=region, storage=storage)
     compute = ComputeStack(
-        app, f"aqip-compute-{env_name}", env_name=env_name, region=region, storage=storage, events=events
+        app, f"intelliqx-compute-{env_name}", env_name=env_name, region=region, storage=storage, events=events
     )
     api = ApiStack(
         app,
-        f"aqip-api-{env_name}",
+        f"intelliqx-api-{env_name}",
         env_name=env_name,
         region=region,
         storage=storage,
@@ -38,7 +38,7 @@ def build_app() -> App:
     )
     ObservabilityStack(
         app,
-        f"aqip-obs-{env_name}",
+        f"intelliqx-obs-{env_name}",
         env_name=env_name,
         region=region,
         storage=storage,

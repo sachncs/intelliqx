@@ -1,4 +1,4 @@
-"""AWS EventBridge + SQS adapter for AQIP event bus.
+"""AWS EventBridge + SQS adapter for IntelliqX event bus.
 
 Wraps the abstract :class:`EventBus` interface with AWS EventBridge (for
 fan-out) + SQS (for per-consumer buffering and DLQ) semantics.
@@ -8,7 +8,7 @@ non-AWS machines.
 
 Production topology:
 
-* A single custom EventBridge bus (default name ``"aqip.bus"``).
+* A single custom EventBridge bus (default name ``"intelliqx.bus"``).
 * One SQS queue per consumer, with an SQS DLQ wired via a redrive
   policy. Consumers poll SQS; EventBridge rules fan events out via
   SQS targets.
@@ -47,7 +47,7 @@ class AWSEventBridgeBus(EventBus):
 
     def __init__(
         self,
-        bus_name: str = "aqip.bus",
+        bus_name: str = "intelliqx.bus",
         region: str | None = None,
         fallback: EventBus | None = None,
     ) -> None:
@@ -112,7 +112,7 @@ class AWSEventBridgeBus(EventBus):
         # each; the platform assumes events stay well under that
         # (typical: a few KB).
         entry = {
-            "Source": "aqip",
+            "Source": "intelliqx",
             "DetailType": topic,
             "Detail": json.dumps(event.model_dump(mode="json"), default=str),
             "EventBusName": self.bus_name,
@@ -122,7 +122,7 @@ class AWSEventBridgeBus(EventBus):
         # loop responsive.
         await asyncio.to_thread(self._client.put_events, Entries=[entry])
         # Return a slice of the serialised detail as a synthetic id
-        # when the event id isn't recoverable (e.g. non-AQIP event).
+        # when the event id isn't recoverable (e.g. non-IntelliqX event).
         return entry["Detail"][:36]
 
     def subscribe(

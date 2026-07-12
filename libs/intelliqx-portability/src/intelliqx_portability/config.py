@@ -20,7 +20,7 @@ class CloudConfig(BaseModel):
     If you need different config, build a new ``CloudAdapter`` instance.
 
     Attributes:
-        provider: One of :class:`aqip_core.models.CloudProvider`.
+        provider: One of :class:`intelliqx_core.models.CloudProvider`.
         region: Default region for all cloud operations. AWS and GCP
             honour it; Modal ignores it (Modal picks the closest region).
         project_id: GCP project id. ``None`` for non-GCP profiles.

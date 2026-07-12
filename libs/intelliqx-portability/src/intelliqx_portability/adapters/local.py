@@ -15,5 +15,5 @@ class LocalAdapter(CloudAdapter):
     The adapter itself exposes no additional behaviour; the in-process
     implementations used under this profile live in the corresponding
     ``*InMemory*`` / ``LocalFileSystem*`` classes throughout the
-    platform (e.g. ``aqip_storage.store.InMemoryObjectStore``).
+    platform (e.g. ``intelliqx_storage.store.InMemoryObjectStore``).
     """

@@ -1,4 +1,4 @@
-# AQIP Makefile
+# IntelliqX Makefile
 
 .PHONY: help install sync lint typecheck test test-unit test-contract test-e2e \
         clean run-agent eval tier=% docs build docker-up docker-down
@@ -8,7 +8,7 @@ PY       ?= $(UV) run python
 AGENT    ?=
 
 help:
-	@echo "AQIP targets:"
+	@echo "IntelliqX targets:"
 	@echo "  make install      Install workspace dependencies"
 	@echo "  make sync         uv sync --all-packages"
 	@echo "  make lint         ruff check ."

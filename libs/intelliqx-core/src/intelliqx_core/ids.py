@@ -1,6 +1,6 @@
 """ID generation and parsing.
 
-Identifiers throughout AQIP are 26-character Crockford-base32 ULIDs
+Identifiers throughout IntelliqX are 26-character Crockford-base32 ULIDs
 (``01HXXXXXXXXXXXXXXXXXXXXXXXX``). They are:
 
 * Lexicographically sortable by creation time (high bits are the UNIX

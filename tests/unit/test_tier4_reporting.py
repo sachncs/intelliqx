@@ -24,7 +24,7 @@ async def test_reporting_produces_markdown():
             tenant_id="t1",
         )
     )
-    assert "# AQIP Run Report" in out["markdown"]
+    assert "# IntelliqX Run Report" in out["markdown"]
     assert "r1" in out["markdown"]
 
 

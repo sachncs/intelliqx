@@ -1,4 +1,4 @@
-"""Tests for aqip-compute."""
+"""Tests for intelliqx-compute."""
 
 import asyncio
 

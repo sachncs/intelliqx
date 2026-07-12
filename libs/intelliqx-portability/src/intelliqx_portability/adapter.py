@@ -2,8 +2,8 @@
 
 The :class:`CloudAdapter` is intentionally tiny: it carries the resolved
 :class:`CloudConfig` and exposes a short name for log lines. All
-cloud-SDK access lives in the per-feature adapter libs (``aqip-storage``,
-``aqip-events``, …) so the platform can mix and match (e.g. run on AWS
+cloud-SDK access lives in the per-feature adapter libs (``intelliqx-storage``,
+``intelliqx-events``, …) so the platform can mix and match (e.g. run on AWS
 Lambda with GCS for object storage).
 """
 
@@ -51,16 +51,16 @@ def get_adapter() -> CloudAdapter:
 
     Resolution order:
 
-    1. Read the ``AQIP_CLOUD`` env var (defaults to ``"local"``).
-    2. Construct a :class:`CloudConfig` from ``AQIP_REGION``,
-       ``AQIP_PROJECT_ID``, and ``AQIP_ENV``.
+    1. Read the ``INTELLIQX_CLOUD`` env var (defaults to ``"local"``).
+    2. Construct a :class:`CloudConfig` from ``INTELLIQX_REGION``,
+       ``INTELLIQX_PROJECT_ID``, and ``INTELLIQX_ENV``.
     3. Instantiate the matching adapter.
 
     The result is cached with ``lru_cache``; tests must call
     :func:`reset_adapter_cache` to force re-resolution.
 
     Raises:
-        CloudConfigError: If ``AQIP_CLOUD`` is not one of the supported
+        CloudConfigError: If ``INTELLIQX_CLOUD`` is not one of the supported
             providers.
     """
     from intelliqx_portability.adapters.aws import AWSAdapter
@@ -68,17 +68,17 @@ def get_adapter() -> CloudAdapter:
     from intelliqx_portability.adapters.local import LocalAdapter
     from intelliqx_portability.adapters.modal import ModalAdapter
 
-    provider_str = os.environ.get("AQIP_CLOUD", "local").lower()
+    provider_str = os.environ.get("INTELLIQX_CLOUD", "local").lower()
     try:
         provider = CloudProvider(provider_str)
     except ValueError as e:
-        raise CloudConfigError(f"Unknown AQIP_CLOUD: {provider_str!r}") from e
+        raise CloudConfigError(f"Unknown INTELLIQX_CLOUD: {provider_str!r}") from e
 
     config = CloudConfig(
         provider=provider,
-        region=os.environ.get("AQIP_REGION", "us-east-1"),
-        project_id=os.environ.get("AQIP_PROJECT_ID"),
-        environment=os.environ.get("AQIP_ENV", "dev"),
+        region=os.environ.get("INTELLIQX_REGION", "us-east-1"),
+        project_id=os.environ.get("INTELLIQX_PROJECT_ID"),
+        environment=os.environ.get("INTELLIQX_ENV", "dev"),
     )
 
     if provider == CloudProvider.AWS:

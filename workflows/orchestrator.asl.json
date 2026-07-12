@@ -1,10 +1,10 @@
 {
-  "Comment": "AQIP Orchestrator workflow (Phase 1). Mirrors the in-process orchestrator in agents/tier1/orchestrator.py.",
+  "Comment": "IntelliqX Orchestrator workflow (Phase 1). Mirrors the in-process orchestrator in agents/tier1/orchestrator.py.",
   "StartAt": "Planner",
   "States": {
     "Planner": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:aqip-planner",
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:intelliqx-planner",
       "ResultPath": "$.plan",
       "Retry": [
         {
@@ -29,7 +29,7 @@
           },
           "InvokeAgent": {
             "Type": "Task",
-            "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:aqip-agent-dispatcher",
+            "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:intelliqx-agent-dispatcher",
             "End": true
           }
         }
@@ -39,7 +39,7 @@
     },
     "PersistResults": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:aqip-persist-results",
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:intelliqx-persist-results",
       "ResultPath": "$.persist",
       "Retry": [
         {
@@ -53,7 +53,7 @@
     },
     "EmitRunCompleted": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:aqip-emit-run-completed",
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:intelliqx-emit-run-completed",
       "End": true
     }
   }

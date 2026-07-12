@@ -1,4 +1,4 @@
-"""Tests for aqip-observability."""
+"""Tests for intelliqx-observability."""
 
 import pytest
 from intelliqx_observability.logging import get_logger

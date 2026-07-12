@@ -1,7 +1,7 @@
 """Tier 1 event types.
 
 A small set of strongly-typed event payloads exchanged by the
-Tier 1 agents. Every event carries :class:`aqip_core.events.EventMetadata`
+Tier 1 agents. Every event carries :class:`intelliqx_core.events.EventMetadata`
 so the platform can correlate them across processes and clouds.
 
 Topic names are ``"<noun>.<verb>(.<modifier>)"`` — verb last so
@@ -25,7 +25,7 @@ from pydantic import Field
 
 
 class PlanGenerated(BaseEvent):
-    """Emitted by the Planner when an :class:`aqip_core.models.PlanNode` list is ready."""
+    """Emitted by the Planner when an :class:`intelliqx_core.models.PlanNode` list is ready."""
 
     detail_type: str = "PlanGenerated"
     plan_id: str
@@ -77,7 +77,7 @@ class RunStarted(BaseEvent):
 class RunCompleted(BaseEvent):
     """Emitted by the Orchestrator when a workflow run terminates.
 
-    ``status`` follows :class:`aqip_core.models.RunStatus`.
+    ``status`` follows :class:`intelliqx_core.models.RunStatus`.
     ``summary`` carries per-node counts so subscribers can render a
     release-quality event without a second round-trip.
     """

@@ -9,10 +9,10 @@ without requiring the caller to switch agent names.
 Storage layout:
 
 * **Working memory** — fast, TTL-bounded. Backed by
-  :class:`aqip_state.store.StateStore` (Redis in production). Key
+  :class:`intelliqx_state.store.StateStore` (Redis in production). Key
   shape: ``{tenant_id}:working:{key}``.
 * **Episodic / semantic / code memory** — durable. Backed by
-  :class:`aqip_storage.store.ObjectStore` (S3 / GCS / Modal Volume in
+  :class:`intelliqx_storage.store.ObjectStore` (S3 / GCS / Modal Volume in
   production). Key shape: ``{tenant_id}/{memory_type}/{key}``.
 
 The two key shapes look different on purpose: state-store keys are

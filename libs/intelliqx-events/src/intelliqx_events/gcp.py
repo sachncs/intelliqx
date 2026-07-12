@@ -1,4 +1,4 @@
-"""GCP Pub/Sub adapter for AQIP event bus.
+"""GCP Pub/Sub adapter for IntelliqX event bus.
 
 Uses Pub/Sub topics for fan-out and subscriptions for delivery. The
 ``google-cloud-pubsub`` SDK is lazy-imported; if it is missing or

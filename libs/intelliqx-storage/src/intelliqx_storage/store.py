@@ -209,7 +209,7 @@ def get_object_store() -> ObjectStore:
 
     Resolution order:
 
-    1. ``AQIP_OBJECT_STORE`` env var — ``memory`` (default) or
+    1. ``INTELLIQX_OBJECT_STORE`` env var — ``memory`` (default) or
        ``fs:/path/to/dir``.
     2. Otherwise, the in-memory store.
 
@@ -220,7 +220,7 @@ def get_object_store() -> ObjectStore:
     global _STORE_SINGLETON
     if _STORE_SINGLETON is not None:
         return _STORE_SINGLETON
-    override = os.environ.get("AQIP_OBJECT_STORE", "memory")
+    override = os.environ.get("INTELLIQX_OBJECT_STORE", "memory")
     if override.startswith("fs:"):
         _STORE_SINGLETON = LocalFileSystemObjectStore(override[3:])
     else:

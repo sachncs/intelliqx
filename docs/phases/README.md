@@ -1,8 +1,8 @@
-# AQIP — Master Implementation Plan
+# IntelliqX — Master Implementation Plan
 
 ## Overview
 
-This directory contains the per-phase implementation plans for the Autonomous QA Intelligence Platform (AQIP).
+This directory contains the per-phase implementation plans for the Autonomous QA Intelligence Platform (IntelliqX).
 
 ## Phase Index
 
@@ -31,10 +31,10 @@ Each phase:
 ## Top-Level Architecture
 
 - **Multi-cloud**: AWS (CDK), GCP (cdktf), Modal (native SDK).
-- **Portability layer**: agents never import cloud SDKs directly; all access via `aqip-*` libs.
+- **Portability layer**: agents never import cloud SDKs directly; all access via `intelliqx-*` libs.
 - **Storage**: object store (S3/GCS/modal.Volume) + zvec (vector) + Parquet+DuckDB (KG).
 - **Events**: Pub/Sub semantics (EventBridge+SQS / Pub/Sub / modal.Queue).
-- **LLM**: Bedrock / Vertex AI / vLLM or LiteLLM — selected per cloud via `aqip-llm`.
+- **LLM**: Bedrock / Vertex AI / vLLM or LiteLLM — selected per cloud via `intelliqx-llm`.
 
 ## Top-Level Decisions Locked
 

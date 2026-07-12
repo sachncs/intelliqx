@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-events"
 version = "0.1.0"
-description = "AQIP event bus abstraction"
+description = "IntelliqX event bus abstraction"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",

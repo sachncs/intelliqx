@@ -1,4 +1,4 @@
-"""AWS ElastiCache Redis adapter for AQIP state store.
+"""AWS ElastiCache Redis adapter for IntelliqX state store.
 
 Production: talks to ElastiCache via the ``redis.asyncio`` client.
 The Redis SDK is lazy-imported; if it is missing or the endpoint is

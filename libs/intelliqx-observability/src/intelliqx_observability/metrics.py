@@ -1,4 +1,4 @@
-"""In-process metrics for AQIP.
+"""In-process metrics for IntelliqX.
 
 The platform exposes three primitive metric types — counter, gauge, and
 histogram — plus a :class:`MetricsRegistry` that lazily creates and
@@ -127,7 +127,7 @@ class Histogram:
     Observations are kept in a per-label-set list and percentiles are
     computed on demand at snapshot time. Memory grows linearly with
     observation count; the cost is acceptable for the small
-    per-process histograms AQIP tracks (agent latencies, token
+    per-process histograms IntelliqX tracks (agent latencies, token
     counts). For high-cardinality histograms, replace with
     OpenTelemetry's t-digest in production.
 

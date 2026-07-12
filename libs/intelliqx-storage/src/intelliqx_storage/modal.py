@@ -1,4 +1,4 @@
-"""Modal ``Volume`` adapter for AQIP object store.
+"""Modal ``Volume`` adapter for IntelliqX object store.
 
 A Modal Volume is a filesystem-backed, read-write blob mount that
 persists across function invocations within a Modal app. The

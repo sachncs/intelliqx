@@ -1,9 +1,9 @@
 """Shared pytest fixtures.
 
 The platform uses a constellation of module-level singletons
-(:class:`aqip_state.store.InMemoryStateStore`,
-:class:`aqip_storage.store.InMemoryObjectStore`,
-:class:`aqip_events.bus.InMemoryEventBus`, the LLM client, the
+(:class:`intelliqx_state.store.InMemoryStateStore`,
+:class:`intelliqx_storage.store.InMemoryObjectStore`,
+:class:`intelliqx_events.bus.InMemoryEventBus`, the LLM client, the
 metrics registry, the agent registry, the compute runtime, the
 tool manager, the vector index, the knowledge graph, and the
 event registry). All of them have reset helpers; the
@@ -23,10 +23,10 @@ import pytest
 
 # Set sane defaults before any application code is imported so the
 # in-process adapters behave the same way in every test session.
-os.environ.setdefault("AQIP_CLOUD", "local")
-os.environ.setdefault("AQIP_LLM_BACKEND", "fake")
-os.environ.setdefault("AQIP_OBJECT_STORE", "memory")
-os.environ.setdefault("AQIP_OTEL", "0")
+os.environ.setdefault("INTELLIQX_CLOUD", "local")
+os.environ.setdefault("INTELLIQX_LLM_BACKEND", "fake")
+os.environ.setdefault("INTELLIQX_OBJECT_STORE", "memory")
+os.environ.setdefault("INTELLIQX_OTEL", "0")
 
 
 @pytest.fixture(autouse=True)

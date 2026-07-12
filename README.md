@@ -1,4 +1,4 @@
-# AQIP — Autonomous QA Intelligence Platform
+# IntelliqX — Autonomous QA Intelligence Platform
 
 Multi-cloud, agent-native QA platform. See `docs/phases/README.md` for the phased implementation plan.
 
@@ -22,7 +22,7 @@ docker compose up -d   # requires Docker
 ## Layout
 
 ```
-libs/          Shared libraries (aqip-core, aqip-events, aqip-vector, ...)
+libs/          Shared libraries (intelliqx-core, intelliqx-events, intelliqx-vector, ...)
 agents/        Agent implementations by tier
 services/      HTTP/WebSocket entrypoints
 workflows/     Step Functions / LangGraph definitions

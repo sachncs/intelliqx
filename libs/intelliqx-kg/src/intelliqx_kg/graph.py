@@ -2,7 +2,7 @@
 
 The :class:`KnowledgeGraph` keeps an in-memory mirror of every node
 and edge for fast query access. Writes are batched into Parquet
-partitions and flushed to the AQIP object store; reads register the
+partitions and flushed to the IntelliqX object store; reads register the
 in-memory tables as DuckDB views and execute SQL against them.
 
 Storage layout in the object store::

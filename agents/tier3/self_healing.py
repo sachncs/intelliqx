@@ -10,7 +10,7 @@ alternative selectors. The agent is **two-stage**:
    specific the attribute is.
 2. **LLM ranking.** Each candidate is sent to the LLM for a
    confidence refinement. In tests the LLM is the deterministic
-   :class:`aqip_llm.client.FakeLLMClient`, so the ranking is a
+   :class:`intelliqx_llm.client.FakeLLMClient`, so the ranking is a
    no-op; in production the LLM uses the DOM context to pick the
    best match.
 

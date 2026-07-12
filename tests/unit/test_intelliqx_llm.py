@@ -1,4 +1,4 @@
-"""Tests for aqip-llm."""
+"""Tests for intelliqx-llm."""
 
 import pytest
 from intelliqx_llm.client import (

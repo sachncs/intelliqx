@@ -1,7 +1,7 @@
-"""Knowledge Graph: file-based (Parquet + DuckDB) for AQIP.
+"""Knowledge Graph: file-based (Parquet + DuckDB) for IntelliqX.
 
 The platform's knowledge graph is **file-based by design**. Nodes and
-edges are serialised as Parquet partitions in the AQIP object store;
+edges are serialised as Parquet partitions in the IntelliqX object store;
 DuckDB reads them in-process for sub-second analytics. We avoid a
 managed graph database for three reasons:
 
@@ -13,7 +13,7 @@ managed graph database for three reasons:
 3. **Partition pruning.** Filtering on ``tenant_id`` happens at the
    DuckDB scan, so tenants never see each other's data.
 
-The trade-off is no OLTP graph traversal; for AQIP's usage (RAG
+The trade-off is no OLTP graph traversal; for IntelliqX's usage (RAG
 retrieval, lineage, requirements traceability) batch analytics
 dominate anyway.
 """

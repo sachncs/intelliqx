@@ -61,7 +61,7 @@ class AgentContext(BaseModel):
     """The runtime context passed to every agent invocation.
 
     Attributes:
-        tenant: The active :class:`~aqip_core.models.TenantContext`.
+        tenant: The active :class:`~intelliqx_core.models.TenantContext`.
         run_id: The orchestrator's run id (or ``"unknown"`` for
             ad-hoc invocations).
         trace_id: Optional OTel trace id for cross-agent

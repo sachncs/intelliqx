@@ -41,7 +41,7 @@ class EventBus:
         Args:
             topic: The topic name (e.g. ``"run.started"``).
             event: The event payload. Must expose a ``metadata`` field
-                with at least ``event_id`` (see :mod:`aqip_core.events`).
+                with at least ``event_id`` (see :mod:`intelliqx_core.events`).
 
         Returns:
             The event id, for correlation by the caller.

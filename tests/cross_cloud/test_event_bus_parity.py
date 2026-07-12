@@ -1,4 +1,4 @@
-"""Cross-cloud parity tests for aqip-events.
+"""Cross-cloud parity tests for intelliqx-events.
 
 Same agent invoked under 4 cloud profiles must produce identical structured output.
 """
@@ -14,7 +14,7 @@ from intelliqx_events.modal import ModalQueueBus
 def _make_bus(profile: str):
     """Build the event bus for the given cloud profile."""
     if profile == "aws":
-        return AWSEventBridgeBus(bus_name="aqip.test")
+        return AWSEventBridgeBus(bus_name="intelliqx.test")
     if profile == "gcp":
         return GCPPubSubBus(project_id="intelliqx-test")
     if profile == "modal":

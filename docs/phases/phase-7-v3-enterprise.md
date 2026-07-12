@@ -1,6 +1,6 @@
 # Phase 7 — v3 Enterprise
 
-**Goal**: Convert AQIP into a multi-tenant enterprise SaaS: federated knowledge, portfolio analytics, marketplace, cross-region, predictive quality, BYO-LLM. Certify v3 GA.
+**Goal**: Convert IntelliqX into a multi-tenant enterprise SaaS: federated knowledge, portfolio analytics, marketplace, cross-region, predictive quality, BYO-LLM. Certify v3 GA.
 
 **Status**: PENDING
 
@@ -29,12 +29,12 @@
 
 ## 7.3 Deliverables
 
-- [ ] Tenant isolation middleware (`aqip-tenant/`).
+- [ ] Tenant isolation middleware (`intelliqx-tenant/`).
 - [ ] Federated KG query API.
 - [ ] Cross-region replicator (configurable per topic).
 - [ ] Portfolio analytics dashboards.
 - [ ] Predictive quality model + serving agent.
-- [ ] Agent SDK (`aqip-sdk/`) + marketplace UI stub.
+- [ ] Agent SDK (`intelliqx-sdk/`) + marketplace UI stub.
 - [ ] BYO-LLM adapter router.
 - [ ] Compliance pack framework + 2 reference packs (SOC2, GDPR).
 - [ ] v3 GA release notes.

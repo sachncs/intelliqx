@@ -1,4 +1,4 @@
-"""Cross-cloud parity tests for aqip-storage."""
+"""Cross-cloud parity tests for intelliqx-storage."""
 
 import pytest
 from intelliqx_storage.aws import S3ObjectStore

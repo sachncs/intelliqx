@@ -2,7 +2,7 @@
 
 Aggregates in-process metrics and checks SLA compliance. The
 agent does not collect new data; it reads from
-:class:`aqip_observability.metrics.MetricsRegistry` and applies the
+:class:`intelliqx_observability.metrics.MetricsRegistry` and applies the
 default SLA targets.
 
 Default SLA targets:

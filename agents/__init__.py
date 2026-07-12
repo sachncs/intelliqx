@@ -1,8 +1,8 @@
-"""Agent registry bootstrap for AQIP.
+"""Agent registry bootstrap for IntelliqX.
 
 Imports and registers every Tier 1-4 agent with the
-:class:`aqip_agents.registry.AgentRegistry`, and wires each agent's
-``run`` method to the :class:`aqip_compute.runtime.InProcessComputeRuntime`
+:class:`intelliqx_agents.registry.AgentRegistry`, and wires each agent's
+``run`` method to the :class:`intelliqx_compute.runtime.InProcessComputeRuntime`
 so the Orchestrator can dispatch to them by name.
 
 Two entry points:
@@ -105,7 +105,7 @@ def register_compute_handlers() -> None:
     """Register every agent's ``run`` method with the in-process compute runtime.
 
     The handler closure captures the agent instance so each
-    invocation produces a fresh :class:`aqip_compute.runtime.InvocationResponse`.
+    invocation produces a fresh :class:`intelliqx_compute.runtime.InvocationResponse`.
     """
     from intelliqx_compute.runtime import get_compute_runtime
 

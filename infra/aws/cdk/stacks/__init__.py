@@ -1,1 +1,1 @@
-"""AQIP CDK stacks."""
+"""IntelliqX CDK stacks."""

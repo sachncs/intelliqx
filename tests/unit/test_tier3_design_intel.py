@@ -12,7 +12,7 @@ SAMPLE_HTML = """
 <html>
 <body>
   <header>
-    <h1 id="title">AQIP</h1>
+    <h1 id="title">IntelliqX</h1>
     <nav><a href="/login" id="nav-login">Login</a></nav>
   </header>
   <main>

@@ -1,8 +1,8 @@
-"""AWS Lambda / Fargate compute adapter for AQIP.
+"""AWS Lambda / Fargate compute adapter for IntelliqX.
 
 Invokes agents via AWS Lambda. The convention is one Lambda function
-per agent, named ``aqip-{agent_name}`` (e.g. ``aqip-planner``,
-``aqip-execution``). For long-running agents whose single execution
+per agent, named ``intelliqx-{agent_name}`` (e.g. ``intelliqx-planner``,
+``intelliqx-execution``). For long-running agents whose single execution
 can exceed the 15-minute Lambda limit, use AWS Fargate instead (a
 separate adapter in production deployments).
 """

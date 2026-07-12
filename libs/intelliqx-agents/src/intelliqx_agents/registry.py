@@ -35,7 +35,7 @@ class AgentRegistry:
             name: The agent's registry key.
             factory: A zero-arg callable that returns a new
                 :class:`AgentBase` instance.
-            meta: Optional :class:`aqip_agents.base.AgentMeta` (or
+            meta: Optional :class:`intelliqx_agents.base.AgentMeta` (or
                 anything else) attached to the registration for
                 later inspection.
         """

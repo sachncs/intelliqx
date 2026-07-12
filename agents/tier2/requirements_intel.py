@@ -13,7 +13,7 @@ markers; otherwise ``"medium"`` is assumed. Acceptance criteria are
 extracted from ``"AC: ..."`` or ``"Acceptance: ..."`` suffixes.
 
 The agent persists nodes and edges to the
-:class:`~aqip_kg.graph.KnowledgeGraph` so subsequent agents (RAG,
+:class:`~intelliqx_kg.graph.KnowledgeGraph` so subsequent agents (RAG,
 coverage analysis) can query the requirements without re-parsing
 the source text.
 """

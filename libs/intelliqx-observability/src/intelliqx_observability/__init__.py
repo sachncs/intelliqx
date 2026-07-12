@@ -1,4 +1,4 @@
-"""Observability for AQIP.
+"""Observability for IntelliqX.
 
 The observability stack has three pillars:
 

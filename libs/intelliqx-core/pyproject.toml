@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-core"
 version = "0.1.0"
-description = "AQIP shared core: Pydantic models, enums, errors, event base"
+description = "IntelliqX shared core: Pydantic models, enums, errors, event base"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",

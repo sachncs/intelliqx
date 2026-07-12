@@ -1,4 +1,4 @@
-"""Tests for aqip-portability."""
+"""Tests for intelliqx-portability."""
 
 import pytest
 from intelliqx_core.errors import CloudConfigError
@@ -32,7 +32,7 @@ def test_config_provider_checks():
 
 @pytest.mark.unit
 def test_get_adapter_local(monkeypatch):
-    monkeypatch.setenv("AQIP_CLOUD", "local")
+    monkeypatch.setenv("INTELLIQX_CLOUD", "local")
     reset_adapter_cache()
     a = get_adapter()
     assert isinstance(a, LocalAdapter)
@@ -41,7 +41,7 @@ def test_get_adapter_local(monkeypatch):
 
 @pytest.mark.unit
 def test_get_adapter_aws(monkeypatch):
-    monkeypatch.setenv("AQIP_CLOUD", "aws")
+    monkeypatch.setenv("INTELLIQX_CLOUD", "aws")
     reset_adapter_cache()
     a = get_adapter()
     assert isinstance(a, AWSAdapter)
@@ -49,7 +49,7 @@ def test_get_adapter_aws(monkeypatch):
 
 @pytest.mark.unit
 def test_get_adapter_gcp(monkeypatch):
-    monkeypatch.setenv("AQIP_CLOUD", "gcp")
+    monkeypatch.setenv("INTELLIQX_CLOUD", "gcp")
     reset_adapter_cache()
     a = get_adapter()
     assert isinstance(a, GCPAdapter)
@@ -57,7 +57,7 @@ def test_get_adapter_gcp(monkeypatch):
 
 @pytest.mark.unit
 def test_get_adapter_modal(monkeypatch):
-    monkeypatch.setenv("AQIP_CLOUD", "modal")
+    monkeypatch.setenv("INTELLIQX_CLOUD", "modal")
     reset_adapter_cache()
     a = get_adapter()
     assert isinstance(a, ModalAdapter)
@@ -65,7 +65,7 @@ def test_get_adapter_modal(monkeypatch):
 
 @pytest.mark.unit
 def test_unknown_cloud(monkeypatch):
-    monkeypatch.setenv("AQIP_CLOUD", "wat")
+    monkeypatch.setenv("INTELLIQX_CLOUD", "wat")
     reset_adapter_cache()
     with pytest.raises(CloudConfigError):
         get_adapter()
@@ -73,6 +73,6 @@ def test_unknown_cloud(monkeypatch):
 
 @pytest.mark.unit
 def test_adapter_singleton(monkeypatch):
-    monkeypatch.setenv("AQIP_CLOUD", "local")
+    monkeypatch.setenv("INTELLIQX_CLOUD", "local")
     reset_adapter_cache()
     assert get_adapter() is get_adapter()

@@ -1,12 +1,12 @@
-"""Tests for aqip-core."""
+"""Tests for intelliqx-core."""
 
 from datetime import datetime
 
 import pytest
 from intelliqx_core.errors import (
-    AQIPError,
     CloudConfigError,
     ContractError,
+    IntelliqxError,
     NotFoundError,
     ValidationError,
 )
@@ -112,7 +112,7 @@ def test_health_status_enum():
 
 @pytest.mark.unit
 def test_error_hierarchy():
-    assert issubclass(CloudConfigError, AQIPError)
-    assert issubclass(ContractError, AQIPError)
-    assert issubclass(NotFoundError, AQIPError)
-    assert issubclass(ValidationError, AQIPError)
+    assert issubclass(CloudConfigError, IntelliqxError)
+    assert issubclass(ContractError, IntelliqxError)
+    assert issubclass(NotFoundError, IntelliqxError)
+    assert issubclass(ValidationError, IntelliqxError)

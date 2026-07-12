@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-llm"
 version = "0.1.0"
-description = "AQIP LLM client abstraction"
+description = "IntelliqX LLM client abstraction"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",

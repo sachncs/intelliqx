@@ -78,7 +78,7 @@ def _render_markdown(
     """
     summary = input.summary
     lines: list[str] = []
-    lines.append(f"# AQIP Run Report — {input.run_id}")
+    lines.append(f"# IntelliqX Run Report — {input.run_id}")
     lines.append("")
     lines.append(f"- Tenant: `{input.tenant_id}`")
     lines.append(f"- Generated: {datetime.utcnow().isoformat()}Z")

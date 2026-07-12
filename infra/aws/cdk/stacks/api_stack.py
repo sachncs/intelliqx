@@ -1,4 +1,4 @@
-"""AWS CDK stack: API Gateway + Lambda for AQIP API."""
+"""AWS CDK stack: API Gateway + Lambda for IntelliqX API."""
 
 from __future__ import annotations
 

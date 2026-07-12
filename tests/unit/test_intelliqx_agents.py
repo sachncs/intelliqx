@@ -1,4 +1,4 @@
-"""Tests for aqip-agents."""
+"""Tests for intelliqx-agents."""
 
 import pytest
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta

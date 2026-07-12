@@ -1,1 +1,1 @@
-"""AQIP AWS CDK package."""
+"""IntelliqX AWS CDK package."""

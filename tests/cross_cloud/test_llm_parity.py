@@ -1,4 +1,4 @@
-"""Cross-cloud parity tests for aqip-llm."""
+"""Cross-cloud parity tests for intelliqx-llm."""
 
 import pytest
 from intelliqx_llm.aws import BedrockLLMClient

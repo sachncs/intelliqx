@@ -1,4 +1,4 @@
-"""Tests for aqip-events."""
+"""Tests for intelliqx-events."""
 
 import pytest
 from intelliqx_core.events import BaseEvent, EventMetadata

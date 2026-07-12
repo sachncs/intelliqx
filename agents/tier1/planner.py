@@ -1,7 +1,7 @@
 """Planner Agent (Tier 1).
 
-Transforms a :class:`~aqip_core.models.Goal` into a list of
-:class:`~aqip_core.models.PlanNode` records that form a DAG. The
+Transforms a :class:`~intelliqx_core.models.Goal` into a list of
+:class:`~intelliqx_core.models.PlanNode` records that form a DAG. The
 DAG is validated (no cycles, all dependencies satisfied) and then
 trimmed to fit a per-goal cost ceiling. The output includes a
 ``plan_id`` (a fresh ULID) the Orchestrator can use to look the plan
@@ -28,7 +28,7 @@ class PlannerInput(BaseModel):
 
     Attributes:
         goal: The goal dict (typically a serialised
-            :class:`~aqip_core.models.Goal`).
+            :class:`~intelliqx_core.models.Goal`).
         tenant_id: The owning tenant.
         available_agents: Optional list of agent names available in
             the runtime; the planner currently ignores this but

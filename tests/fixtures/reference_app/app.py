@@ -14,7 +14,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI(title="AQIP Reference App")
+app = FastAPI(title="IntelliqX Reference App")
 
 
 class LoginRequest(BaseModel):
@@ -35,7 +35,7 @@ def health() -> dict[str, str]:
 @app.get("/")
 def index() -> dict[str, Any]:
     return {
-        "title": "AQIP Reference",
+        "title": "IntelliqX Reference",
         "endpoints": [
             "/health",
             "/login",
@@ -99,10 +99,10 @@ def echo(payload: dict) -> dict:
 INDEX_HTML = """
 <!DOCTYPE html>
 <html>
-<head><title>AQIP Reference</title></head>
+<head><title>IntelliqX Reference</title></head>
 <body>
   <header>
-    <h1 id="title">AQIP Reference App</h1>
+    <h1 id="title">IntelliqX Reference App</h1>
     <nav><a href="/login" id="nav-login">Login</a></nav>
   </header>
   <main>

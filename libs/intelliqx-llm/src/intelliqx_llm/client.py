@@ -53,7 +53,7 @@ class CompletionRequest(BaseModel):
 
     Matches the OpenAI chat-completions shape closely so the
     production adapters can serialise requests with minimal
-    translation. ``metadata`` is AQIP-specific — it lets callers
+    translation. ``metadata`` is IntelliqX-specific — it lets callers
     attach tenant ids, run ids, etc. without changing the model.
     """
 
@@ -221,7 +221,7 @@ def get_llm_client() -> LLMClient:
     """Return the configured LLM client.
 
     Resolution:
-        * ``AQIP_LLM_BACKEND=fake`` (default) → :class:`FakeLLMClient`.
+        * ``INTELLIQX_LLM_BACKEND=fake`` (default) → :class:`FakeLLMClient`.
         * Other values are accepted by name but require the
           corresponding cloud SDK + credentials at runtime. In dev
           we raise a clear :class:`RuntimeError` so the failure is
@@ -229,13 +229,13 @@ def get_llm_client() -> LLMClient:
     """
     global _SINGLETON
     if _SINGLETON is None:
-        backend = os.environ.get("AQIP_LLM_BACKEND", "fake")
+        backend = os.environ.get("INTELLIQX_LLM_BACKEND", "fake")
         if backend == "fake":
             _SINGLETON = FakeLLMClient()
         else:
             raise RuntimeError(
                 f"LLM backend {backend!r} not available in this runtime. "
-                "Use AQIP_LLM_BACKEND=fake for tests/dev."
+                "Use INTELLIQX_LLM_BACKEND=fake for tests/dev."
             )
     return _SINGLETON
 

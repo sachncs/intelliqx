@@ -1,4 +1,4 @@
-"""Tracing for AQIP.
+"""Tracing for IntelliqX.
 
 The platform uses OpenTelemetry for distributed tracing and provides a
 thin Pythonic wrapper (:class:`Tracer` / :class:`_SpanProxy`) so agent
@@ -7,7 +7,7 @@ exposes only two operations on a span — ``set_attribute`` and
 ``add_event`` — which covers the vast majority of use cases.
 
 Configuration is opt-in: by default the tracer is a no-op. Set
-``AQIP_OTEL=1`` to enable the console exporter, or call
+``INTELLIQX_OTEL=1`` to enable the console exporter, or call
 :func:`configure_tracing` explicitly at startup.
 """
 
@@ -28,7 +28,7 @@ from opentelemetry.sdk.trace.export import (
 )
 
 
-def configure_tracing(service_name: str = "aqip", exporter: str = "console") -> None:
+def configure_tracing(service_name: str = "intelliqx", exporter: str = "console") -> None:
     """Configure OpenTelemetry tracing.
 
     Args:
@@ -69,7 +69,7 @@ class Tracer:
     """
 
     def __init__(self) -> None:
-        self._tracer = trace.get_tracer("aqip")
+        self._tracer = trace.get_tracer("intelliqx")
 
     @contextmanager
     def span(self, name: str, **attrs: Any):
@@ -105,7 +105,7 @@ class _SpanProxy:
 
     The proxy is intentionally tiny: a span has many more methods in
     OTel (``set_status``, ``add_link``, ``update_name`` …) but
-    AQIP's needs are limited to attributes and events.
+    IntelliqX's needs are limited to attributes and events.
     """
 
     def __init__(self, span: Any) -> None:
@@ -150,13 +150,13 @@ _SINGLETON: Tracer | None = None
 def get_tracer() -> Tracer:
     """Return the process-wide :class:`Tracer`.
 
-    If the ``AQIP_OTEL`` env var is set, the underlying OTel SDK is
+    If the ``INTELLIQX_OTEL`` env var is set, the underlying OTel SDK is
     configured on first call. Otherwise the tracer is a thin no-op
     wrapper that still records ``duration_ms`` on every span.
     """
     global _SINGLETON
     if _SINGLETON is None:
-        if os.environ.get("AQIP_OTEL") == "1":
+        if os.environ.get("INTELLIQX_OTEL") == "1":
             configure_tracing()
         _SINGLETON = Tracer()
     return _SINGLETON

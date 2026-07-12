@@ -1,4 +1,4 @@
-"""Tests for aqip-vector zvec-backed index."""
+"""Tests for intelliqx-vector zvec-backed index."""
 
 from pathlib import Path
 

@@ -1,4 +1,4 @@
-# AQIP Cost Model
+# IntelliqX Cost Model
 
 Per-invocation USD cost estimates used by the Planner to enforce
 the ``cost_ceiling_usd`` goal constraint. Values live in

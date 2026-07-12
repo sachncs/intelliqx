@@ -1,1 +1,1 @@
-"""Tests for aqip-core."""
+"""Tests for intelliqx-core."""
