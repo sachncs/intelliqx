@@ -1,5 +1,5 @@
 [project]
-name = "aqip-agents"
+name = "intelliqx-agents"
 version = "0.1.0"
 description = "AQIP agent base class and decorators"
 requires-python = ">=3.12,<3.13"

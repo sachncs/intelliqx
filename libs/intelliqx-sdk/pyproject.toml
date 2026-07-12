@@ -1,5 +1,5 @@
 [project]
-name = "aqip-sdk"
+name = "intelliqx-sdk"
 version = "0.1.0"
 description = "AQIP third-party agent SDK"
 requires-python = ">=3.12,<3.13"

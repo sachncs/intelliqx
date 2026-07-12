@@ -1,5 +1,5 @@
 [project]
-name = "aqip-storage"
+name = "intelliqx-storage"
 version = "0.1.0"
 description = "AQIP object storage abstraction"
 requires-python = ">=3.12,<3.13"

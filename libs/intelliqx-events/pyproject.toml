@@ -1,5 +1,5 @@
 [project]
-name = "aqip-events"
+name = "intelliqx-events"
 version = "0.1.0"
 description = "AQIP event bus abstraction"
 requires-python = ">=3.12,<3.13"

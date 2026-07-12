@@ -1,60 +1,60 @@
 [project]
-name = "aqip"
+name = "intelliqx"
 version = "0.1.0"
 description = "Autonomous QA Intelligence Platform"
 requires-python = ">=3.12,<3.13"
 readme = "README.md"
 dependencies = [
-    "aqip-core",
-    "aqip-portability",
-    "aqip-events",
-    "aqip-storage",
-    "aqip-vector",
-    "aqip-kg",
-    "aqip-state",
-    "aqip-llm",
-    "aqip-compute",
-    "aqip-observability",
-    "aqip-tools",
-    "aqip-agents",
-    "aqip-tenant",
-    "aqip-sdk",
-    "aqip-agents-impl",
+    intelliqx-core",
+    intelliqx-portability",
+    intelliqx-events",
+    intelliqx-storage",
+    intelliqx-vector",
+    intelliqx-kg",
+    intelliqx-state",
+    intelliqx-llm",
+    intelliqx-compute",
+    intelliqx-observability",
+    intelliqx-tools",
+    intelliqx-agents",
+    intelliqx-tenant",
+    intelliqx-sdk",
+    intelliqx-agents-impl",
 ]
 
 [tool.uv.sources]
-aqip-core = { workspace = true }
-aqip-portability = { workspace = true }
-aqip-events = { workspace = true }
-aqip-storage = { workspace = true }
-aqip-vector = { workspace = true }
-aqip-kg = { workspace = true }
-aqip-state = { workspace = true }
-aqip-llm = { workspace = true }
-aqip-compute = { workspace = true }
-aqip-observability = { workspace = true }
-aqip-tools = { workspace = true }
-aqip-agents = { workspace = true }
-aqip-tenant = { workspace = true }
-aqip-sdk = { workspace = true }
-aqip-agents-impl = { workspace = true }
+intelliqx-core = { workspace = true }
+intelliqx-portability = { workspace = true }
+intelliqx-events = { workspace = true }
+intelliqx-storage = { workspace = true }
+intelliqx-vector = { workspace = true }
+intelliqx-kg = { workspace = true }
+intelliqx-state = { workspace = true }
+intelliqx-llm = { workspace = true }
+intelliqx-compute = { workspace = true }
+intelliqx-observability = { workspace = true }
+intelliqx-tools = { workspace = true }
+intelliqx-agents = { workspace = true }
+intelliqx-tenant = { workspace = true }
+intelliqx-sdk = { workspace = true }
+intelliqx-agents-impl = { workspace = true }
 
 [tool.uv.workspace]
 members = [
-    "libs/aqip-core",
-    "libs/aqip-portability",
-    "libs/aqip-events",
-    "libs/aqip-storage",
-    "libs/aqip-vector",
-    "libs/aqip-kg",
-    "libs/aqip-state",
-    "libs/aqip-llm",
-    "libs/aqip-compute",
-    "libs/aqip-observability",
-    "libs/aqip-tools",
-    "libs/aqip-agents",
-    "libs/aqip-tenant",
-    "libs/aqip-sdk",
+    "libs/intelliqx-core",
+    "libs/intelliqx-portability",
+    "libs/intelliqx-events",
+    "libs/intelliqx-storage",
+    "libs/intelliqx-vector",
+    "libs/intelliqx-kg",
+    "libs/intelliqx-state",
+    "libs/intelliqx-llm",
+    "libs/intelliqx-compute",
+    "libs/intelliqx-observability",
+    "libs/intelliqx-tools",
+    "libs/intelliqx-agents",
+    "libs/intelliqx-tenant",
+    "libs/intelliqx-sdk",
     "agents",
     "tests",
 ]

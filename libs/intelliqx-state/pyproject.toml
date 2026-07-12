@@ -1,5 +1,5 @@
 [project]
-name = "aqip-state"
+name = "intelliqx-state"
 version = "0.1.0"
 description = "AQIP state/cache abstraction (Redis-compatible)"
 requires-python = ">=3.12,<3.13"

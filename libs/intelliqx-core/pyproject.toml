@@ -1,5 +1,5 @@
 [project]
-name = "aqip-core"
+name = "intelliqx-core"
 version = "0.1.0"
 description = "AQIP shared core: Pydantic models, enums, errors, event base"
 requires-python = ">=3.12,<3.13"
