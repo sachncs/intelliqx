@@ -18,9 +18,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from aqip_core.events import BaseEvent, EventMetadata
-from aqip_core.ids import new_id
-from aqip_core.models import RunStatus
+from intelliqx_core.events import BaseEvent, EventMetadata
+from intelliqx_core.ids import new_id
+from intelliqx_core.models import RunStatus
 from pydantic import Field
 
 

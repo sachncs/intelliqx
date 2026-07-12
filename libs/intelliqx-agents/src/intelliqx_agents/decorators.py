@@ -5,7 +5,7 @@ from __future__ import annotations
 import functools
 from collections.abc import Callable
 
-from aqip_observability.tracing import get_tracer
+from intelliqx_observability.tracing import get_tracer
 
 
 def traced_agent(name: str | None = None) -> Callable:

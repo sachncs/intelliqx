@@ -5,23 +5,23 @@ description = "AQIP agent base class and decorators"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",
-    "aqip-core",
-    "aqip-portability",
-    "aqip-events",
-    "aqip-llm",
-    "aqip-state",
-    "aqip-observability",
-    "aqip-compute",
+    "intelliqx-core",
+    "intelliqx-portability",
+    "intelliqx-events",
+    "intelliqx-llm",
+    "intelliqx-state",
+    "intelliqx-observability",
+    "intelliqx-compute",
 ]
 
 [tool.uv.sources]
-aqip-core = { workspace = true }
-aqip-portability = { workspace = true }
-aqip-events = { workspace = true }
-aqip-llm = { workspace = true }
-aqip-state = { workspace = true }
-aqip-observability = { workspace = true }
-aqip-compute = { workspace = true }
+intelliqx-core = { workspace = true }
+intelliqx-portability = { workspace = true }
+intelliqx-events = { workspace = true }
+intelliqx-llm = { workspace = true }
+intelliqx-state = { workspace = true }
+intelliqx-observability = { workspace = true }
+intelliqx-compute = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

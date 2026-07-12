@@ -1,9 +1,9 @@
 """Tests for aqip-observability."""
 
 import pytest
-from aqip_observability.logging import get_logger
-from aqip_observability.metrics import Counter, Gauge, Histogram, MetricsRegistry
-from aqip_observability.tracing import Tracer, get_tracer
+from intelliqx_observability.logging import get_logger
+from intelliqx_observability.metrics import Counter, Gauge, Histogram, MetricsRegistry
+from intelliqx_observability.tracing import Tracer, get_tracer
 
 
 @pytest.mark.unit

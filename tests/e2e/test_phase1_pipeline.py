@@ -1,9 +1,9 @@
 """End-to-end Phase 1 test: Goal → Plan → Orchestrator → Agents → Result."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
-from aqip_core.ids import new_id
-from aqip_core.models import RunStatus
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_core.ids import new_id
+from intelliqx_core.models import RunStatus
 
 from agents import register_all, register_compute_handlers
 from agents.tier1.orchestrator import OrchestratorAgent

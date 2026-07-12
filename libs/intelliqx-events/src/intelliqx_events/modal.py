@@ -14,8 +14,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from aqip_events.bus import EventBus
-from aqip_events.handler import EventHandler
+from intelliqx_events.bus import EventBus
+from intelliqx_events.handler import EventHandler
 
 
 class ModalQueueBus(EventBus):
@@ -62,7 +62,7 @@ class ModalQueueBus(EventBus):
         """
         if topic not in self._queues:
             self._queues[topic] = self._modal.Queue.from_name(
-                f"aqip-{topic}", create_if_missing=True
+                f"intelliqx-{topic}", create_if_missing=True
             )
         return self._queues[topic]
 

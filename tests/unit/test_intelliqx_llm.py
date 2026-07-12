@@ -1,7 +1,7 @@
 """Tests for aqip-llm."""
 
 import pytest
-from aqip_llm.client import (
+from intelliqx_llm.client import (
     CompletionRequest,
     FakeLLMClient,
     get_llm_client,

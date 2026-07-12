@@ -1,7 +1,7 @@
 """Tests for Tier 1 Tool Manager Agent."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
+from intelliqx_compute.runtime import InvocationRequest
 
 from agents import register_all, register_compute_handlers
 from agents.tier1.tool_manager import ToolManagerAgent, default_tool_manager
@@ -135,7 +135,7 @@ async def test_tool_manager_rate_limit(monkeypatch):
     register_compute_handlers()
     agent = ToolManagerAgent()
     # Force a low rate limit on the slack tool
-    from aqip_tools.manager import get_tool_manager
+    from intelliqx_tools.manager import get_tool_manager
 
     mgr = get_tool_manager()
     for t in mgr.registry.list():

@@ -31,7 +31,7 @@ Phase status:
 
 from __future__ import annotations
 
-from aqip_agents.registry import get_agent_registry
+from intelliqx_agents.registry import get_agent_registry
 
 
 def register_all() -> None:
@@ -107,7 +107,7 @@ def register_compute_handlers() -> None:
     The handler closure captures the agent instance so each
     invocation produces a fresh :class:`aqip_compute.runtime.InvocationResponse`.
     """
-    from aqip_compute.runtime import get_compute_runtime
+    from intelliqx_compute.runtime import get_compute_runtime
 
     from agents.tier1.knowledge_rag import KnowledgeRAGAgent
     from agents.tier1.memory_manager import MemoryManagerAgent

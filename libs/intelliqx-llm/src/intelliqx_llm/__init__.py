@@ -21,7 +21,7 @@ default; the cloud values are recognised but require credentials at
 runtime).
 """
 
-from aqip_llm.client import (
+from intelliqx_llm.client import (
     CompletionRequest,
     CompletionResponse,
     FakeLLMClient,

@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aqip_core.models import TenantContext
+from intelliqx_core.models import TenantContext
 
 
 class TenantViolation(Exception):

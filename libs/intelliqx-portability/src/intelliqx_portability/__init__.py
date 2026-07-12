@@ -17,7 +17,7 @@ Why the indirection:
   call :func:`reset_adapter_cache` between cases.
 """
 
-from aqip_portability.adapter import CloudAdapter, get_adapter
-from aqip_portability.config import CloudConfig
+from intelliqx_portability.adapter import CloudAdapter, get_adapter
+from intelliqx_portability.config import CloudConfig
 
 __all__ = ["CloudAdapter", "CloudConfig", "get_adapter"]

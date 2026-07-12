@@ -17,9 +17,9 @@ from __future__ import annotations
 
 from typing import Any, ClassVar
 
-from aqip_agents.base import AgentBase, AgentContext, AgentMeta
-from aqip_agents.decorators import traced_agent
-from aqip_core.models import PlanNode
+from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
+from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import PlanNode
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -97,7 +97,7 @@ class PlannerAgent(AgentBase[PlannerInput, PlannerOutput]):
 
     @traced_agent("planner")
     async def run(self, ctx: AgentContext, input: PlannerInput) -> PlannerOutput:
-        from aqip_core.ids import new_id
+        from intelliqx_core.ids import new_id
 
         from agents.tier1.templates import plan_for
 

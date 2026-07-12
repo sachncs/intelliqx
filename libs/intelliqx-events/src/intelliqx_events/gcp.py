@@ -15,8 +15,8 @@ from collections.abc import Callable
 
 from pydantic import BaseModel
 
-from aqip_events.bus import EventBus
-from aqip_events.handler import EventHandler
+from intelliqx_events.bus import EventBus
+from intelliqx_events.handler import EventHandler
 
 
 class GCPPubSubBus(EventBus):
@@ -24,7 +24,7 @@ class GCPPubSubBus(EventBus):
 
     Args:
         project_id: GCP project id. Defaults to ``GOOGLE_CLOUD_PROJECT``
-            env var, then ``"aqip-local"`` for dev.
+            env var, then ``"intelliqx-local"`` for dev.
         fallback: Optional explicit in-memory bus to use when the GCP
             SDK is unavailable.
     """
@@ -34,7 +34,7 @@ class GCPPubSubBus(EventBus):
         project_id: str | None = None,
         fallback: EventBus | None = None,
     ) -> None:
-        self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "aqip-local")
+        self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
         self._publisher = None
         self._subscriptions: dict[str, list[EventHandler]] = {}
         self._fallback = fallback

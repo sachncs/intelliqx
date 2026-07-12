@@ -13,7 +13,7 @@ import json
 import os
 import time
 
-from aqip_compute.runtime import (
+from intelliqx_compute.runtime import (
     ComputeRuntime,
     InvocationRequest,
     InvocationResponse,
@@ -59,7 +59,7 @@ class AWSLambdaComputeRuntime(ComputeRuntime):
             # blocking; we offload to a worker thread.
             response = await asyncio.to_thread(
                 self._client.invoke,
-                FunctionName=f"aqip-{request.agent_name}",
+                FunctionName=f"intelliqx-{request.agent_name}",
                 InvocationType="RequestResponse",
                 Payload=json.dumps(request.model_dump(mode="json")),
             )

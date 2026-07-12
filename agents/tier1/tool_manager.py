@@ -11,10 +11,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from aqip_agents.base import AgentBase, AgentContext, AgentMeta
-from aqip_agents.decorators import traced_agent
-from aqip_tools.manager import ToolManager, get_tool_manager
-from aqip_tools.registry import ToolDefinition
+from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
+from intelliqx_agents.decorators import traced_agent
+from intelliqx_tools.manager import ToolManager, get_tool_manager
+from intelliqx_tools.registry import ToolDefinition
 from pydantic import BaseModel, ConfigDict, Field
 
 

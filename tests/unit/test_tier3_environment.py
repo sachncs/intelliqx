@@ -1,7 +1,7 @@
 """Tests for Tier 3 Environment Agent."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
+from intelliqx_compute.runtime import InvocationRequest
 
 from agents import register_all, register_compute_handlers
 from agents.tier3.environment import EnvironmentAgent

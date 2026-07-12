@@ -37,18 +37,18 @@ def _reset_singletons():
     registry) would leak state to the next test. We call every
     known ``reset_*`` helper here.
     """
-    from aqip_compute.runtime import reset_compute_runtime
-    from aqip_events.bus import reset_event_bus
-    from aqip_events.schemas import EventRegistry
-    from aqip_kg.graph import reset_kg
-    from aqip_llm.client import reset_llm_client
-    from aqip_observability.metrics import reset_metrics
-    from aqip_observability.tracing import reset_tracer
-    from aqip_portability.adapter import reset_adapter_cache
-    from aqip_state.store import reset_state_store
-    from aqip_storage.store import reset_object_store
-    from aqip_tools.manager import reset_tool_manager
-    from aqip_vector.index import reset_vector_index
+    from intelliqx_compute.runtime import reset_compute_runtime
+    from intelliqx_events.bus import reset_event_bus
+    from intelliqx_events.schemas import EventRegistry
+    from intelliqx_kg.graph import reset_kg
+    from intelliqx_llm.client import reset_llm_client
+    from intelliqx_observability.metrics import reset_metrics
+    from intelliqx_observability.tracing import reset_tracer
+    from intelliqx_portability.adapter import reset_adapter_cache
+    from intelliqx_state.store import reset_state_store
+    from intelliqx_storage.store import reset_object_store
+    from intelliqx_tools.manager import reset_tool_manager
+    from intelliqx_vector.index import reset_vector_index
 
     reset_compute_runtime()
     reset_event_bus()

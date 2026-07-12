@@ -1,9 +1,9 @@
 """Tests for aqip-agents."""
 
 import pytest
-from aqip_agents.base import AgentBase, AgentContext, AgentMeta
-from aqip_agents.decorators import traced_agent
-from aqip_agents.registry import (
+from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
+from intelliqx_agents.decorators import traced_agent
+from intelliqx_agents.registry import (
     get_agent_registry,
     register_agent,
     reset_agent_registry,
@@ -33,7 +33,7 @@ class _DemoAgent(AgentBase[_Input, _Output]):
 @pytest.mark.asyncio
 async def test_agent_invoke():
     agent = _DemoAgent()
-    from aqip_compute.runtime import InvocationRequest
+    from intelliqx_compute.runtime import InvocationRequest
 
     req = InvocationRequest(
         agent_name="demo", input={"x": 5}, tenant_id="t1", metadata={"run_id": "r1"}
@@ -91,7 +91,7 @@ async def test_agent_requires_input_output_models():
             return {}
 
     bad = _BadAgent()
-    from aqip_compute.runtime import InvocationRequest
+    from intelliqx_compute.runtime import InvocationRequest
 
     with pytest.raises(RuntimeError):
         await bad.invoke(

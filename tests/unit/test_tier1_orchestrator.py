@@ -1,10 +1,10 @@
 """Tests for Tier 1 Orchestrator Agent."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
-from aqip_core.models import RunStatus
-from aqip_events.bus import get_event_bus
-from aqip_state.store import get_state_store
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_core.models import RunStatus
+from intelliqx_events.bus import get_event_bus
+from intelliqx_state.store import get_state_store
 
 from agents import register_all, register_compute_handlers
 from agents.tier1.orchestrator import OrchestratorAgent
@@ -158,7 +158,7 @@ async def test_orchestrator_persists_run_status_to_state():
 async def test_orchestrator_retries_on_failure():
     _ensure_registered()
     # Register a flaky agent that fails the first time and succeeds on the second.
-    from aqip_compute.runtime import get_compute_runtime
+    from intelliqx_compute.runtime import get_compute_runtime
 
     runtime = get_compute_runtime()
     calls = {"n": 0}
@@ -194,7 +194,7 @@ async def test_orchestrator_retries_on_failure():
 @pytest.mark.asyncio
 async def test_orchestrator_failed_when_retries_exhausted():
     _ensure_registered()
-    from aqip_compute.runtime import get_compute_runtime
+    from intelliqx_compute.runtime import get_compute_runtime
 
     runtime = get_compute_runtime()
 

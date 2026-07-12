@@ -27,8 +27,8 @@ from collections.abc import Callable
 
 from pydantic import BaseModel
 
-from aqip_events.bus import EventBus
-from aqip_events.handler import EventHandler
+from intelliqx_events.bus import EventBus
+from intelliqx_events.handler import EventHandler
 
 
 class AWSEventBridgeBus(EventBus):

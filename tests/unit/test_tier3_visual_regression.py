@@ -1,8 +1,8 @@
 """Tests for Tier 3 Visual Regression Agent."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
-from aqip_storage.store import InMemoryObjectStore
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_storage.store import InMemoryObjectStore
 
 from agents import register_all, register_compute_handlers
 from agents.tier3.visual_regression import VisualRegressionAgent, _pixel_diff_pct
@@ -31,7 +31,7 @@ def test_pixel_diff_pct_empty():
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_visual_regression_stores_baseline_on_first_run():
-    from aqip_storage.store import reset_object_store, set_object_store
+    from intelliqx_storage.store import reset_object_store, set_object_store
 
     register_all()
     register_compute_handlers()

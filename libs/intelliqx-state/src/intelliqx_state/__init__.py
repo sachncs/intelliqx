@@ -18,6 +18,6 @@ Adapters:
   support TTL natively.
 """
 
-from aqip_state.store import InMemoryStateStore, StateStore, get_state_store
+from intelliqx_state.store import InMemoryStateStore, StateStore, get_state_store
 
 __all__ = ["InMemoryStateStore", "StateStore", "get_state_store"]

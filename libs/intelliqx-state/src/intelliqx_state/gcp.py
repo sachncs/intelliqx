@@ -10,7 +10,7 @@ deployment.
 
 from __future__ import annotations
 
-from aqip_state.store import StateStore
+from intelliqx_state.store import StateStore
 
 
 class MemorystoreStateStore(StateStore):

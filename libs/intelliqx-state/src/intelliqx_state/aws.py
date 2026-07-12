@@ -13,7 +13,7 @@ the :class:`InMemoryStateStore` directly.
 
 from __future__ import annotations
 
-from aqip_state.store import StateStore
+from intelliqx_state.store import StateStore
 
 
 class ElastiCacheStateStore(StateStore):

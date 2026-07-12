@@ -2,10 +2,10 @@
 across all cloud profiles (using fallback implementations)."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest, get_compute_runtime
-from aqip_events.bus import get_event_bus
-from aqip_storage.store import reset_object_store
-from aqip_vector.index import reset_vector_index
+from intelliqx_compute.runtime import InvocationRequest, get_compute_runtime
+from intelliqx_events.bus import get_event_bus
+from intelliqx_storage.store import reset_object_store
+from intelliqx_vector.index import reset_vector_index
 
 from agents import register_all, register_compute_handlers
 from agents.tier1.planner import PlannerAgent

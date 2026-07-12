@@ -1,7 +1,7 @@
 """Tests for aqip-kg."""
 
 import pytest
-from aqip_kg.graph import Edge, KnowledgeGraph, Node, get_kg
+from intelliqx_kg.graph import Edge, KnowledgeGraph, Node, get_kg
 
 
 @pytest.mark.unit
@@ -82,7 +82,7 @@ async def test_edge_count():
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_persists_to_object_store():
-    from aqip_storage.store import InMemoryObjectStore
+    from intelliqx_storage.store import InMemoryObjectStore
 
     storage = InMemoryObjectStore()
     kg = KnowledgeGraph(storage=storage)

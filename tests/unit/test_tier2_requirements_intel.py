@@ -1,8 +1,8 @@
 """Tests for Tier 2 Requirements Intelligence Agent."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
-from aqip_kg.graph import get_kg
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_kg.graph import get_kg
 
 from agents import register_all, register_compute_handlers
 from agents.tier2.requirements_intel import (

@@ -1,14 +1,14 @@
 """Tests for aqip-portability."""
 
 import pytest
-from aqip_core.errors import CloudConfigError
-from aqip_core.models import CloudProvider
-from aqip_portability.adapter import get_adapter, reset_adapter_cache
-from aqip_portability.adapters.aws import AWSAdapter
-from aqip_portability.adapters.gcp import GCPAdapter
-from aqip_portability.adapters.local import LocalAdapter
-from aqip_portability.adapters.modal import ModalAdapter
-from aqip_portability.config import CloudConfig
+from intelliqx_core.errors import CloudConfigError
+from intelliqx_core.models import CloudProvider
+from intelliqx_portability.adapter import get_adapter, reset_adapter_cache
+from intelliqx_portability.adapters.aws import AWSAdapter
+from intelliqx_portability.adapters.gcp import GCPAdapter
+from intelliqx_portability.adapters.local import LocalAdapter
+from intelliqx_portability.adapters.modal import ModalAdapter
+from intelliqx_portability.config import CloudConfig
 
 
 @pytest.mark.unit

@@ -1,7 +1,7 @@
 """Tests for aqip-vector."""
 
 import pytest
-from aqip_vector.index import (
+from intelliqx_vector.index import (
     InMemoryVectorIndex,
     VectorDoc,
     get_vector_index,

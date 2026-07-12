@@ -16,12 +16,12 @@ import asyncio
 import time
 from typing import Any
 
-from aqip_agents.base import AgentBase, AgentContext, AgentMeta
-from aqip_agents.decorators import traced_agent
-from aqip_compute.runtime import InvocationRequest, get_compute_runtime
-from aqip_core.models import RunStatus
-from aqip_events.bus import get_event_bus
-from aqip_state.store import get_state_store
+from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
+from intelliqx_agents.decorators import traced_agent
+from intelliqx_compute.runtime import InvocationRequest, get_compute_runtime
+from intelliqx_core.models import RunStatus
+from intelliqx_events.bus import get_event_bus
+from intelliqx_state.store import get_state_store
 from pydantic import BaseModel, ConfigDict, Field
 
 

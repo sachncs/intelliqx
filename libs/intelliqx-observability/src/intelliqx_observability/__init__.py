@@ -14,15 +14,15 @@ Singletons are exposed by ``get_logger``, ``get_metrics``, and
 to guarantee a clean world per test.
 """
 
-from aqip_observability.logging import configure_logging, get_logger
-from aqip_observability.metrics import (
+from intelliqx_observability.logging import configure_logging, get_logger
+from intelliqx_observability.metrics import (
     Counter,
     Gauge,
     Histogram,
     MetricsRegistry,
     get_metrics,
 )
-from aqip_observability.tracing import Tracer, configure_tracing, get_tracer
+from intelliqx_observability.tracing import Tracer, configure_tracing, get_tracer
 
 __all__ = [
     "Counter",

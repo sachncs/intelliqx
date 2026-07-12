@@ -1,9 +1,9 @@
 """Tests for Tier 1 Planner Agent."""
 
 import pytest
-from aqip_agents.registry import get_agent_registry
-from aqip_compute.runtime import InvocationRequest
-from aqip_core.models import PlanNode
+from intelliqx_agents.registry import get_agent_registry
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_core.models import PlanNode
 
 from agents import register_all, register_compute_handlers
 from agents.tier1.planner import PlannerAgent, _trim_to_cost, _validate_dag
@@ -186,7 +186,7 @@ async def test_planner_plan_id_is_ulid():
         tenant_id="t1",
     )
     out = await agent.invoke(req)
-    from aqip_core.ids import is_valid_id
+    from intelliqx_core.ids import is_valid_id
 
     assert is_valid_id(out["plan_id"])
 

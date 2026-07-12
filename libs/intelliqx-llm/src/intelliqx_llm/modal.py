@@ -21,7 +21,7 @@ import hashlib
 import os
 from collections.abc import Sequence
 
-from aqip_llm.client import CompletionRequest, CompletionResponse, LLMClient, LLMUsage
+from intelliqx_llm.client import CompletionRequest, CompletionResponse, LLMClient, LLMUsage
 
 
 class VLLMModalLLMClient(LLMClient):

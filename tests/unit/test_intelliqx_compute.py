@@ -3,7 +3,7 @@
 import asyncio
 
 import pytest
-from aqip_compute.runtime import (
+from intelliqx_compute.runtime import (
     InProcessComputeRuntime,
     InvocationRequest,
     get_compute_runtime,

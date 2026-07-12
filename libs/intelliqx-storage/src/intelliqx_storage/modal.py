@@ -12,9 +12,9 @@ import asyncio
 from collections.abc import AsyncIterator
 from pathlib import Path
 
-from aqip_core.errors import NotFoundError
+from intelliqx_core.errors import NotFoundError
 
-from aqip_storage.store import ObjectStore
+from intelliqx_storage.store import ObjectStore
 
 
 class ModalVolumeObjectStore(ObjectStore):

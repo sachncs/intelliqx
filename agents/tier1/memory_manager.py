@@ -26,10 +26,10 @@ import time
 from contextlib import suppress
 from typing import Any
 
-from aqip_agents.base import AgentBase, AgentContext, AgentMeta
-from aqip_agents.decorators import traced_agent
-from aqip_state.store import get_state_store
-from aqip_storage.store import get_object_store
+from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
+from intelliqx_agents.decorators import traced_agent
+from intelliqx_state.store import get_state_store
+from intelliqx_storage.store import get_object_store
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -155,8 +155,8 @@ class MemoryManagerAgent(AgentBase):
 
     async def invoke(self, request):  # type: ignore[no-untyped-def]
         """Polymorphic dispatch: pick the right input model from the operation."""
-        from aqip_agents.base import AgentContext
-        from aqip_core.models import TenantContext
+        from intelliqx_agents.base import AgentContext
+        from intelliqx_core.models import TenantContext
 
         payload = dict(request.input)
         op = payload.pop("operation", None) or _infer_op(payload)

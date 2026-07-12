@@ -1,8 +1,8 @@
 """Tests for Tier 3 Execution Agent."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
-from aqip_storage.store import get_object_store
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_storage.store import get_object_store
 
 from agents import register_all, register_compute_handlers
 from agents.tier3.environment import EnvironmentAgent

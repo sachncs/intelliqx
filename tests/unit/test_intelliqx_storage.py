@@ -3,8 +3,8 @@
 from pathlib import Path
 
 import pytest
-from aqip_core.errors import NotFoundError
-from aqip_storage.store import (
+from intelliqx_core.errors import NotFoundError
+from intelliqx_storage.store import (
     InMemoryObjectStore,
     LocalFileSystemObjectStore,
     get_object_store,

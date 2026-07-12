@@ -6,7 +6,7 @@ lives in feature-specific libs (``aqip-events.modal``,
 and a typed handle for Modal-specific helpers.
 """
 
-from aqip_portability.adapter import CloudAdapter
+from intelliqx_portability.adapter import CloudAdapter
 
 
 class ModalAdapter(CloudAdapter):

@@ -5,13 +5,13 @@ description = "AQIP third-party agent SDK"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",
-    "aqip-core",
-    "aqip-agents",
+    "intelliqx-core",
+    "intelliqx-agents",
 ]
 
 [tool.uv.sources]
-aqip-core = { workspace = true }
-aqip-agents = { workspace = true }
+intelliqx-core = { workspace = true }
+intelliqx-agents = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

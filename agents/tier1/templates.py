@@ -16,8 +16,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from aqip_core.ids import new_id
-from aqip_core.models import PlanNode
+from intelliqx_core.ids import new_id
+from intelliqx_core.models import PlanNode
 
 
 def plan_for(goal: dict[str, Any], *, available_agents: list[str]) -> list[PlanNode]:

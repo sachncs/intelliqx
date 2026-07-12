@@ -18,7 +18,7 @@ import contextvars
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from aqip_core.models import TenantContext
+from intelliqx_core.models import TenantContext
 
 # Single, package-wide ContextVar. The default of ``None`` is intentional:
 # code that needs a tenant must either receive one or set one explicitly.

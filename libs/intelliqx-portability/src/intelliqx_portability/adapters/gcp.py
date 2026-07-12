@@ -6,7 +6,7 @@ access lives in feature-specific libs (``aqip-storage.gcp``,
 exposes ``config.project_id`` for code that needs it.
 """
 
-from aqip_portability.adapter import CloudAdapter
+from intelliqx_portability.adapter import CloudAdapter
 
 
 class GCPAdapter(CloudAdapter):

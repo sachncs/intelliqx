@@ -21,14 +21,14 @@ the in-memory index for tests and the zvec index for prod. The
 ``AQIP_VECTOR_DIM`` env var configures the in-memory dim.
 """
 
-from aqip_vector.index import (
+from intelliqx_vector.index import (
     InMemoryVectorIndex,
     SearchResult,
     VectorDoc,
     VectorIndex,
     get_vector_index,
 )
-from aqip_vector.zvec_index import ZvecIndex
+from intelliqx_vector.zvec_index import ZvecIndex
 
 __all__ = [
     "InMemoryVectorIndex",

@@ -1,10 +1,10 @@
 """Cross-cloud parity tests for aqip-state."""
 
 import pytest
-from aqip_state.aws import ElastiCacheStateStore
-from aqip_state.gcp import MemorystoreStateStore
-from aqip_state.modal import ModalDictStateStore
-from aqip_state.store import InMemoryStateStore
+from intelliqx_state.aws import ElastiCacheStateStore
+from intelliqx_state.gcp import MemorystoreStateStore
+from intelliqx_state.modal import ModalDictStateStore
+from intelliqx_state.store import InMemoryStateStore
 
 
 @pytest.mark.cross_cloud
@@ -22,7 +22,7 @@ def test_gcp_state_lazy_init():
 
 @pytest.mark.cross_cloud
 def test_modal_state_lazy_init():
-    s = ModalDictStateStore(name="aqip-test")
+    s = ModalDictStateStore(name="intelliqx-test")
     assert not s._available
 
 

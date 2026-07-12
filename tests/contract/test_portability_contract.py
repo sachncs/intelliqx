@@ -3,10 +3,10 @@
 from pathlib import Path
 
 import pytest
-from aqip_events.bus import EventBus, InMemoryEventBus
-from aqip_state.store import InMemoryStateStore, StateStore
-from aqip_storage.store import InMemoryObjectStore, LocalFileSystemObjectStore, ObjectStore
-from aqip_vector.index import InMemoryVectorIndex, VectorIndex
+from intelliqx_events.bus import EventBus, InMemoryEventBus
+from intelliqx_state.store import InMemoryStateStore, StateStore
+from intelliqx_storage.store import InMemoryObjectStore, LocalFileSystemObjectStore, ObjectStore
+from intelliqx_vector.index import InMemoryVectorIndex, VectorIndex
 
 
 @pytest.mark.contract
@@ -69,7 +69,7 @@ async def test_event_bus_contract():
             received.append(e)
 
         b.subscribe("t", h)
-        from aqip_core.events import BaseEvent, EventMetadata
+        from intelliqx_core.events import BaseEvent, EventMetadata
 
         md = EventMetadata(tenant_id="t1", produced_by="c")
         await b.publish("t", BaseEvent(detail_type="T", metadata=md))
@@ -79,6 +79,6 @@ async def test_event_bus_contract():
 
 
 def _doc(id: str, vec: list[float]):
-    from aqip_vector.index import VectorDoc
+    from intelliqx_vector.index import VectorDoc
 
     return VectorDoc(id=id, tenant_id="t1", vector=vec)

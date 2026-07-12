@@ -27,7 +27,7 @@ from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aqip_core.ids import new_id
+from intelliqx_core.ids import new_id
 
 T = TypeVar("T", bound=BaseModel)
 

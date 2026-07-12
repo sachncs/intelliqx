@@ -1,10 +1,10 @@
 """Tests for aqip-events."""
 
 import pytest
-from aqip_core.events import BaseEvent, EventMetadata
-from aqip_events.bus import InMemoryEventBus, get_event_bus
-from aqip_events.handler import EventHandler
-from aqip_events.schemas import EventContract, EventRegistry
+from intelliqx_core.events import BaseEvent, EventMetadata
+from intelliqx_events.bus import InMemoryEventBus, get_event_bus
+from intelliqx_events.handler import EventHandler
+from intelliqx_events.schemas import EventContract, EventRegistry
 
 
 @pytest.mark.unit

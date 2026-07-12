@@ -4,8 +4,8 @@ Goal → Planner → Orchestrator → All Tier 1-4 agents → Release decision.
 """
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
-from aqip_core.models import RunStatus, TenantContext
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_core.models import RunStatus, TenantContext
 
 from agents import register_all, register_compute_handlers
 from agents.tier1.orchestrator import OrchestratorAgent

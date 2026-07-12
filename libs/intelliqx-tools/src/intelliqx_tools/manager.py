@@ -23,8 +23,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from aqip_tools.rate_limit import RateLimiter
-from aqip_tools.registry import ToolDefinition, ToolRegistry
+from intelliqx_tools.rate_limit import RateLimiter
+from intelliqx_tools.registry import ToolDefinition, ToolRegistry
 
 
 class ToolInvocationResult(BaseModel):

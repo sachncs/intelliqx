@@ -17,9 +17,9 @@ The shape is intentionally compatible with the Model Context Protocol
 (MCP) tool interface, so a future migration to MCP is mechanical.
 """
 
-from aqip_tools.manager import ToolInvocationResult, ToolManager, get_tool_manager
-from aqip_tools.rate_limit import RateLimiter
-from aqip_tools.registry import ToolDefinition, ToolRegistry
+from intelliqx_tools.manager import ToolInvocationResult, ToolManager, get_tool_manager
+from intelliqx_tools.rate_limit import RateLimiter
+from intelliqx_tools.registry import ToolDefinition, ToolRegistry
 
 __all__ = [
     "RateLimiter",

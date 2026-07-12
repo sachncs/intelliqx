@@ -12,10 +12,10 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 
-from aqip_core.errors import CloudConfigError
-from aqip_core.models import CloudProvider
+from intelliqx_core.errors import CloudConfigError
+from intelliqx_core.models import CloudProvider
 
-from aqip_portability.config import CloudConfig
+from intelliqx_portability.config import CloudConfig
 
 
 class CloudAdapter:
@@ -63,10 +63,10 @@ def get_adapter() -> CloudAdapter:
         CloudConfigError: If ``AQIP_CLOUD`` is not one of the supported
             providers.
     """
-    from aqip_portability.adapters.aws import AWSAdapter
-    from aqip_portability.adapters.gcp import GCPAdapter
-    from aqip_portability.adapters.local import LocalAdapter
-    from aqip_portability.adapters.modal import ModalAdapter
+    from intelliqx_portability.adapters.aws import AWSAdapter
+    from intelliqx_portability.adapters.gcp import GCPAdapter
+    from intelliqx_portability.adapters.local import LocalAdapter
+    from intelliqx_portability.adapters.modal import ModalAdapter
 
     provider_str = os.environ.get("AQIP_CLOUD", "local").lower()
     try:

@@ -29,9 +29,9 @@ in addition to the recommendation.
 
 from __future__ import annotations
 
-from aqip_agents.base import AgentBase, AgentContext, AgentMeta
-from aqip_agents.decorators import traced_agent
-from aqip_core.ids import new_id
+from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
+from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.ids import new_id
 from pydantic import BaseModel, ConfigDict, Field
 
 

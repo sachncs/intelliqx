@@ -15,8 +15,8 @@ threading it explicitly. These are typically used in CLI tools and
 background workers.
 """
 
-from aqip_tenant.context import TenantResolver, current_tenant, with_tenant
-from aqip_tenant.isolation import IsolationEnforcer, TenantViolation
+from intelliqx_tenant.context import TenantResolver, current_tenant, with_tenant
+from intelliqx_tenant.isolation import IsolationEnforcer, TenantViolation
 
 __all__ = [
     "IsolationEnforcer",

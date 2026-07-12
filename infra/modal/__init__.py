@@ -22,7 +22,7 @@ defines Tier 1 agents as modal.Functions and mounts the agent container image.
 #     register_all()
 #     register_compute_handlers()
 #     from agents.tier1.planner import PlannerAgent
-#     from aqip_compute.runtime import InvocationRequest
+#     from intelliqx_compute.runtime import InvocationRequest
 #     agent = PlannerAgent()
 #     out = await agent.invoke(InvocationRequest(agent_name="planner", input=payload, tenant_id=payload.get("tenant_id", "default")))
 #     return out

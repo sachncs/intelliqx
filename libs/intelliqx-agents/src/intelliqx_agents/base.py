@@ -18,11 +18,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, ClassVar, Generic, TypeVar
 
-from aqip_compute.runtime import InvocationRequest
-from aqip_core.models import AgentCapability, TenantContext
-from aqip_observability.logging import get_logger
-from aqip_observability.metrics import get_metrics
-from aqip_observability.tracing import get_tracer
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_core.models import AgentCapability, TenantContext
+from intelliqx_observability.logging import get_logger
+from intelliqx_observability.metrics import get_metrics
+from intelliqx_observability.tracing import get_tracer
 from pydantic import BaseModel, ConfigDict, Field
 
 InputT = TypeVar("InputT", bound=BaseModel)
@@ -118,9 +118,9 @@ class AgentBase(Generic[InputT, OutputT]):
         Agents that need a different input/output mapping (e.g. the
         Memory Manager) override this method.
         """
-        from aqip_core.models import TenantContext
+        from intelliqx_core.models import TenantContext
 
-        from aqip_agents.base import AgentContext
+        from intelliqx_agents.base import AgentContext
 
         input_model = getattr(self, "INPUT_MODEL", None)
         output_model = getattr(self, "OUTPUT_MODEL", None)

@@ -17,7 +17,7 @@ Tenants are *not* enforced by the store itself; the
 :class:`aqip_tenant.IsolationEnforcer` provides runtime checks.
 """
 
-from aqip_storage.store import (
+from intelliqx_storage.store import (
     InMemoryObjectStore,
     LocalFileSystemObjectStore,
     ObjectStore,

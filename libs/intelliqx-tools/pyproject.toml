@@ -6,15 +6,15 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.7",
     "httpx>=0.27",
-    "aqip-core",
-    "aqip-portability",
-    "aqip-state",
+    "intelliqx-core",
+    "intelliqx-portability",
+    "intelliqx-state",
 ]
 
 [tool.uv.sources]
-aqip-core = { workspace = true }
-aqip-portability = { workspace = true }
-aqip-state = { workspace = true }
+intelliqx-core = { workspace = true }
+intelliqx-portability = { workspace = true }
+intelliqx-state = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

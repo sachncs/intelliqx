@@ -5,21 +5,21 @@ description = "Autonomous QA Intelligence Platform"
 requires-python = ">=3.12,<3.13"
 readme = "README.md"
 dependencies = [
-    intelliqx-core",
-    intelliqx-portability",
-    intelliqx-events",
-    intelliqx-storage",
-    intelliqx-vector",
-    intelliqx-kg",
-    intelliqx-state",
-    intelliqx-llm",
-    intelliqx-compute",
-    intelliqx-observability",
-    intelliqx-tools",
-    intelliqx-agents",
-    intelliqx-tenant",
-    intelliqx-sdk",
-    intelliqx-agents-impl",
+    "intelliqx-core",
+    "intelliqx-portability",
+    "intelliqx-events",
+    "intelliqx-storage",
+    "intelliqx-vector",
+    "intelliqx-kg",
+    "intelliqx-state",
+    "intelliqx-llm",
+    "intelliqx-compute",
+    "intelliqx-observability",
+    "intelliqx-tools",
+    "intelliqx-agents",
+    "intelliqx-tenant",
+    "intelliqx-sdk",
+    "intelliqx-agents-impl",
 ]
 
 [tool.uv.sources]
@@ -96,3 +96,9 @@ omit = ["*/tests/*", "*/__init__.py"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = false
+
+[dependency-groups]
+dev = [
+    "fastapi>=0.139.0",
+    "uvicorn>=0.51.0",
+]

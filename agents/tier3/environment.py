@@ -25,8 +25,8 @@ import time
 from typing import Any
 
 import uvicorn
-from aqip_agents.base import AgentBase, AgentContext, AgentMeta
-from aqip_agents.decorators import traced_agent
+from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
+from intelliqx_agents.decorators import traced_agent
 from pydantic import BaseModel, ConfigDict, Field
 
 

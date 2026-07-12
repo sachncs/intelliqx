@@ -12,9 +12,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from aqip_agents.base import AgentBase, AgentContext, AgentMeta
-from aqip_agents.decorators import traced_agent
-from aqip_observability.metrics import get_metrics
+from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
+from intelliqx_agents.decorators import traced_agent
+from intelliqx_observability.metrics import get_metrics
 from pydantic import BaseModel, ConfigDict, Field
 
 

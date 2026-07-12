@@ -15,17 +15,17 @@ from __future__ import annotations
 
 from contextlib import suppress
 
-from aqip_state.store import StateStore
+from intelliqx_state.store import StateStore
 
 
 class ModalDictStateStore(StateStore):
     """modal.Dict-backed ephemeral state store.
 
     Args:
-        name: The Modal ``Dict`` name. Defaults to ``"aqip-state"``.
+        name: The Modal ``Dict`` name. Defaults to ``"intelliqx-state"``.
     """
 
-    def __init__(self, name: str = "aqip-state") -> None:
+    def __init__(self, name: str = "intelliqx-state") -> None:
         self.name = name
         self._dict = None
         self._available = self._try_init()

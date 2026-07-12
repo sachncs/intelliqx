@@ -6,7 +6,7 @@ lives in feature-specific libs (e.g. ``aqip-storage.aws``,
 a typed entry point for AWS-specific helpers.
 """
 
-from aqip_portability.adapter import CloudAdapter
+from intelliqx_portability.adapter import CloudAdapter
 
 
 class AWSAdapter(CloudAdapter):

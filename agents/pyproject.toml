@@ -1,39 +1,36 @@
 [project]
-name = "aqip-agents-impl"
+name = "intelliqx-agents-impl"
 version = "0.1.0"
-description = "AQIP agent implementations (tiers 1-4)"
+description = "IntelliqX agent implementations (tiers 1-4)"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "aqip-core",
-    "aqip-portability",
-    "aqip-events",
-    "aqip-llm",
-    "aqip-state",
-    "aqip-observability",
-    "aqip-compute",
-    "aqip-agents",
-    "aqip-tools",
-    "aqip-vector",
-    "aqip-kg",
-    "aqip-storage",
-    "httpx>=0.27",
-    "fastapi>=0.110",
-    "uvicorn>=0.29",
+    "intelliqx-core",
+    "intelliqx-portability",
+    "intelliqx-events",
+    "intelliqx-llm",
+    "intelliqx-state",
+    "intelliqx-observability",
+    "intelliqx-compute",
+    "intelliqx-agents",
+    "intelliqx-tools",
+    "intelliqx-vector",
+    "intelliqx-kg",
+    "intelliqx-storage",
 ]
 
 [tool.uv.sources]
-aqip-core = { workspace = true }
-aqip-portability = { workspace = true }
-aqip-events = { workspace = true }
-aqip-llm = { workspace = true }
-aqip-state = { workspace = true }
-aqip-observability = { workspace = true }
-aqip-compute = { workspace = true }
-aqip-agents = { workspace = true }
-aqip-tools = { workspace = true }
-aqip-vector = { workspace = true }
-aqip-kg = { workspace = true }
-aqip-storage = { workspace = true }
+intelliqx-core = { workspace = true }
+intelliqx-portability = { workspace = true }
+intelliqx-events = { workspace = true }
+intelliqx-llm = { workspace = true }
+intelliqx-state = { workspace = true }
+intelliqx-observability = { workspace = true }
+intelliqx-compute = { workspace = true }
+intelliqx-agents = { workspace = true }
+intelliqx-tools = { workspace = true }
+intelliqx-vector = { workspace = true }
+intelliqx-kg = { workspace = true }
+intelliqx-storage = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

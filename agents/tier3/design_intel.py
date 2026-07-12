@@ -23,9 +23,9 @@ from __future__ import annotations
 import re
 from typing import ClassVar
 
-from aqip_agents.base import AgentBase, AgentContext, AgentMeta
-from aqip_agents.decorators import traced_agent
-from aqip_kg.graph import Node, get_kg
+from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
+from intelliqx_agents.decorators import traced_agent
+from intelliqx_kg.graph import Node, get_kg
 from pydantic import BaseModel, ConfigDict, Field
 
 

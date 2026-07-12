@@ -4,23 +4,23 @@ requires-python = "==3.12.*"
 
 [manifest]
 members = [
-    "aqip",
-    "aqip-agents",
-    "aqip-agents-impl",
-    "aqip-compute",
-    "aqip-core",
-    "aqip-events",
-    "aqip-kg",
-    "aqip-llm",
-    "aqip-observability",
-    "aqip-portability",
-    "aqip-sdk",
-    "aqip-state",
-    "aqip-storage",
-    "aqip-tenant",
-    "aqip-tests",
-    "aqip-tools",
-    "aqip-vector",
+    "intelliqx",
+    "intelliqx-agents",
+    "intelliqx-agents-impl",
+    "intelliqx-compute",
+    "intelliqx-core",
+    "intelliqx-events",
+    "intelliqx-kg",
+    "intelliqx-llm",
+    "intelliqx-observability",
+    "intelliqx-portability",
+    "intelliqx-sdk",
+    "intelliqx-state",
+    "intelliqx-storage",
+    "intelliqx-tenant",
+    "intelliqx-tests",
+    "intelliqx-tools",
+    "intelliqx-vector",
 ]
 
 [[package]]
@@ -110,407 +110,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/3b/72/5562aabb8dd7181e8e860622a38bea08d17842b99ecd4c91f84ac95251b0/anyio-4.14.1.tar.gz", hash = "sha256:8d648a3544c1a700e3ff78615cd679e4c5c3f149904287e73687b2596963629e", size = 254831, upload-time = "2026-06-24T20:56:06.017Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b0/7b/90df4a0a816d98d6ea26f559d87836d494a2cf1fcf063be67df50a7bcc30/anyio-4.14.1-py3-none-any.whl", hash = "sha256:4e5533c5b8ff0a24f5d7a176cbe6877129cd183893f66b537f8f227d10527d72", size = 124875, upload-time = "2026-06-24T20:56:04.413Z" },
-]
-
-[[package]]
-name = "aqip"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "aqip-agents" },
-    { name = "aqip-agents-impl" },
-    { name = "aqip-compute" },
-    { name = "aqip-core" },
-    { name = "aqip-events" },
-    { name = "aqip-kg" },
-    { name = "aqip-llm" },
-    { name = "aqip-observability" },
-    { name = "aqip-portability" },
-    { name = "aqip-sdk" },
-    { name = "aqip-state" },
-    { name = "aqip-storage" },
-    { name = "aqip-tenant" },
-    { name = "aqip-tools" },
-    { name = "aqip-vector" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-agents", editable = "libs/aqip-agents" },
-    { name = "aqip-agents-impl", editable = "agents" },
-    { name = "aqip-compute", editable = "libs/aqip-compute" },
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-events", editable = "libs/aqip-events" },
-    { name = "aqip-kg", editable = "libs/aqip-kg" },
-    { name = "aqip-llm", editable = "libs/aqip-llm" },
-    { name = "aqip-observability", editable = "libs/aqip-observability" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "aqip-sdk", editable = "libs/aqip-sdk" },
-    { name = "aqip-state", editable = "libs/aqip-state" },
-    { name = "aqip-storage", editable = "libs/aqip-storage" },
-    { name = "aqip-tenant", editable = "libs/aqip-tenant" },
-    { name = "aqip-tools", editable = "libs/aqip-tools" },
-    { name = "aqip-vector", editable = "libs/aqip-vector" },
-]
-
-[[package]]
-name = "aqip-agents"
-version = "0.1.0"
-source = { editable = "libs/aqip-agents" }
-dependencies = [
-    { name = "aqip-compute" },
-    { name = "aqip-core" },
-    { name = "aqip-events" },
-    { name = "aqip-llm" },
-    { name = "aqip-observability" },
-    { name = "aqip-portability" },
-    { name = "aqip-state" },
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-compute", editable = "libs/aqip-compute" },
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-events", editable = "libs/aqip-events" },
-    { name = "aqip-llm", editable = "libs/aqip-llm" },
-    { name = "aqip-observability", editable = "libs/aqip-observability" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "aqip-state", editable = "libs/aqip-state" },
-    { name = "pydantic", specifier = ">=2.7" },
-]
-
-[[package]]
-name = "aqip-agents-impl"
-version = "0.1.0"
-source = { editable = "agents" }
-dependencies = [
-    { name = "aqip-agents" },
-    { name = "aqip-compute" },
-    { name = "aqip-core" },
-    { name = "aqip-events" },
-    { name = "aqip-kg" },
-    { name = "aqip-llm" },
-    { name = "aqip-observability" },
-    { name = "aqip-portability" },
-    { name = "aqip-state" },
-    { name = "aqip-storage" },
-    { name = "aqip-tools" },
-    { name = "aqip-vector" },
-    { name = "fastapi" },
-    { name = "httpx" },
-    { name = "uvicorn" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-agents", editable = "libs/aqip-agents" },
-    { name = "aqip-compute", editable = "libs/aqip-compute" },
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-events", editable = "libs/aqip-events" },
-    { name = "aqip-kg", editable = "libs/aqip-kg" },
-    { name = "aqip-llm", editable = "libs/aqip-llm" },
-    { name = "aqip-observability", editable = "libs/aqip-observability" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "aqip-state", editable = "libs/aqip-state" },
-    { name = "aqip-storage", editable = "libs/aqip-storage" },
-    { name = "aqip-tools", editable = "libs/aqip-tools" },
-    { name = "aqip-vector", editable = "libs/aqip-vector" },
-    { name = "fastapi", specifier = ">=0.110" },
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "uvicorn", specifier = ">=0.29" },
-]
-
-[[package]]
-name = "aqip-compute"
-version = "0.1.0"
-source = { editable = "libs/aqip-compute" }
-dependencies = [
-    { name = "aqip-core" },
-    { name = "aqip-observability" },
-    { name = "aqip-portability" },
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-observability", editable = "libs/aqip-observability" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "pydantic", specifier = ">=2.7" },
-]
-
-[[package]]
-name = "aqip-core"
-version = "0.1.0"
-source = { editable = "libs/aqip-core" }
-dependencies = [
-    { name = "pydantic" },
-    { name = "ulid-py" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pydantic", specifier = ">=2.7" },
-    { name = "ulid-py", specifier = ">=1.1" },
-]
-
-[[package]]
-name = "aqip-events"
-version = "0.1.0"
-source = { editable = "libs/aqip-events" }
-dependencies = [
-    { name = "aqip-core" },
-    { name = "aqip-portability" },
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "pydantic", specifier = ">=2.7" },
-]
-
-[[package]]
-name = "aqip-kg"
-version = "0.1.0"
-source = { editable = "libs/aqip-kg" }
-dependencies = [
-    { name = "aqip-core" },
-    { name = "aqip-portability" },
-    { name = "aqip-storage" },
-    { name = "duckdb" },
-    { name = "pyarrow" },
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "aqip-storage", editable = "libs/aqip-storage" },
-    { name = "duckdb", specifier = ">=1.0" },
-    { name = "pyarrow", specifier = ">=16" },
-    { name = "pydantic", specifier = ">=2.7" },
-]
-
-[[package]]
-name = "aqip-llm"
-version = "0.1.0"
-source = { editable = "libs/aqip-llm" }
-dependencies = [
-    { name = "aqip-core" },
-    { name = "aqip-observability" },
-    { name = "aqip-portability" },
-    { name = "litellm" },
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-observability", editable = "libs/aqip-observability" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "litellm", specifier = ">=1.40" },
-    { name = "pydantic", specifier = ">=2.7" },
-]
-
-[[package]]
-name = "aqip-observability"
-version = "0.1.0"
-source = { editable = "libs/aqip-observability" }
-dependencies = [
-    { name = "aqip-core" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-sdk" },
-    { name = "pydantic" },
-    { name = "structlog" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "opentelemetry-api", specifier = ">=1.24" },
-    { name = "opentelemetry-sdk", specifier = ">=1.24" },
-    { name = "pydantic", specifier = ">=2.7" },
-    { name = "structlog", specifier = ">=24.1" },
-]
-
-[[package]]
-name = "aqip-portability"
-version = "0.1.0"
-source = { editable = "libs/aqip-portability" }
-dependencies = [
-    { name = "aqip-core" },
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "pydantic", specifier = ">=2.7" },
-]
-
-[[package]]
-name = "aqip-sdk"
-version = "0.1.0"
-source = { editable = "libs/aqip-sdk" }
-dependencies = [
-    { name = "aqip-agents" },
-    { name = "aqip-core" },
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-agents", editable = "libs/aqip-agents" },
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "pydantic", specifier = ">=2.7" },
-]
-
-[[package]]
-name = "aqip-state"
-version = "0.1.0"
-source = { editable = "libs/aqip-state" }
-dependencies = [
-    { name = "aqip-core" },
-    { name = "aqip-portability" },
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "pydantic", specifier = ">=2.7" },
-]
-
-[[package]]
-name = "aqip-storage"
-version = "0.1.0"
-source = { editable = "libs/aqip-storage" }
-dependencies = [
-    { name = "aqip-core" },
-    { name = "aqip-portability" },
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "pydantic", specifier = ">=2.7" },
-]
-
-[[package]]
-name = "aqip-tenant"
-version = "0.1.0"
-source = { editable = "libs/aqip-tenant" }
-dependencies = [
-    { name = "aqip-core" },
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "pydantic", specifier = ">=2.7" },
-]
-
-[[package]]
-name = "aqip-tests"
-version = "0.1.0"
-source = { editable = "tests" }
-dependencies = [
-    { name = "aqip-agents" },
-    { name = "aqip-compute" },
-    { name = "aqip-core" },
-    { name = "aqip-events" },
-    { name = "aqip-kg" },
-    { name = "aqip-llm" },
-    { name = "aqip-observability" },
-    { name = "aqip-portability" },
-    { name = "aqip-sdk" },
-    { name = "aqip-state" },
-    { name = "aqip-storage" },
-    { name = "aqip-tenant" },
-    { name = "aqip-tools" },
-    { name = "aqip-vector" },
-    { name = "httpx" },
-    { name = "jsonschema" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "pytest-timeout" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-agents", editable = "libs/aqip-agents" },
-    { name = "aqip-compute", editable = "libs/aqip-compute" },
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-events", editable = "libs/aqip-events" },
-    { name = "aqip-kg", editable = "libs/aqip-kg" },
-    { name = "aqip-llm", editable = "libs/aqip-llm" },
-    { name = "aqip-observability", editable = "libs/aqip-observability" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "aqip-sdk", editable = "libs/aqip-sdk" },
-    { name = "aqip-state", editable = "libs/aqip-state" },
-    { name = "aqip-storage", editable = "libs/aqip-storage" },
-    { name = "aqip-tenant", editable = "libs/aqip-tenant" },
-    { name = "aqip-tools", editable = "libs/aqip-tools" },
-    { name = "aqip-vector", editable = "libs/aqip-vector" },
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "jsonschema", specifier = ">=4.22" },
-    { name = "pytest", specifier = ">=8.2" },
-    { name = "pytest-asyncio", specifier = ">=0.23" },
-    { name = "pytest-cov", specifier = ">=5.0" },
-    { name = "pytest-timeout", specifier = ">=2.3" },
-]
-
-[[package]]
-name = "aqip-tools"
-version = "0.1.0"
-source = { editable = "libs/aqip-tools" }
-dependencies = [
-    { name = "aqip-core" },
-    { name = "aqip-portability" },
-    { name = "aqip-state" },
-    { name = "httpx" },
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "aqip-state", editable = "libs/aqip-state" },
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "pydantic", specifier = ">=2.7" },
-]
-
-[[package]]
-name = "aqip-vector"
-version = "0.1.0"
-source = { editable = "libs/aqip-vector" }
-dependencies = [
-    { name = "aqip-core" },
-    { name = "aqip-portability" },
-    { name = "aqip-storage" },
-    { name = "numpy" },
-    { name = "pydantic" },
-    { name = "zvec" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aqip-core", editable = "libs/aqip-core" },
-    { name = "aqip-portability", editable = "libs/aqip-portability" },
-    { name = "aqip-storage", editable = "libs/aqip-storage" },
-    { name = "numpy", specifier = ">=1.26" },
-    { name = "pydantic", specifier = ">=2.7" },
-    { name = "zvec", specifier = ">=0.5" },
 ]
 
 [[package]]
@@ -801,6 +400,413 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/72/34/14ca021ce8e5dfedc35312d08ba8bf51fdd999c576889fc2c24cb97f4f10/iniconfig-2.3.0.tar.gz", hash = "sha256:c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730", size = 20503, upload-time = "2025-10-18T21:55:43.219Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/b1/3846dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/iniconfig-2.3.0-py3-none-any.whl", hash = "sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12", size = 7484, upload-time = "2025-10-18T21:55:41.639Z" },
+]
+
+[[package]]
+name = "intelliqx"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "intelliqx-agents" },
+    { name = "intelliqx-agents-impl" },
+    { name = "intelliqx-compute" },
+    { name = "intelliqx-core" },
+    { name = "intelliqx-events" },
+    { name = "intelliqx-kg" },
+    { name = "intelliqx-llm" },
+    { name = "intelliqx-observability" },
+    { name = "intelliqx-portability" },
+    { name = "intelliqx-sdk" },
+    { name = "intelliqx-state" },
+    { name = "intelliqx-storage" },
+    { name = "intelliqx-tenant" },
+    { name = "intelliqx-tools" },
+    { name = "intelliqx-vector" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "fastapi" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-agents", editable = "libs/intelliqx-agents" },
+    { name = "intelliqx-agents-impl", editable = "agents" },
+    { name = "intelliqx-compute", editable = "libs/intelliqx-compute" },
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-events", editable = "libs/intelliqx-events" },
+    { name = "intelliqx-kg", editable = "libs/intelliqx-kg" },
+    { name = "intelliqx-llm", editable = "libs/intelliqx-llm" },
+    { name = "intelliqx-observability", editable = "libs/intelliqx-observability" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "intelliqx-sdk", editable = "libs/intelliqx-sdk" },
+    { name = "intelliqx-state", editable = "libs/intelliqx-state" },
+    { name = "intelliqx-storage", editable = "libs/intelliqx-storage" },
+    { name = "intelliqx-tenant", editable = "libs/intelliqx-tenant" },
+    { name = "intelliqx-tools", editable = "libs/intelliqx-tools" },
+    { name = "intelliqx-vector", editable = "libs/intelliqx-vector" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "fastapi", specifier = ">=0.139.0" },
+    { name = "uvicorn", specifier = ">=0.51.0" },
+]
+
+[[package]]
+name = "intelliqx-agents"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-agents" }
+dependencies = [
+    { name = "intelliqx-compute" },
+    { name = "intelliqx-core" },
+    { name = "intelliqx-events" },
+    { name = "intelliqx-llm" },
+    { name = "intelliqx-observability" },
+    { name = "intelliqx-portability" },
+    { name = "intelliqx-state" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-compute", editable = "libs/intelliqx-compute" },
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-events", editable = "libs/intelliqx-events" },
+    { name = "intelliqx-llm", editable = "libs/intelliqx-llm" },
+    { name = "intelliqx-observability", editable = "libs/intelliqx-observability" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "intelliqx-state", editable = "libs/intelliqx-state" },
+    { name = "pydantic", specifier = ">=2.7" },
+]
+
+[[package]]
+name = "intelliqx-agents-impl"
+version = "0.1.0"
+source = { editable = "agents" }
+dependencies = [
+    { name = "intelliqx-agents" },
+    { name = "intelliqx-compute" },
+    { name = "intelliqx-core" },
+    { name = "intelliqx-events" },
+    { name = "intelliqx-kg" },
+    { name = "intelliqx-llm" },
+    { name = "intelliqx-observability" },
+    { name = "intelliqx-portability" },
+    { name = "intelliqx-state" },
+    { name = "intelliqx-storage" },
+    { name = "intelliqx-tools" },
+    { name = "intelliqx-vector" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-agents", editable = "libs/intelliqx-agents" },
+    { name = "intelliqx-compute", editable = "libs/intelliqx-compute" },
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-events", editable = "libs/intelliqx-events" },
+    { name = "intelliqx-kg", editable = "libs/intelliqx-kg" },
+    { name = "intelliqx-llm", editable = "libs/intelliqx-llm" },
+    { name = "intelliqx-observability", editable = "libs/intelliqx-observability" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "intelliqx-state", editable = "libs/intelliqx-state" },
+    { name = "intelliqx-storage", editable = "libs/intelliqx-storage" },
+    { name = "intelliqx-tools", editable = "libs/intelliqx-tools" },
+    { name = "intelliqx-vector", editable = "libs/intelliqx-vector" },
+]
+
+[[package]]
+name = "intelliqx-compute"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-compute" }
+dependencies = [
+    { name = "intelliqx-core" },
+    { name = "intelliqx-observability" },
+    { name = "intelliqx-portability" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-observability", editable = "libs/intelliqx-observability" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "pydantic", specifier = ">=2.7" },
+]
+
+[[package]]
+name = "intelliqx-core"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-core" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "ulid-py" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pydantic", specifier = ">=2.7" },
+    { name = "ulid-py", specifier = ">=1.1" },
+]
+
+[[package]]
+name = "intelliqx-events"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-events" }
+dependencies = [
+    { name = "intelliqx-core" },
+    { name = "intelliqx-portability" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "pydantic", specifier = ">=2.7" },
+]
+
+[[package]]
+name = "intelliqx-kg"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-kg" }
+dependencies = [
+    { name = "duckdb" },
+    { name = "intelliqx-core" },
+    { name = "intelliqx-portability" },
+    { name = "intelliqx-storage" },
+    { name = "pyarrow" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "duckdb", specifier = ">=1.0" },
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "intelliqx-storage", editable = "libs/intelliqx-storage" },
+    { name = "pyarrow", specifier = ">=16" },
+    { name = "pydantic", specifier = ">=2.7" },
+]
+
+[[package]]
+name = "intelliqx-llm"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-llm" }
+dependencies = [
+    { name = "intelliqx-core" },
+    { name = "intelliqx-observability" },
+    { name = "intelliqx-portability" },
+    { name = "litellm" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-observability", editable = "libs/intelliqx-observability" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "litellm", specifier = ">=1.40" },
+    { name = "pydantic", specifier = ">=2.7" },
+]
+
+[[package]]
+name = "intelliqx-observability"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-observability" }
+dependencies = [
+    { name = "intelliqx-core" },
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-sdk" },
+    { name = "pydantic" },
+    { name = "structlog" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "opentelemetry-api", specifier = ">=1.24" },
+    { name = "opentelemetry-sdk", specifier = ">=1.24" },
+    { name = "pydantic", specifier = ">=2.7" },
+    { name = "structlog", specifier = ">=24.1" },
+]
+
+[[package]]
+name = "intelliqx-portability"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-portability" }
+dependencies = [
+    { name = "intelliqx-core" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "pydantic", specifier = ">=2.7" },
+]
+
+[[package]]
+name = "intelliqx-sdk"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-sdk" }
+dependencies = [
+    { name = "intelliqx-agents" },
+    { name = "intelliqx-core" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-agents", editable = "libs/intelliqx-agents" },
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "pydantic", specifier = ">=2.7" },
+]
+
+[[package]]
+name = "intelliqx-state"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-state" }
+dependencies = [
+    { name = "intelliqx-core" },
+    { name = "intelliqx-portability" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "pydantic", specifier = ">=2.7" },
+]
+
+[[package]]
+name = "intelliqx-storage"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-storage" }
+dependencies = [
+    { name = "intelliqx-core" },
+    { name = "intelliqx-portability" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "pydantic", specifier = ">=2.7" },
+]
+
+[[package]]
+name = "intelliqx-tenant"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-tenant" }
+dependencies = [
+    { name = "intelliqx-core" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "pydantic", specifier = ">=2.7" },
+]
+
+[[package]]
+name = "intelliqx-tests"
+version = "0.1.0"
+source = { editable = "tests" }
+dependencies = [
+    { name = "httpx" },
+    { name = "intelliqx-agents" },
+    { name = "intelliqx-compute" },
+    { name = "intelliqx-core" },
+    { name = "intelliqx-events" },
+    { name = "intelliqx-kg" },
+    { name = "intelliqx-llm" },
+    { name = "intelliqx-observability" },
+    { name = "intelliqx-portability" },
+    { name = "intelliqx-sdk" },
+    { name = "intelliqx-state" },
+    { name = "intelliqx-storage" },
+    { name = "intelliqx-tenant" },
+    { name = "intelliqx-tools" },
+    { name = "intelliqx-vector" },
+    { name = "jsonschema" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-timeout" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "intelliqx-agents", editable = "libs/intelliqx-agents" },
+    { name = "intelliqx-compute", editable = "libs/intelliqx-compute" },
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-events", editable = "libs/intelliqx-events" },
+    { name = "intelliqx-kg", editable = "libs/intelliqx-kg" },
+    { name = "intelliqx-llm", editable = "libs/intelliqx-llm" },
+    { name = "intelliqx-observability", editable = "libs/intelliqx-observability" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "intelliqx-sdk", editable = "libs/intelliqx-sdk" },
+    { name = "intelliqx-state", editable = "libs/intelliqx-state" },
+    { name = "intelliqx-storage", editable = "libs/intelliqx-storage" },
+    { name = "intelliqx-tenant", editable = "libs/intelliqx-tenant" },
+    { name = "intelliqx-tools", editable = "libs/intelliqx-tools" },
+    { name = "intelliqx-vector", editable = "libs/intelliqx-vector" },
+    { name = "jsonschema", specifier = ">=4.22" },
+    { name = "pytest", specifier = ">=8.2" },
+    { name = "pytest-asyncio", specifier = ">=0.23" },
+    { name = "pytest-cov", specifier = ">=5.0" },
+    { name = "pytest-timeout", specifier = ">=2.3" },
+]
+
+[[package]]
+name = "intelliqx-tools"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-tools" }
+dependencies = [
+    { name = "httpx" },
+    { name = "intelliqx-core" },
+    { name = "intelliqx-portability" },
+    { name = "intelliqx-state" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "intelliqx-state", editable = "libs/intelliqx-state" },
+    { name = "pydantic", specifier = ">=2.7" },
+]
+
+[[package]]
+name = "intelliqx-vector"
+version = "0.1.0"
+source = { editable = "libs/intelliqx-vector" }
+dependencies = [
+    { name = "intelliqx-core" },
+    { name = "intelliqx-portability" },
+    { name = "intelliqx-storage" },
+    { name = "numpy" },
+    { name = "pydantic" },
+    { name = "zvec" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-portability", editable = "libs/intelliqx-portability" },
+    { name = "intelliqx-storage", editable = "libs/intelliqx-storage" },
+    { name = "numpy", specifier = ">=1.26" },
+    { name = "pydantic", specifier = ">=2.7" },
+    { name = "zvec", specifier = ">=0.5" },
 ]
 
 [[package]]

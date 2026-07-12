@@ -6,7 +6,7 @@ fully offline, and so unit tests can construct an adapter without
 needing AWS/GCP/Modal credentials.
 """
 
-from aqip_portability.adapter import CloudAdapter
+from intelliqx_portability.adapter import CloudAdapter
 
 
 class LocalAdapter(CloudAdapter):

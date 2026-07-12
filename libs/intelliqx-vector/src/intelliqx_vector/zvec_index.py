@@ -29,9 +29,9 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from aqip_storage.store import ObjectStore, get_object_store
+from intelliqx_storage.store import ObjectStore, get_object_store
 
-from aqip_vector.index import SearchResult, VectorDoc
+from intelliqx_vector.index import SearchResult, VectorDoc
 
 
 class ZvecIndex:

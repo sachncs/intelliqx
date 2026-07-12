@@ -24,7 +24,7 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
 
-from aqip_core.errors import NotFoundError
+from intelliqx_core.errors import NotFoundError
 
 
 class ObjectStore:

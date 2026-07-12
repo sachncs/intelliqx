@@ -1,8 +1,8 @@
 """Tests for Tier 1 Knowledge/RAG Agent."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
-from aqip_kg.graph import Node, get_kg
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_kg.graph import Node, get_kg
 
 from agents import register_all, register_compute_handlers
 from agents.tier1.knowledge_rag import KnowledgeRAGAgent
@@ -56,7 +56,7 @@ async def test_rag_lexical_retrieval():
     register_all()
     register_compute_handlers()
     agent = KnowledgeRAGAgent()
-    from aqip_storage.store import get_object_store
+    from intelliqx_storage.store import get_object_store
 
     store = get_object_store()
     await store.put(

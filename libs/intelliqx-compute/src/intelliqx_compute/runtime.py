@@ -22,7 +22,7 @@ import traceback
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from aqip_observability.tracing import get_tracer
+from intelliqx_observability.tracing import get_tracer
 from pydantic import BaseModel, ConfigDict, Field
 
 

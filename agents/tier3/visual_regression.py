@@ -22,9 +22,9 @@ from __future__ import annotations
 
 import hashlib
 
-from aqip_agents.base import AgentBase, AgentContext, AgentMeta
-from aqip_agents.decorators import traced_agent
-from aqip_storage.store import get_object_store
+from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
+from intelliqx_agents.decorators import traced_agent
+from intelliqx_storage.store import get_object_store
 from pydantic import BaseModel, ConfigDict
 
 

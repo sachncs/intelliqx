@@ -4,11 +4,11 @@ Same agent invoked under 4 cloud profiles must produce identical structured outp
 """
 
 import pytest
-from aqip_core.events import BaseEvent, EventMetadata
-from aqip_events.aws import AWSEventBridgeBus
-from aqip_events.bus import InMemoryEventBus
-from aqip_events.gcp import GCPPubSubBus
-from aqip_events.modal import ModalQueueBus
+from intelliqx_core.events import BaseEvent, EventMetadata
+from intelliqx_events.aws import AWSEventBridgeBus
+from intelliqx_events.bus import InMemoryEventBus
+from intelliqx_events.gcp import GCPPubSubBus
+from intelliqx_events.modal import ModalQueueBus
 
 
 def _make_bus(profile: str):
@@ -16,7 +16,7 @@ def _make_bus(profile: str):
     if profile == "aws":
         return AWSEventBridgeBus(bus_name="aqip.test")
     if profile == "gcp":
-        return GCPPubSubBus(project_id="aqip-test")
+        return GCPPubSubBus(project_id="intelliqx-test")
     if profile == "modal":
         return ModalQueueBus()
     return InMemoryEventBus()
@@ -76,7 +76,7 @@ async def test_multiple_subscribers_contract(profile):
 
 @pytest.mark.cross_cloud
 def test_bus_factory_local():
-    from aqip_events.bus import get_event_bus
+    from intelliqx_events.bus import get_event_bus
 
     bus = get_event_bus()
     assert isinstance(bus, InMemoryEventBus)

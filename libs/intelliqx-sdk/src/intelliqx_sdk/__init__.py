@@ -13,8 +13,8 @@ Marketplace agents are loaded with :func:`aqip_sdk.manifest.load_manifest`
 and executed in a :class:`Sandbox` enforced by the compute runtime.
 """
 
-from aqip_sdk.manifest import AgentManifest, dump_manifest, load_manifest
-from aqip_sdk.sandbox import Sandbox, SandboxViolation
+from intelliqx_sdk.manifest import AgentManifest, dump_manifest, load_manifest
+from intelliqx_sdk.sandbox import Sandbox, SandboxViolation
 
 __all__ = [
     "AgentManifest",

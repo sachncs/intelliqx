@@ -1,8 +1,8 @@
 """Tests for Tier 3 Cost Optimization Agent."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
-from aqip_observability.metrics import get_metrics
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_observability.metrics import get_metrics
 
 from agents import register_all, register_compute_handlers
 from agents.tier3.cost_optimization import CostOptimizationAgent

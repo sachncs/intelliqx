@@ -1,9 +1,9 @@
 """Tests for Tier 4 Governance & Compliance Agent."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
-from aqip_core.models import TenantContext
-from aqip_state.store import get_state_store
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_core.models import TenantContext
+from intelliqx_state.store import get_state_store
 
 from agents import register_all, register_compute_handlers
 from agents.tier4.governance_compliance import GovernanceComplianceAgent

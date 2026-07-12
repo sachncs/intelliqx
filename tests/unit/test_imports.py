@@ -5,20 +5,20 @@ import importlib
 import pytest
 
 LIBS = [
-    "aqip_core",
-    "aqip_portability",
-    "aqip_events",
-    "aqip_storage",
-    "aqip_vector",
-    "aqip_kg",
-    "aqip_state",
-    "aqip_llm",
-    "aqip_compute",
-    "aqip_observability",
-    "aqip_tools",
-    "aqip_agents",
-    "aqip_tenant",
-    "aqip_sdk",
+    "intelliqx_core",
+    "intelliqx_portability",
+    "intelliqx_events",
+    "intelliqx_storage",
+    "intelliqx_vector",
+    "intelliqx_kg",
+    "intelliqx_state",
+    "intelliqx_llm",
+    "intelliqx_compute",
+    "intelliqx_observability",
+    "intelliqx_tools",
+    "intelliqx_agents",
+    "intelliqx_tenant",
+    "intelliqx_sdk",
 ]
 
 

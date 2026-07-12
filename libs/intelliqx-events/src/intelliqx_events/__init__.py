@@ -18,9 +18,9 @@ adapters' contract. Subscribers can opt into a dead-letter topic via
 there.
 """
 
-from aqip_events.bus import EventBus, InMemoryEventBus, get_event_bus
-from aqip_events.handler import EventHandler
-from aqip_events.schemas import EventContract, EventRegistry, get_registry
+from intelliqx_events.bus import EventBus, InMemoryEventBus, get_event_bus
+from intelliqx_events.handler import EventHandler
+from intelliqx_events.schemas import EventContract, EventRegistry, get_registry
 
 __all__ = [
     "EventBus",

@@ -9,7 +9,7 @@ parsing strings.
 
 from __future__ import annotations
 
-from aqip_core.models import CloudProvider
+from intelliqx_core.models import CloudProvider
 from pydantic import BaseModel, ConfigDict, Field
 
 

@@ -3,16 +3,16 @@
 from datetime import datetime
 
 import pytest
-from aqip_core.errors import (
+from intelliqx_core.errors import (
     AQIPError,
     CloudConfigError,
     ContractError,
     NotFoundError,
     ValidationError,
 )
-from aqip_core.events import BaseEvent, EventEnvelope, EventMetadata
-from aqip_core.ids import is_valid_id, new_id, parse_id
-from aqip_core.models import (
+from intelliqx_core.events import BaseEvent, EventEnvelope, EventMetadata
+from intelliqx_core.ids import is_valid_id, new_id, parse_id
+from intelliqx_core.models import (
     AgentCapability,
     AgentRef,
     CloudProvider,

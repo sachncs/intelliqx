@@ -18,6 +18,6 @@ retrieval, lineage, requirements traceability) batch analytics
 dominate anyway.
 """
 
-from aqip_kg.graph import Edge, KGQueryResult, KnowledgeGraph, Node, get_kg
+from intelliqx_kg.graph import Edge, KGQueryResult, KnowledgeGraph, Node, get_kg
 
 __all__ = ["Edge", "KGQueryResult", "KnowledgeGraph", "Node", "get_kg"]

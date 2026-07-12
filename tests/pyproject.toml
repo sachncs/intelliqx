@@ -1,5 +1,5 @@
 [project]
-name = "aqip-tests"
+name = "intelliqx-tests"
 version = "0.1.0"
 description = "AQIP test suite (cross-package)"
 requires-python = ">=3.12,<3.13"
@@ -10,37 +10,37 @@ dependencies = [
     "pytest-timeout>=2.3",
     "httpx>=0.27",
     "jsonschema>=4.22",
-    "aqip-core",
-    "aqip-portability",
-    "aqip-events",
-    "aqip-storage",
-    "aqip-vector",
-    "aqip-kg",
-    "aqip-state",
-    "aqip-llm",
-    "aqip-compute",
-    "aqip-observability",
-    "aqip-tools",
-    "aqip-agents",
-    "aqip-tenant",
-    "aqip-sdk",
+    "intelliqx-core",
+    "intelliqx-portability",
+    "intelliqx-events",
+    "intelliqx-storage",
+    "intelliqx-vector",
+    "intelliqx-kg",
+    "intelliqx-state",
+    "intelliqx-llm",
+    "intelliqx-compute",
+    "intelliqx-observability",
+    "intelliqx-tools",
+    "intelliqx-agents",
+    "intelliqx-tenant",
+    "intelliqx-sdk",
 ]
 
 [tool.uv.sources]
-aqip-core = { workspace = true }
-aqip-portability = { workspace = true }
-aqip-events = { workspace = true }
-aqip-storage = { workspace = true }
-aqip-vector = { workspace = true }
-aqip-kg = { workspace = true }
-aqip-state = { workspace = true }
-aqip-llm = { workspace = true }
-aqip-compute = { workspace = true }
-aqip-observability = { workspace = true }
-aqip-tools = { workspace = true }
-aqip-agents = { workspace = true }
-aqip-tenant = { workspace = true }
-aqip-sdk = { workspace = true }
+intelliqx-core = { workspace = true }
+intelliqx-portability = { workspace = true }
+intelliqx-events = { workspace = true }
+intelliqx-storage = { workspace = true }
+intelliqx-vector = { workspace = true }
+intelliqx-kg = { workspace = true }
+intelliqx-state = { workspace = true }
+intelliqx-llm = { workspace = true }
+intelliqx-compute = { workspace = true }
+intelliqx-observability = { workspace = true }
+intelliqx-tools = { workspace = true }
+intelliqx-agents = { workspace = true }
+intelliqx-tenant = { workspace = true }
+intelliqx-sdk = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

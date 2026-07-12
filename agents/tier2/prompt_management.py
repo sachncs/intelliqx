@@ -25,9 +25,9 @@ from __future__ import annotations
 import json
 import random
 
-from aqip_agents.base import AgentBase, AgentContext, AgentMeta
-from aqip_agents.decorators import traced_agent
-from aqip_state.store import get_state_store
+from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
+from intelliqx_agents.decorators import traced_agent
+from intelliqx_state.store import get_state_store
 from pydantic import BaseModel, ConfigDict, Field
 
 

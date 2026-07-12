@@ -1,9 +1,9 @@
 """Tests for aqip-tenant."""
 
 import pytest
-from aqip_core.models import TenantContext
-from aqip_tenant.context import TenantResolver, current_tenant, with_tenant
-from aqip_tenant.isolation import IsolationEnforcer, TenantViolation
+from intelliqx_core.models import TenantContext
+from intelliqx_tenant.context import TenantResolver, current_tenant, with_tenant
+from intelliqx_tenant.isolation import IsolationEnforcer, TenantViolation
 
 
 @pytest.mark.unit

@@ -24,7 +24,7 @@ from typing import Any
 import duckdb
 import pyarrow as pa
 import pyarrow.parquet as pq
-from aqip_storage.store import ObjectStore, get_object_store
+from intelliqx_storage.store import ObjectStore, get_object_store
 from pydantic import BaseModel, ConfigDict, Field
 
 

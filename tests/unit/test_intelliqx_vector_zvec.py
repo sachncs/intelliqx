@@ -3,8 +3,8 @@
 from pathlib import Path
 
 import pytest
-from aqip_storage.store import InMemoryObjectStore
-from aqip_vector.zvec_index import ZvecIndex
+from intelliqx_storage.store import InMemoryObjectStore
+from intelliqx_vector.zvec_index import ZvecIndex
 
 
 @pytest.mark.unit
@@ -36,6 +36,6 @@ async def test_zvec_persistence_manifest(tmp_path: Path):
 
 
 def idx_doc(i, v):
-    from aqip_vector.index import VectorDoc
+    from intelliqx_vector.index import VectorDoc
 
     return VectorDoc(id=i, tenant_id="t1", vector=v, text=f"doc {i}", metadata={"i": i})

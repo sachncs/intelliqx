@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aqip_agents.base import AgentBase, AgentFactory
+from intelliqx_agents.base import AgentBase, AgentFactory
 
 
 class AgentRegistry:

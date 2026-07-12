@@ -1,8 +1,8 @@
 """Tests for Tier 4 Release Readiness Agent."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
-from aqip_core.ids import is_valid_id
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_core.ids import is_valid_id
 
 from agents import register_all, register_compute_handlers
 from agents.tier4.release_readiness import ReleaseReadinessAgent

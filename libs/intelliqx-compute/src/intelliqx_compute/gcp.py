@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 import time
 
-from aqip_compute.runtime import ComputeRuntime, InvocationRequest, InvocationResponse
+from intelliqx_compute.runtime import ComputeRuntime, InvocationRequest, InvocationResponse
 
 
 class GCPFunctionsComputeRuntime(ComputeRuntime):
@@ -19,13 +19,13 @@ class GCPFunctionsComputeRuntime(ComputeRuntime):
 
     Args:
         project_id: GCP project id. Defaults to ``GOOGLE_CLOUD_PROJECT``
-            env var, then ``"aqip-local"``.
+            env var, then ``"intelliqx-local"``.
         region: GCP region. Defaults to ``AQIP_GCP_REGION``, then
             ``us-central-1``.
     """
 
     def __init__(self, project_id: str | None = None, region: str | None = None) -> None:
-        self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "aqip-local")
+        self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
         self.region = region or os.environ.get("AQIP_GCP_REGION", "us-central1")
         self._available = False
 

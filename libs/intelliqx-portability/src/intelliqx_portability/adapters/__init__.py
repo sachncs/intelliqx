@@ -6,9 +6,9 @@ and ``local.py``. They are imported lazily by
 when the platform is running on a single cloud.
 """
 
-from aqip_portability.adapters.aws import AWSAdapter
-from aqip_portability.adapters.gcp import GCPAdapter
-from aqip_portability.adapters.local import LocalAdapter
-from aqip_portability.adapters.modal import ModalAdapter
+from intelliqx_portability.adapters.aws import AWSAdapter
+from intelliqx_portability.adapters.gcp import GCPAdapter
+from intelliqx_portability.adapters.local import LocalAdapter
+from intelliqx_portability.adapters.modal import ModalAdapter
 
 __all__ = ["AWSAdapter", "GCPAdapter", "LocalAdapter", "ModalAdapter"]

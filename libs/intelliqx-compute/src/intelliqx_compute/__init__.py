@@ -21,7 +21,7 @@ breakers, and per-invocation metrics; the in-process implementation
 already exposes invocation duration via the metrics layer.
 """
 
-from aqip_compute.runtime import (
+from intelliqx_compute.runtime import (
     ComputeRuntime,
     InProcessComputeRuntime,
     InvocationRequest,

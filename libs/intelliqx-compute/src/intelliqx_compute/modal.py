@@ -12,7 +12,7 @@ import asyncio
 import time
 from typing import Any
 
-from aqip_compute.runtime import ComputeRuntime, InvocationRequest, InvocationResponse
+from intelliqx_compute.runtime import ComputeRuntime, InvocationRequest, InvocationResponse
 
 
 class ModalComputeRuntime(ComputeRuntime):

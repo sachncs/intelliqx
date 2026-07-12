@@ -1,7 +1,7 @@
 """Tests for Tier 2 Risk Assessment, Test Design, Test Data, Coverage, Critic."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
+from intelliqx_compute.runtime import InvocationRequest
 
 from agents import register_all
 from agents.tier2.coverage_analysis import CoverageAnalysisAgent
@@ -406,7 +406,7 @@ async def test_critic_empty_output_fails():
 @pytest.mark.unit
 def test_tier2_agents_registered():
     register_all()
-    from aqip_agents.registry import get_agent_registry
+    from intelliqx_agents.registry import get_agent_registry
 
     reg = get_agent_registry()
     for name in [

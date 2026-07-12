@@ -11,7 +11,7 @@ import hashlib
 import os
 from collections.abc import Sequence
 
-from aqip_llm.client import CompletionRequest, CompletionResponse, LLMClient, LLMUsage
+from intelliqx_llm.client import CompletionRequest, CompletionResponse, LLMClient, LLMUsage
 
 
 class VertexLLMClient(LLMClient):
@@ -33,7 +33,7 @@ class VertexLLMClient(LLMClient):
         region: str | None = None,
         model: str | None = None,
     ) -> None:
-        self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "aqip-local")
+        self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
         self.region = region or os.environ.get("AQIP_GCP_REGION", "us-central1")
         self.model = model or self.DEFAULT_MODEL
         self._client = None

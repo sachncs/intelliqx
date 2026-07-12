@@ -3,8 +3,8 @@
 from pathlib import Path
 
 import pytest
-from aqip_sdk.manifest import AgentManifest, dump_manifest, load_manifest
-from aqip_sdk.sandbox import Sandbox
+from intelliqx_sdk.manifest import AgentManifest, dump_manifest, load_manifest
+from intelliqx_sdk.sandbox import Sandbox
 
 
 @pytest.mark.unit
@@ -35,7 +35,7 @@ def test_manifest_extra_forbidden():
 
 @pytest.mark.unit
 def test_sandbox_enforce():
-    from aqip_sdk.sandbox import SandboxViolation
+    from intelliqx_sdk.sandbox import SandboxViolation
 
     s = Sandbox(cpu_time_seconds=10, memory_mb=256, max_file_descriptors=64)
     try:
@@ -51,7 +51,7 @@ def test_sandbox_enforce():
 def test_sandbox_restore_limits():
     import resource
 
-    from aqip_sdk.sandbox import SandboxViolation
+    from intelliqx_sdk.sandbox import SandboxViolation
 
     s = Sandbox(cpu_time_seconds=10, memory_mb=256, max_file_descriptors=64)
     try:

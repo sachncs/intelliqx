@@ -3,7 +3,7 @@
 import asyncio
 
 import pytest
-from aqip_state.store import InMemoryStateStore, get_state_store
+from intelliqx_state.store import InMemoryStateStore, get_state_store
 
 
 @pytest.mark.unit

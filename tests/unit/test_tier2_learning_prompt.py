@@ -1,8 +1,8 @@
 """Tests for Tier 2 Learning and Prompt Management agents."""
 
 import pytest
-from aqip_compute.runtime import InvocationRequest
-from aqip_state.store import get_state_store
+from intelliqx_compute.runtime import InvocationRequest
+from intelliqx_state.store import get_state_store
 
 from agents import register_all, register_compute_handlers
 from agents.tier2.learning import LearningAgent

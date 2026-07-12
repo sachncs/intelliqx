@@ -23,9 +23,9 @@ Agents call into :mod:`aqip_storage`, :mod:`aqip_state`,
 agent code runs in any deployment.
 """
 
-from aqip_agents.base import AgentBase, AgentContext, AgentFactory, AgentMeta
-from aqip_agents.decorators import traced_agent
-from aqip_agents.registry import (
+from intelliqx_agents.base import AgentBase, AgentContext, AgentFactory, AgentMeta
+from intelliqx_agents.decorators import traced_agent
+from intelliqx_agents.registry import (
     AgentRegistry,
     get_agent_registry,
     register_agent,

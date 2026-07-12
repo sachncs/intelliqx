@@ -7,15 +7,15 @@ dependencies = [
     "pydantic>=2.7",
     "duckdb>=1.0",
     "pyarrow>=16",
-    "aqip-core",
-    "aqip-portability",
-    "aqip-storage",
+    "intelliqx-core",
+    "intelliqx-portability",
+    "intelliqx-storage",
 ]
 
 [tool.uv.sources]
-aqip-core = { workspace = true }
-aqip-portability = { workspace = true }
-aqip-storage = { workspace = true }
+intelliqx-core = { workspace = true }
+intelliqx-portability = { workspace = true }
+intelliqx-storage = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
