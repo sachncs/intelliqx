@@ -1,4 +1,4 @@
-"""Learning Agent (Tier 2).
+"""Learning Agent (Intelligence).
 
 Closes the feedback loop: after every run, agents report
 ``(prompt_id, outcome)`` to this agent. The agent aggregates

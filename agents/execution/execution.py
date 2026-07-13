@@ -1,4 +1,4 @@
-"""Execution Agent (Tier 3).
+"""Execution Agent (Execution).
 
 Runs structured test specs against a running environment. The agent
 takes a list of :class:`TestSpec` records and executes each one
@@ -13,7 +13,7 @@ step-by-step over HTTP. The supported step actions are:
                         key/value in ``expected_json`` matches the
                         response body (exact equality).
 
-The agent is the abstraction layer between the Tier 2 "test design"
+The agent is the abstraction layer between the Intelligence "test design"
 output and the actual HTTP traffic. In production, the same
 :class:`TestSpec` shape can be translated to Playwright / Selenium
 calls — the only change is the runner, not the agent.

@@ -1,4 +1,4 @@
-"""Test Design Agent (Tier 2).
+"""Test Design Agent (Intelligence).
 
 Generates structured test specs from a list of requirements. The
 default template produces three test types per requirement:
@@ -11,7 +11,7 @@ If ``min_tests_per_requirement >= 4`` and a requirement is ``"high"``
 or ``"critical"``, a fourth **exploratory** test is added.
 
 The output is a list of test dicts suitable for direct ingestion by
-the Tier 3 Execution Agent, which translates each dict into a
+the Execution Execution Agent, which translates each dict into a
 sequence of HTTP ``GET`` / ``POST`` / ``assert_status`` /
 ``assert_json`` steps.
 

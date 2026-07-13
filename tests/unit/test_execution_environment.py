@@ -1,4 +1,4 @@
-"""Tests for Tier 3 Environment Agent."""
+"""Tests for  Environment Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

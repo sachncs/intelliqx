@@ -1,4 +1,4 @@
-"""Tests for Tier 3 Design Intelligence Agent."""
+"""Tests for  Design Intelligence Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

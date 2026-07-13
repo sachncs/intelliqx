@@ -1,4 +1,4 @@
-"""Tests for Tier 1 Orchestrator Agent."""
+"""Tests for  Orchestrator Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

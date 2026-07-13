@@ -1,6 +1,6 @@
 """Agent registry bootstrap for IntelliqX.
 
-Imports and registers every Tier 1-4 agent with the
+Imports and registers every agent with the
 :class:`intelliqx_agents.registry.AgentRegistry`, and wires each agent's
 ``run`` method to the :class:`intelliqx_compute.runtime.InProcessComputeRuntime`
 so the Orchestrator can dispatch to them by name.
@@ -17,15 +17,15 @@ conftest fixture.
 
 Phase status:
 
-* Tier 1 (Planner, Orchestrator, Memory, Knowledge/RAG 4-source, Tool) —
-  Phase 1.
-* Tier 2 (Requirements Intel, Code Intel, Risk, Test Design, Test
+* Coordination (Planner, Orchestrator, Memory, Knowledge/RAG 4-source,
+  Tool Manager, Smoke) — Phase 1.
+* Intelligence (Requirements Intel, Code Intel, Risk, Test Design, Test
   Data, Coverage, Critic, Learning, Prompt Management) — Phases 3
   & 6.
-* Tier 3 (Environment, Design Intel, Execution, Self-Healing,
+* Execution (Environment, Design Intel, Execution, Self-Healing,
   Failure Analysis, Visual Regression, Accessibility, Performance,
   Security, Cost Optimization) — Phases 4 & 6.
-* Tier 4 (Observability, Reporting, Governance & Compliance,
+* Governance (Observability, Reporting, Governance & Compliance,
   Release Readiness) — Phase 5.
 """
 

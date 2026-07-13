@@ -1,4 +1,4 @@
-"""Accessibility Agent (Tier 3).
+"""Accessibility Agent (Execution).
 
 Validates a DOM snapshot against a small set of WCAG-derived rules.
 The agent is regex-based (no real HTML parser) and covers:

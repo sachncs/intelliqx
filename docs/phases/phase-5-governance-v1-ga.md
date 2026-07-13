@@ -1,4 +1,4 @@
-# Phase 5 — Tier 4 Governance + v1 GA
+# Phase 5 — Governance + v1 GA
 
 **Goal**: Implement the enterprise governance layer — Observability, Reporting, Governance & Compliance, Release Readiness — and certify the v1 GA release.
 

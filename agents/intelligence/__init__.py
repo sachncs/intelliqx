@@ -1,8 +1,8 @@
-"""Tier 2 agents: domain intelligence and reasoning.
+"""Intelligence agents: domain intelligence and reasoning.
 
 These agents are the platform's "thinking" layer. They consume
 requirements, source code, test designs, and historical data to
-produce structured outputs that the Tier 3 execution agents consume.
+produce structured outputs that the Execution execution agents consume.
 
 Module map:
 

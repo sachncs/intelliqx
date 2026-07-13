@@ -1,4 +1,4 @@
-"""Security Agent (Tier 3).
+"""Security Agent (Execution).
 
 Runs four checks against a set of source files and (optionally) a
 live target URL:

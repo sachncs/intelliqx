@@ -1,4 +1,4 @@
-"""Tests for Tier 2 Requirements Intelligence Agent."""
+"""Tests for  Requirements Intelligence Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

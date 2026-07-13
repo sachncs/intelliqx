@@ -1,4 +1,4 @@
-"""Tests for Tier 2 Risk Assessment, Test Design, Test Data, Coverage, Critic."""
+"""Tests for the Intelligence-category agents: Risk Assessment, Test Design, Test Data, Coverage, Critic."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest
@@ -391,11 +391,11 @@ async def test_critic_empty_output_fails():
     assert not out["critique"]["passed"]
 
 
-# --- All Tier 2 registered ---------------------------------------------------
+# --- All Intelligence-category agents registered ----------------------------
 
 
 @pytest.mark.unit
-def test_tier2_agents_registered():
+def test_intelligence_agents_registered():
     register_all()
     from intelliqx_agents.registry import get_agent_registry
 

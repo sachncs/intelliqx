@@ -1,4 +1,4 @@
-"""Orchestrator Agent (Tier 1).
+"""Orchestrator Agent (Coordination).
 
 Coordinates execution of a plan: invokes agents via the compute
 runtime in dependency order, retries on failure with exponential

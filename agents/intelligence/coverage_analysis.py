@@ -1,4 +1,4 @@
-"""Coverage Analysis Agent (Tier 2).
+"""Coverage Analysis Agent (Intelligence).
 
 Aggregates requirement, test, and code coverage into a single
 :class:`CoverageReport`. The agent does not run anything; it just

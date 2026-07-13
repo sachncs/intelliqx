@@ -1,6 +1,6 @@
-# Phase 3 — Tier 2 Domain Intelligence Core
+# Phase 3 — Intelligence Domain Core
 
-**Goal**: Implement the four core Tier 2 reasoning agents — Requirements Intelligence, Code Intelligence, Test Design, Critic — plus supporting Risk Assessment, Coverage Analysis, and Test Data scaffolding.
+**Goal**: Implement the four core Intelligence-category reasoning agents — Requirements Intelligence, Code Intelligence, Test Design, Critic — plus supporting Risk Assessment, Coverage Analysis, and Test Data scaffolding.
 
 **Status**: PENDING
 
@@ -22,10 +22,10 @@ Deferred to Phase 6: Learning Agent, Prompt Management Agent.
 
 ## 3.2 Architecture
 
-- All Tier 2 agents are **reasoning agents**: Lambda/Cloud Function/modal.Function + LiteLLM (per cloud).
+- All Intelligence agents are **reasoning agents**: Lambda/Cloud Function/modal.Function + LiteLLM (per cloud).
 - They write to KG (Parquet) and zvec; read from KG, zvec, and external sources (GitHub, Jira).
 - Planner (Phase 1) invokes these via the Orchestrator.
-- Critic runs as a guardrail after every Tier 2 agent output; failures trigger self-retry or human escalation.
+- Critic runs as a guardrail after every Intelligence agent output; failures trigger self-retry or human escalation.
 
 ## 3.3 Deliverables
 
@@ -49,7 +49,7 @@ Deferred to Phase 6: Learning Agent, Prompt Management Agent.
 5. **Test Data**: synthetic datasets pass validator (no real PII matches via Presidio).
 6. **Critic**: catches 100% of planted hallucinations and 100% of schema violations.
 7. **Coverage Analysis**: end-to-end pipeline (PRD → code → tests → coverage) yields consistent numbers across runs.
-8. **All evals** registered with LangSmith-compatible format and runnable via `make eval tier=2`.
+8. **All evals** registered with LangSmith-compatible format and runnable from `evals/intelligence/`.
 
 ## 3.5 Out of scope
 

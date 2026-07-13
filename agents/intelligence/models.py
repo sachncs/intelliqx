@@ -1,7 +1,7 @@
-"""Shared value objects for Tier 2 agents.
+"""Shared value objects for Intelligence agents.
 
-These models are the structured outputs that the Tier 2 agents
-produce and the Tier 3/4 agents consume. They are deliberately
+These models are the structured outputs that the Intelligence agents
+produce and the Execution/4 agents consume. They are deliberately
 simple — flat structures with string severities so callers can
 serialise them to JSON without a custom encoder.
 """

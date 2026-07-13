@@ -1,4 +1,4 @@
-"""Tests for Tier 4 Release Readiness Agent."""
+"""Tests for  Release Readiness Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

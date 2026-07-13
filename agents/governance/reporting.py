@@ -1,4 +1,4 @@
-"""Reporting Agent (Tier 4).
+"""Reporting Agent (Governance).
 
 Produces Markdown and JSON run reports. The Markdown output is
 designed to be PR-comment friendly: a heading, a one-line summary,

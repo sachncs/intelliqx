@@ -1,4 +1,4 @@
-"""Tests for Tier 1 Knowledge/RAG Agent."""
+"""Tests for  Knowledge/RAG Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

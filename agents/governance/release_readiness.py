@@ -1,4 +1,4 @@
-"""Release Readiness Agent (Tier 4).
+"""Release Readiness Agent (Governance).
 
 Aggregates risk + coverage + performance + security + open defects
 into a single Go / Conditional Go / No-Go recommendation with

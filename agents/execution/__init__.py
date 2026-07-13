@@ -1,6 +1,6 @@
-"""Tier 3 agents: Environment, Design Intelligence, Execution, Self-Healing, Failure Analysis, and v2 expansion.
+"""Execution agents: Environment, Design Intelligence, Execution, Self-Healing, Failure Analysis, and v2 expansion.
 
-The Tier 3 agents are the platform's **execution layer**. They do the
+The Execution agents are the platform's **execution layer**. They do the
 actual work: spin up environments, run tests, heal broken selectors,
 classify failures, and (in v2) measure performance, accessibility,
 visual regression, and security.

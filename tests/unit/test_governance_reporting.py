@@ -1,4 +1,4 @@
-"""Tests for Tier 4 Reporting Agent."""
+"""Tests for  Reporting Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

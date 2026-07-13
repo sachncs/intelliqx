@@ -1,4 +1,4 @@
-"""Tests for Tier 2 Learning and Prompt Management agents."""
+"""Tests for  Learning and Prompt Management agents."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

@@ -1,4 +1,4 @@
-"""Code Intelligence Agent (Tier 2).
+"""Code Intelligence Agent (Intelligence).
 
 Analyzes a set of source files and produces an impact graph plus a
 dependency graph. The agent is the bridge between the planner

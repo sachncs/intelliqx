@@ -1,8 +1,8 @@
-"""Environment Agent (Tier 3).
+"""Environment Agent (Execution).
 
 Provisions an ephemeral test environment. In local/dev runs the
 agent starts the in-process FastAPI "reference app" (a tiny
-purpose-built HTTP service used by the Tier 3 tests). In
+purpose-built HTTP service used by the Execution tests). In
 production the agent would call a cloud provisioning path
 (ECS, Cloud Run, Terraform …) — that wiring is deliberately left
 out of the scaffold.

@@ -1,9 +1,9 @@
-"""Tier 1 agents: Planner, Orchestrator, Memory Manager, Knowledge/RAG, Tool Manager.
+"""Coordination agents: Planner, Orchestrator, Memory Manager, Knowledge/RAG, Tool Manager.
 
-The Tier 1 agents together form the platform's coordination layer.
+The Coordination agents together form the platform's coordination layer.
 They have no domain knowledge of their own; they orchestrate
-Tier 2 reasoning agents and Tier 3 execution agents. Each agent
-in this tier is a thin wrapper over a well-understood algorithm:
+Intelligence reasoning agents and Execution execution agents. Each agent
+in this category is a thin wrapper over a well-understood algorithm:
 
 * :class:`PlannerAgent` — deterministic template-based plan
   generation with cost-ceiling trimming and DAG validation.

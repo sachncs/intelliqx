@@ -1,4 +1,4 @@
-"""Cost Optimization Agent (Tier 3).
+"""Cost Optimization Agent (Execution).
 
 Analyzes run history (via the in-process metrics registry) and
 emits recommendations to reduce spend. The current heuristics:

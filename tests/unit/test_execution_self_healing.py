@@ -1,4 +1,4 @@
-"""Tests for Tier 3 Self-Healing Agent."""
+"""Tests for  Self-Healing Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

@@ -1,1 +1,1 @@
-"""IntelliqX Reference App (FastAPI) for Tier 3 E2E tests."""
+"""IntelliqX Reference App (FastAPI) for Execution-category E2E tests."""

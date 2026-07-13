@@ -1,4 +1,4 @@
-"""Performance Agent (Tier 3).
+"""Performance Agent (Execution).
 
 Runs load/stress/spike/endurance/scalability tests against a target
 URL and reports percentile latencies + SLO compliance. In tests

@@ -1,4 +1,4 @@
-"""Tests for Tier 3 Failure Analysis Agent."""
+"""Tests for  Failure Analysis Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

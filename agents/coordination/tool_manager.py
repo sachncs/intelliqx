@@ -1,4 +1,4 @@
-"""Tool Manager Agent (Tier 1).
+"""Tool Manager Agent (Coordination).
 
 Provides a tool invocation gateway. Registers and routes to
 MCP-compatible tools via :class:`intelliqx_tools.manager.ToolManager`.

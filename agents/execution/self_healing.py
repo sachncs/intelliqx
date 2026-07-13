@@ -1,4 +1,4 @@
-"""Self-Healing Agent (Tier 3).
+"""Self-Healing Agent (Execution).
 
 Given a failed CSS selector and a current DOM snapshot, proposes
 alternative selectors. The agent is **two-stage**:

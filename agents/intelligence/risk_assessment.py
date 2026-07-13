@@ -1,4 +1,4 @@
-"""Risk Assessment Agent (Tier 2).
+"""Risk Assessment Agent (Intelligence).
 
 Combines three signals into a single 0..1 risk score and a priority
 label (low / medium / high / critical):

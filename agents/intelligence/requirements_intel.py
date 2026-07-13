@@ -1,4 +1,4 @@
-"""Requirements Intelligence Agent (Tier 2).
+"""Requirements Intelligence Agent (Intelligence).
 
 Parses a PRD (or any structured text) into a list of requirements
 plus a traceability matrix. The agent is **deterministic and

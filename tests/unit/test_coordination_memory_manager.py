@@ -1,4 +1,4 @@
-"""Tests for Tier 1 Memory Manager Agent."""
+"""Tests for  Memory Manager Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

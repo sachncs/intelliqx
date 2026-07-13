@@ -1,7 +1,7 @@
-"""Tier 1 event types.
+"""Coordination event types.
 
 A small set of strongly-typed event payloads exchanged by the
-Tier 1 agents. Every event carries :class:`intelliqx_core.events.EventMetadata`
+Coordination agents. Every event carries :class:`intelliqx_core.events.EventMetadata`
 so the platform can correlate them across processes and clouds.
 
 Topic names are ``"<noun>.<verb>(.<modifier>)"`` — verb last so

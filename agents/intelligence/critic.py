@@ -1,4 +1,4 @@
-"""Critic / Validator Agent (Tier 2).
+"""Critic / Validator Agent (Intelligence).
 
 Validates another agent's output through a four-stage pipeline:
 

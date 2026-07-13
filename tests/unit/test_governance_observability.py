@@ -1,4 +1,4 @@
-"""Tests for Tier 4 Observability Agent."""
+"""Tests for  Observability Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

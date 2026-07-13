@@ -1,4 +1,4 @@
-"""Tests for Tier 3 Accessibility Agent."""
+"""Tests for  Accessibility Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

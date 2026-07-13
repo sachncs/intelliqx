@@ -1,4 +1,4 @@
-"""Tests for Tier 3 Cost Optimization Agent."""
+"""Tests for  Cost Optimization Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

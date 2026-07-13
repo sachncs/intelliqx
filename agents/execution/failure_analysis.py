@@ -1,4 +1,4 @@
-"""Failure Analysis Agent (Tier 3).
+"""Failure Analysis Agent (Execution).
 
 Classifies a test failure into one of:
 

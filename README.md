@@ -23,7 +23,7 @@ docker compose up -d   # requires Docker
 
 ```
 libs/          15 shared libraries (intelliqx-core, intelliqx-events, intelliqx-vector, intelliqx-okf, ...)
-agents/        29 agent implementations by tier
+agents/        29 agent implementations, grouped by category
   coordination/  Planner, Orchestrator, Memory, Knowledge/RAG, Tool Manager, Smoke
   intelligence/  Requirements Intel, Code Intel, Risk, Test Design, Test Data, Coverage, Critic, Learning, Prompt Mgmt
   execution/     Environment, Design Intel, Execution, Self-Healing, Failure Analysis, Visual Regression, A11y, Perf, Security, Cost Opt
@@ -31,7 +31,6 @@ agents/        29 agent implementations by tier
 schemas/       Event JSON Schemas, KG schema
 dashboards/    Dashboard definitions
 prompts/       Prompt templates
-evals/         Evaluation suites per tier
 scripts/       Utility scripts
 services/      HTTP/WebSocket entrypoints
 workflows/     Step Functions / LangGraph definitions

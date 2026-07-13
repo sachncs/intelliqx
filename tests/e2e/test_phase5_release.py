@@ -1,6 +1,6 @@
 """Phase 5 E2E: v1 GA release scenario.
 
-Goal → Planner → Orchestrator → All Tier 1-4 agents → Release decision.
+Goal → Planner → Orchestrator → all agents → Release decision.
 """
 
 import pytest

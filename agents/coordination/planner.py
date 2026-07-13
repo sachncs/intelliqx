@@ -1,4 +1,4 @@
-"""Planner Agent (Tier 1).
+"""Planner Agent (Coordination).
 
 Transforms a :class:`~intelliqx_core.models.Goal` into a list of
 :class:`~intelliqx_core.models.PlanNode` records that form a DAG. The

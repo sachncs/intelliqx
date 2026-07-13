@@ -1,6 +1,6 @@
-"""Tier 4 agents: Observability, Reporting, Governance & Compliance, Release Readiness.
+"""Governance agents: Observability, Reporting, Governance & Compliance, Release Readiness.
 
-The Tier 4 agents are the platform's **governance layer**. They
+The Governance agents are the platform's **governance layer**. They
 don't do the work; they make the work auditable, observable, and
 gated on quality.
 

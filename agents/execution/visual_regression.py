@@ -1,4 +1,4 @@
-"""Visual Regression Agent (Tier 3).
+"""Visual Regression Agent (Execution).
 
 Compares a current screenshot against a stored baseline and reports
 whether the difference exceeds a configurable threshold.

@@ -1,4 +1,4 @@
-"""Design Intelligence Agent (Tier 3).
+"""Design Intelligence Agent (Execution).
 
 Extracts a semantic UI model from a DOM snapshot. The agent:
 

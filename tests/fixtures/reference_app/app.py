@@ -1,4 +1,4 @@
-"""Reference web app for Tier 3 E2E tests.
+"""Reference web app for Execution-category E2E tests.
 
 A simple FastAPI app with intentional quirks for self-healing and failure-analysis tests:
 - A login page with accessible selectors (id="username", id="password")

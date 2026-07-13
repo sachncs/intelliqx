@@ -1,4 +1,4 @@
-"""Governance & Compliance Agent (Tier 4).
+"""Governance & Compliance Agent (Governance).
 
 Enforces RBAC, ABAC, audit trails, and human-approval workflows.
 The agent has four actions:

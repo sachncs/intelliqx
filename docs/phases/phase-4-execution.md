@@ -1,4 +1,4 @@
-# Phase 4 — Tier 3 Execution Core
+# Phase 4 — Execution Core
 
 **Goal**: Implement the execution backbone — Environment Agent, Execution Agent, Self-Healing Agent, Failure Analysis Agent — plus Design Intelligence supporting agent. Enable end-to-end Goal → Plan → Tests → Executed → Healed → Reported flow.
 
@@ -32,7 +32,7 @@ Deferred to Phase 6: Visual Regression, Accessibility, Performance, Security.
 - [ ] `agents/execution/execution/` — Playwright runner; artifact uploader; event emitter.
 - [ ] `agents/execution/self_healing/` — selector repair (LLM + heuristics).
 - [ ] `agents/execution/failure_analysis/` — root cause classifier.
-- [ ] `workflows/full_qa_workflow.asl.json` updated to include Tier 3.
+- [ ] `workflows/full_qa_workflow.asl.json` updated to include Execution agents.
 - [ ] Reference web app under `tests/fixtures/reference_app/` (multi-page, accessible, intentionally broken in places for healing tests).
 - [ ] E2E test: full pipeline runs against reference app locally; ≥ 80% of "broken" tests heal successfully.
 

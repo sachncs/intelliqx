@@ -1,4 +1,4 @@
-"""Observability Agent (Tier 4).
+"""Observability Agent (Governance).
 
 Aggregates in-process metrics and checks SLA compliance. The
 agent does not collect new data; it reads from

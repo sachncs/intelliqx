@@ -1,4 +1,4 @@
-"""Prompt Management Agent (Tier 2).
+"""Prompt Management Agent (Intelligence).
 
 Maintains versioned prompts, runs A/B tests, and bandit-routes
 requests to the best-performing version. The agent has four

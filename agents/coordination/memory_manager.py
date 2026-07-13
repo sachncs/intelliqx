@@ -1,4 +1,4 @@
-"""Memory Manager Agent (Tier 1).
+"""Memory Manager Agent (Coordination).
 
 Provides a unified memory API across working, episodic, semantic, and
 code memories. The agent uses **polymorphic dispatch** on the

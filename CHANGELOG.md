@@ -21,10 +21,15 @@ and the final merge is squash-clean.
   `EventBus`, and `AgentBase` now inherit `abc.ABC` and use
   `@abstractmethod` — missing implementations are caught at class
   instantiation, not method-call time.
-* **Agent tier rename:** `tier1`/`tier2`/`tier3`/`tier4` directories are
+* **Agent category rename:** `tier1`/`tier2`/`tier3`/`tier4` directories are
   renamed `coordination`/`intelligence`/`execution`/`governance`.
-  `AgentMeta.tier` stays numeric for ordering; the descriptive names make
-  the architecture self-documenting.
+  The numeric `AgentMeta.tier` field is replaced by `AgentMeta.category`
+  (an `AgentCategory` enum: `coordination`, `intelligence`, `execution`,
+  `governance`). `AgentRef` and `AgentManifest` follow the same
+  renaming; ordering is preserved by the enum declaration order.
+  The descriptive names make the architecture self-documenting and
+  make every reference in code, tests, and docs read like English
+  instead of an opaque integer.
 * **Cloud adapter hardening:** bare `except Exception` in `_try_init`
   narrowed to `(ImportError, OSError)` across all 13 cloud adapters so
   configuration errors are loud while SDK-absence is silent; GCP compute
@@ -108,7 +113,7 @@ First tagged release. Phases 0–1 are complete and verified; Phases 2–7 are p
   `intelliqx-sdk`, `intelliqx-agents`) implementing single
   abstract interfaces with AWS, GCP, Modal, and local-dev
   adapters.
-* **Four-tier agent architecture.**
+* **Four-category agent architecture.**
   * Coordination — Planner, Orchestrator,
     Memory Manager, Knowledge / RAG, Tool Manager.
   * Intelligence — Requirements Intel, Code Intel,

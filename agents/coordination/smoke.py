@@ -2,7 +2,7 @@
 
 The smoke agent exists to prove the end-to-end pipeline (Planner →
 Orchestrator → compute runtime → agent invocation) without pulling
-in any of the heavier Tier 2 / Tier 3 logic. Every test in Phase 1
+in any of the heavier Intelligence / Execution logic. Every test in Phase 1
 and beyond uses it as the leaf node of a plan.
 """
 

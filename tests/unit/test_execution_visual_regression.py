@@ -1,4 +1,4 @@
-"""Tests for Tier 3 Visual Regression Agent."""
+"""Tests for  Visual Regression Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

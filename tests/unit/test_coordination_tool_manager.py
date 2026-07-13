@@ -1,4 +1,4 @@
-"""Tests for Tier 1 Tool Manager Agent."""
+"""Tests for  Tool Manager Agent."""
 
 import pytest
 from intelliqx_compute.runtime import InvocationRequest

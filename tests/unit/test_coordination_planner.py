@@ -1,4 +1,4 @@
-"""Tests for Tier 1 Planner Agent."""
+"""Tests for  Planner Agent."""
 
 import pytest
 from intelliqx_agents.registry import get_agent_registry

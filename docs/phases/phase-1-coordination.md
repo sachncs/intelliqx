@@ -48,7 +48,7 @@
 - [ ] `agents/coordination/memory_manager.py` — CRUD/search API.
 - [ ] `agents/coordination/knowledge_rag.py` — Hybrid four-source retriever (vector + KG + lexical + OKF).
 - [ ] `agents/coordination/tool_manager.py` — MCP gateway + 5 starter tools (GitHub, Jira, Slack, PagerDuty, LocalShell).
-- [ ] `workflows/full_qa_workflow.asl.json` — full Tier-1 orchestration.
+- [ ] `workflows/full_qa_workflow.asl.json` — full Coordination orchestration.
 - [ ] `infra/aws/` — CDK app with stacks: `ApiStack`, `EventStack`, `ComputeStack`, `StorageStack`, `ObservabilityStack`.
 - [ ] Seed data: sample PRD, sample code repo (toy).
 - [ ] Local smoke test: runs the full loop against docker-compose infra (no AWS credentials).
@@ -68,7 +68,7 @@
 
 - GCP/Modal deployment (Phase 2).
 - Critic agent (Phase 3).
-- Any Tier 2/3/4 agent.
+- Any Intelligence / Execution / Governance agent.
 
 ## 1.6 Risks
 

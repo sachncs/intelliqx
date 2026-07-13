@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx-agents-impl"
 version = "0.2.0"
-description = "IntelliqX agent implementations (tiers 1-4)"
+description = "IntelliqX agent implementations (coordination, intelligence, execution, governance)"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "intelliqx-core",

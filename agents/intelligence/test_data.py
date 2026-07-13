@@ -1,4 +1,4 @@
-"""Test Data Agent (Tier 2).
+"""Test Data Agent (Intelligence).
 
 Generates synthetic datasets from a column-type schema. The agent
 is intentionally simple — it does not consult a real data

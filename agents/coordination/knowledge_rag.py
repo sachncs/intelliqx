@@ -1,4 +1,4 @@
-"""Knowledge / RAG Agent (Tier 1).
+"""Knowledge / RAG Agent (Coordination).
 
 Four-source hybrid retriever:
 
