@@ -33,6 +33,7 @@ from intelliqx_llm.client import (
     deterministic_embedding,
     get_llm_client,
 )
+from intelliqx_llm.minimax import MiniMaxLLMClient
 
 __all__ = [
     "CompletionRequest",
@@ -40,6 +41,7 @@ __all__ = [
     "FakeLLMClient",
     "LLMClient",
     "LLMUsage",
+    "MiniMaxLLMClient",
     "deterministic_embedding",
     "get_llm_client",
 ]
