@@ -36,6 +36,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class TestStep(BaseModel):
+    # ``pytest`` interprets any class named ``Test*`` as a test class
+    # by default. Disable collection so the Pydantic data model is
+    # never mistaken for a test case.
+    __test__ = False
     model_config = ConfigDict(extra="forbid")
 
     action: str  # get | post | assert_status | assert_json
@@ -46,6 +50,10 @@ class TestStep(BaseModel):
 
 
 class TestSpec(BaseModel):
+    # ``pytest`` interprets any class named ``Test*`` as a test class
+    # by default. Disable collection so the Pydantic data model is
+    # never mistaken for a test case.
+    __test__ = False
     model_config = ConfigDict(extra="forbid")
 
     name: str

@@ -74,7 +74,31 @@ class EnvironmentAgent(AgentBase):
 
         # Run uvicorn in a daemon thread; see module docstring for
         # the SystemExit rationale.
-        server_thread = threading.Thread(target=server.run, daemon=True)
+        #
+        # We install a thread-local exception hook so the
+        # ``SystemExit`` uvicorn raises on bind failure doesn't
+        # surface as an unhandled exception warning. Instead the
+        # thread exits cleanly with ``None`` and the polling loop
+        # below detects the dead thread and raises ``RuntimeError``.
+        thread_error: dict[str, BaseException] = {}
+
+        def _server_target() -> None:
+            try:
+                server.run()
+            except BaseException as exc:
+                # We deliberately catch ``BaseException`` (rather
+                # than just ``Exception``) because uvicorn raises
+                # ``SystemExit`` from its bind-failure path via
+                # ``sys.exit(STARTUP_FAILURE)``. Without this
+                # broader catch, the exception would bubble out of
+                # the daemon thread as
+                # ``PytestUnhandledThreadExceptionWarning``. Storing
+                # it on the parent frame's dict and re-raising as
+                # ``RuntimeError`` from the polling loop keeps both
+                # threads clean.
+                thread_error["exc"] = exc
+
+        server_thread = threading.Thread(target=_server_target, daemon=True)
         server_thread.start()
 
         # Poll the health endpoint until ready or until the
@@ -86,6 +110,10 @@ class EnvironmentAgent(AgentBase):
         ready = False
         while time.monotonic() < deadline:
             if not server_thread.is_alive() and not ready:
+                if "exc" in thread_error:
+                    raise RuntimeError(
+                        f"Environment server failed to start on {base_url}: {thread_error['exc']}"
+                    ) from thread_error["exc"]
                 raise RuntimeError(
                     f"Environment server failed to start on {base_url} (thread exited)"
                 )

@@ -9,7 +9,7 @@ release dashboard) can render their own view.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
@@ -57,7 +57,7 @@ class ReportingAgent(AgentBase):
         js = {
             "run_id": input.run_id,
             "tenant_id": input.tenant_id,
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "summary": input.summary,
             "metrics": metrics_snapshot,
         }
@@ -79,7 +79,7 @@ def _render_markdown(input: ReportingInput, metrics: dict, *, max_chars: int) ->
     lines.append(f"# IntelliqX Run Report — {input.run_id}")
     lines.append("")
     lines.append(f"- Tenant: `{input.tenant_id}`")
-    lines.append(f"- Generated: {datetime.utcnow().isoformat()}Z")
+    lines.append(f"- Generated: {datetime.now(UTC).isoformat()}Z")
     lines.append("")
     lines.append("## Executive Summary")
     lines.append("")

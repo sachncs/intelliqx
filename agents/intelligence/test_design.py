@@ -49,6 +49,10 @@ class TestDesignAgentOutput(BaseModel):
 
 
 class TestDesignAgent(AgentBase):
+    # ``pytest`` interprets any class named ``Test*`` as a test class
+    # by default. Disable collection here so the agent class is
+    # not mistaken for a test case.
+    __test__ = False
     META = AgentMeta(
         name="test_design",
         tier=2,

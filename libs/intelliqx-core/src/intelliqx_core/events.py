@@ -22,7 +22,7 @@ Key concepts:
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -48,7 +48,7 @@ class EventMetadata(BaseModel):
     causation_id: str | None = None
     produced_by: str
     schema_version: str = "1.0"
-    emitted_at: datetime = Field(default_factory=datetime.utcnow)
+    emitted_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class BaseEvent(BaseModel):
