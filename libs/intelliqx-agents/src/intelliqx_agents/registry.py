@@ -25,8 +25,8 @@ class AgentRegistry:
     """
 
     def __init__(self) -> None:
-        self._factories: dict[str, AgentFactory] = {}
-        self._meta: dict[str, Any] = {}
+        self.__factories: dict[str, AgentFactory] = {}
+        self.__meta: dict[str, Any] = {}
 
     def register(self, name: str, factory: AgentFactory, *, meta: Any | None = None) -> None:
         """Register a factory for ``name``.
@@ -39,8 +39,8 @@ class AgentRegistry:
                 anything else) attached to the registration for
                 later inspection.
         """
-        self._factories[name] = factory
-        self._meta[name] = meta
+        self.__factories[name] = factory
+        self.__meta[name] = meta
 
     def create(self, name: str) -> AgentBase:
         """Construct a fresh agent instance for ``name``.
@@ -48,17 +48,17 @@ class AgentRegistry:
         Raises:
             KeyError: If no factory is registered for ``name``.
         """
-        if name not in self._factories:
+        if name not in self.__factories:
             raise KeyError(f"Agent not registered: {name!r}")
-        return self._factories[name]()
+        return self.__factories[name]()
 
     def list(self) -> list[str]:
         """Return every registered name, sorted alphabetically."""
-        return sorted(self._factories.keys())
+        return sorted(self.__factories.keys())
 
     def get_meta(self, name: str) -> Any:
         """Return the metadata attached to ``name``, or ``None``."""
-        return self._meta.get(name)
+        return self.__meta.get(name)
 
 
 _SINGLETON: AgentRegistry | None = None

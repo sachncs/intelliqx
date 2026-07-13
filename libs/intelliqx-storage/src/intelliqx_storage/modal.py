@@ -47,14 +47,14 @@ class ModalVolumeObjectStore(ObjectStore):
     def __init__(self, volume_name: str, mount_path: str | None = None) -> None:
         self.volume_name = volume_name
         self.mount_path = Path(mount_path or f"/mnt/{volume_name}")
-        self._volume: Any = None
-        self._available = self._try_init()
+        self.__volume: Any = None
+        self.__available = self._try_init()
 
     def _try_init(self) -> bool:
         try:
             import modal  # type: ignore
 
-            self._volume = modal.Volume.from_name(self.volume_name, create_if_missing=True)
+            self.__volume = modal.Volume.from_name(self.volume_name, create_if_missing=True)
             return True
         except (ImportError, OSError):
             return False
@@ -82,14 +82,14 @@ class ModalVolumeObjectStore(ObjectStore):
         Raises:
             RuntimeError: If the Modal SDK or token is missing.
         """
-        if not self._available:
+        if not self.__available:
             raise RuntimeError("ModalVolumeObjectStore requires modal SDK + token")
         p = self._path(key)
         # Create parent directories so nested keys work.
         p.parent.mkdir(parents=True, exist_ok=True)
         await asyncio.to_thread(p.write_bytes, data)
         # Volume commit flushes writes to the persisted snapshot.
-        await asyncio.to_thread(self._volume.commit)
+        await asyncio.to_thread(self.__volume.commit)
         return f"modal://{self.volume_name}/{key}"
 
     async def get(self, key: str) -> bytes:
@@ -105,7 +105,7 @@ class ModalVolumeObjectStore(ObjectStore):
             NotFoundError: If the key does not exist on disk.
             RuntimeError: If the Modal SDK or token is missing.
         """
-        if not self._available:
+        if not self.__available:
             raise RuntimeError("ModalVolumeObjectStore requires modal SDK + token")
         p = self._path(key)
         if not p.exists():
@@ -121,19 +121,19 @@ class ModalVolumeObjectStore(ObjectStore):
         Returns:
             True if the file exists at the resolved path.
         """
-        if not self._available:
+        if not self.__available:
             return False
         return self._path(key).exists()
 
     async def delete(self, key: str) -> None:
         """Delete ``key`` from the volume mount and commit the change."""
-        if not self._available:
+        if not self.__available:
             return
         p = self._path(key)
         if p.exists():
             await asyncio.to_thread(p.unlink)
             # Commit the deletion so the persisted snapshot reflects it.
-            await asyncio.to_thread(self._volume.commit)
+            await asyncio.to_thread(self.__volume.commit)
 
     async def list(self, prefix: str) -> AsyncIterator[str]:
         """Yield every file path under ``prefix`` on the volume.
@@ -144,7 +144,7 @@ class ModalVolumeObjectStore(ObjectStore):
         Yields:
             Relative file path strings.
         """
-        if not self._available:
+        if not self.__available:
             return
         if prefix.startswith("/"):
             prefix = prefix[1:]

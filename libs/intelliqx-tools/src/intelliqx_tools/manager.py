@@ -59,8 +59,8 @@ class ToolManager:
     def __init__(self, registry: ToolRegistry | None = None) -> None:
         self.registry = registry or ToolRegistry()
         # tool name -> handler callable
-        self._handlers: dict[str, ToolHandler] = {}
-        self._rate_limiter = RateLimiter()
+        self.__handlers: dict[str, ToolHandler] = {}
+        self.__rate_limiter = RateLimiter()
 
     def register_tool(self, definition: ToolDefinition, handler: ToolHandler) -> None:
         """Register a tool definition and its handler.
@@ -71,7 +71,7 @@ class ToolManager:
                 Signature: ``(payload: dict) -> Any``.
         """
         self.registry.register(definition)
-        self._handlers[definition.name] = handler
+        self.__handlers[definition.name] = handler
 
     async def invoke(
         self, name: str, *, payload: dict[str, Any] | None = None
@@ -89,16 +89,16 @@ class ToolManager:
             the agent's main flow is never interrupted by a tool
             crash.
         """
-        if name not in self._handlers:
+        if name not in self.__handlers:
             return ToolInvocationResult(
                 tool=name, status="not_found", error=f"No handler for {name!r}"
             )
         definition = self.registry.get(name)
         # The rate limiter blocks cooperatively until a token is
         # available; this is the only place the call may pause.
-        await self._rate_limiter.acquire(name, definition.rate_limit_per_minute)
+        await self.__rate_limiter.acquire(name, definition.rate_limit_per_minute)
         try:
-            output = await self._handlers[name](payload or {})
+            output = await self.__handlers[name](payload or {})
             return ToolInvocationResult(tool=name, status="ok", output=output)
         except Exception as e:
             return ToolInvocationResult(tool=name, status="error", error=f"{type(e).__name__}: {e}")

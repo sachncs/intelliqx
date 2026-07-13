@@ -51,10 +51,10 @@ class GCPPubSubBus(EventBus):
         fallback: EventBus | None = None,
     ) -> None:
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
-        self._publisher: Any = None
-        self._subscriptions: dict[str, list[EventHandler]] = {}
-        self._fallback = fallback
-        self._available = self._try_init()
+        self.__publisher: Any = None
+        self.__subscriptions: dict[str, list[EventHandler]] = {}
+        self.__fallback = fallback
+        self.__available = self._try_init()
 
     def _try_init(self) -> bool:
         """Try to instantiate the Pub/Sub publisher client.
@@ -65,7 +65,7 @@ class GCPPubSubBus(EventBus):
         try:
             from google.cloud import pubsub_v1  # type: ignore
 
-            self._publisher = pubsub_v1.PublisherClient()
+            self.__publisher = pubsub_v1.PublisherClient()
             return True
         except (ImportError, OSError):
             return False
@@ -73,7 +73,7 @@ class GCPPubSubBus(EventBus):
     @property
     def uses_gcp(self) -> bool:
         """Return ``True`` when the GCP path is active."""
-        return self._available and self._fallback is None
+        return self.__available and self.__fallback is None
 
     async def publish(self, topic: str, event: BaseModel) -> str:
         """Publish to the Pub/Sub topic ``{project_id}/{topic}``.
@@ -84,7 +84,7 @@ class GCPPubSubBus(EventBus):
         """
         if not self.uses_gcp:
             # Local fallback: in-process fan-out.
-            for handler in list(self._subscriptions.get(topic, [])):
+            for handler in list(self.__subscriptions.get(topic, [])):
                 try:
                     res = handler.handle(event)
                     if asyncio.iscoroutine(res):
@@ -96,11 +96,11 @@ class GCPPubSubBus(EventBus):
                         raise
             return getattr(getattr(event, "metadata", None), "event_id", "local")
 
-        topic_path = self._publisher.topic_path(self.project_id, topic)
+        topic_path = self.__publisher.topic_path(self.project_id, topic)
         data = json.dumps(event.model_dump(mode="json"), default=str).encode("utf-8")
         # The boto3-style sync publisher API is wrapped in a Future;
         # we surface it as an awaitable.
-        future = self._publisher.publish(topic_path, data)
+        future = self.__publisher.publish(topic_path, data)
         return await asyncio.wrap_future(future)
 
     def subscribe(
@@ -120,8 +120,8 @@ class GCPPubSubBus(EventBus):
             handler = EventHandler(name=handler.__name__, callback=handler, dlq=dlq)
         else:
             handler = handler.model_copy(update={"dlq": dlq or handler.dlq})
-        self._subscriptions.setdefault(topic, []).append(handler)
-        return f"gcp-{topic}-{len(self._subscriptions[topic])}"
+        self.__subscriptions.setdefault(topic, []).append(handler)
+        return f"gcp-{topic}-{len(self.__subscriptions[topic])}"
 
     async def start(self) -> None:
         """No-op: Pub/Sub delivery is push-based."""

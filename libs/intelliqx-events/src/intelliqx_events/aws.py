@@ -70,10 +70,10 @@ class AWSEventBridgeBus(EventBus):
     ) -> None:
         self.bus_name = bus_name
         self.region = region or os.environ.get("AWS_REGION", "us-east-1")
-        self._client: Any = None
-        self._subscriptions: dict[str, list[EventHandler]] = {}
-        self._fallback = fallback
-        self._aws_available = self._try_init_aws()
+        self.__client: Any = None
+        self.__subscriptions: dict[str, list[EventHandler]] = {}
+        self.__fallback = fallback
+        self.__aws_available = self._try_init_aws()
 
     def _try_init_aws(self) -> bool:
         """Try to instantiate the boto3 EventBridge client.
@@ -85,7 +85,7 @@ class AWSEventBridgeBus(EventBus):
         try:
             import boto3  # type: ignore
 
-            self._client = boto3.client("events", region_name=self.region)
+            self.__client = boto3.client("events", region_name=self.region)
             return True
         except (ImportError, OSError):
             return False
@@ -97,7 +97,7 @@ class AWSEventBridgeBus(EventBus):
         The bus is considered "using AWS" only when the SDK is
         available *and* no explicit fallback was provided.
         """
-        return self._aws_available and self._fallback is None
+        return self.__aws_available and self.__fallback is None
 
     async def publish(self, topic: str, event: BaseModel) -> str:
         """Publish ``event`` to ``topic`` via EventBridge.
@@ -107,12 +107,12 @@ class AWSEventBridgeBus(EventBus):
         credentials.
         """
         if not self.uses_aws:
-            if self._fallback is not None:
-                return await self._fallback.publish(topic, event)
+            if self.__fallback is not None:
+                return await self.__fallback.publish(topic, event)
             # Local: in-process fan-out using the in-memory handler
             # list. Useful for running the bus adapter without an
             # explicit fallback configured.
-            for handler in list(self._subscriptions.get(topic, [])):
+            for handler in list(self.__subscriptions.get(topic, [])):
                 try:
                     res = handler.handle(event)
                     if asyncio.iscoroutine(res):
@@ -137,7 +137,7 @@ class AWSEventBridgeBus(EventBus):
         # The boto3 ``put_events`` call is blocking and can take a
         # few hundred ms; offload to a thread to keep the event
         # loop responsive.
-        await asyncio.to_thread(self._client.put_events, Entries=[entry])
+        await asyncio.to_thread(self.__client.put_events, Entries=[entry])
         # Return a slice of the serialised detail as a synthetic id
         # when the event id isn't recoverable (e.g. non-IntelliqX event).
         return entry["Detail"][:36]
@@ -160,8 +160,8 @@ class AWSEventBridgeBus(EventBus):
             handler = EventHandler(name=handler.__name__, callback=handler, dlq=dlq)
         else:
             handler = handler.model_copy(update={"dlq": dlq or handler.dlq})
-        self._subscriptions.setdefault(topic, []).append(handler)
-        return f"aws-{topic}-{len(self._subscriptions[topic])}"
+        self.__subscriptions.setdefault(topic, []).append(handler)
+        return f"aws-{topic}-{len(self.__subscriptions[topic])}"
 
     async def start(self) -> None:
         """No-op: AWS delivery is push-based via EventBridge."""

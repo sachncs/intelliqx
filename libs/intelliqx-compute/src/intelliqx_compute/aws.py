@@ -49,14 +49,14 @@ class AWSLambdaComputeRuntime(ComputeRuntime):
 
     def __init__(self, region: str | None = None) -> None:
         self.region = region or os.environ.get("AWS_REGION", "us-east-1")
-        self._client: Any = None
-        self._available = self._try_init()
+        self.__client: Any = None
+        self.__available = self._try_init()
 
     def _try_init(self) -> bool:
         try:
             import boto3  # type: ignore
 
-            self._client = boto3.client("lambda", region_name=self.region)
+            self.__client = boto3.client("lambda", region_name=self.region)
             return True
         except (ImportError, OSError):
             return False
@@ -76,7 +76,7 @@ class AWSLambdaComputeRuntime(ComputeRuntime):
             InvocationResponse with one of statuses
             ``"ok"``, ``"error"``, or ``"not_found"``.
         """
-        if not self._available:
+        if not self.__available:
             return InvocationResponse(
                 agent_name=request.agent_name,
                 output={},
@@ -91,7 +91,7 @@ class AWSLambdaComputeRuntime(ComputeRuntime):
             # Synchronous RequestResponse invoke. The boto3 call is
             # blocking; we offload to a worker thread.
             response = await asyncio.to_thread(
-                self._client.invoke,
+                self.__client.invoke,
                 FunctionName=f"intelliqx-{request.agent_name}",
                 InvocationType="RequestResponse",
                 Payload=json.dumps(request.model_dump(mode="json")),

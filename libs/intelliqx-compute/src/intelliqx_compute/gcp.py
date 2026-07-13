@@ -42,7 +42,7 @@ class GCPFunctionsComputeRuntime(ComputeRuntime):
     def __init__(self, project_id: str | None = None, region: str | None = None) -> None:
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
         self.region = region or os.environ.get("INTELLIQX_GCP_REGION", "us-central1")
-        self._available = self._try_init()
+        self.__available = self._try_init()
 
     def _try_init(self) -> bool:
         """Check whether the ``httpx`` SDK is importable."""
@@ -68,7 +68,7 @@ class GCPFunctionsComputeRuntime(ComputeRuntime):
             InvocationResponse with status ``"ok"``, ``"error"``,
             or ``"not_found"``.
         """
-        if not self._available:
+        if not self.__available:
             return InvocationResponse(
                 agent_name=request.agent_name,
                 output={},

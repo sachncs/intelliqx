@@ -10,20 +10,20 @@ from intelliqx_state.store import InMemoryStateStore
 @pytest.mark.cross_cloud
 def test_aws_state_lazy_init():
     s = ElastiCacheStateStore(host="localhost")
-    # Without redis SDK / endpoint, _available should be False
-    assert not s._available
+    # Without redis SDK / endpoint, the (name-mangled) available flag should be False
+    assert not s._ElastiCacheStateStore__available
 
 
 @pytest.mark.cross_cloud
 def test_gcp_state_lazy_init():
     s = MemorystoreStateStore(host="localhost")
-    assert not s._available
+    assert not s._MemorystoreStateStore__available
 
 
 @pytest.mark.cross_cloud
 def test_modal_state_lazy_init():
     s = ModalDictStateStore(name="intelliqx-test")
-    assert not s._available
+    assert not s._ModalDictStateStore__available
 
 
 @pytest.mark.cross_cloud

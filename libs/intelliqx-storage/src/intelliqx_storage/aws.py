@@ -51,14 +51,14 @@ class S3ObjectStore(ObjectStore):
         self.bucket = bucket
         self.region = region or "us-east-1"
         self.prefix = prefix.rstrip("/")
-        self._client: Any = None
-        self._available = self._try_init()
+        self.__client: Any = None
+        self.__available = self._try_init()
 
     def _try_init(self) -> bool:
         try:
             import boto3  # type: ignore
 
-            self._client = boto3.client("s3", region_name=self.region)
+            self.__client = boto3.client("s3", region_name=self.region)
             return True
         except (ImportError, OSError):
             return False
@@ -90,7 +90,7 @@ class S3ObjectStore(ObjectStore):
             RuntimeError: If ``boto3`` is not installed or credentials
                 are missing.
         """
-        if not self._available:
+        if not self.__available:
             raise RuntimeError("S3ObjectStore requires boto3 + AWS credentials")
         kwargs: dict[str, Any] = {
             "Bucket": self.bucket,
@@ -100,7 +100,7 @@ class S3ObjectStore(ObjectStore):
         if content_type:
             kwargs["ContentType"] = content_type
         # Offload the synchronous boto3 call to a worker thread.
-        await asyncio.to_thread(self._client.put_object, **kwargs)
+        await asyncio.to_thread(self.__client.put_object, **kwargs)
         return f"s3://{self.bucket}/{self._key(key)}"
 
     async def get(self, key: str) -> bytes:
@@ -120,13 +120,13 @@ class S3ObjectStore(ObjectStore):
             RuntimeError: If ``boto3`` is not installed or credentials
                 are missing.
         """
-        if not self._available:
+        if not self.__available:
             raise RuntimeError("S3ObjectStore requires boto3 + AWS credentials")
         try:
             # ``get_object`` returns a dict with a streaming ``Body``;
             # we read it fully in a worker thread.
             obj = await asyncio.to_thread(
-                self._client.get_object, Bucket=self.bucket, Key=self._key(key)
+                self.__client.get_object, Bucket=self.bucket, Key=self._key(key)
             )
             return await asyncio.to_thread(obj["Body"].read)
         except Exception as e:
@@ -145,12 +145,12 @@ class S3ObjectStore(ObjectStore):
         Returns:
             True if the object exists in the bucket.
         """
-        if not self._available:
+        if not self.__available:
             return False
         try:
             # ``head_object`` is the cheap existence check.
             await asyncio.to_thread(
-                self._client.head_object, Bucket=self.bucket, Key=self._key(key)
+                self.__client.head_object, Bucket=self.bucket, Key=self._key(key)
             )
             return True
         except Exception:
@@ -158,9 +158,9 @@ class S3ObjectStore(ObjectStore):
 
     async def delete(self, key: str) -> None:
         """Delete ``key`` from S3 (idempotent no-op if backend unavailable)."""
-        if not self._available:
+        if not self.__available:
             return
-        await asyncio.to_thread(self._client.delete_object, Bucket=self.bucket, Key=self._key(key))
+        await asyncio.to_thread(self.__client.delete_object, Bucket=self.bucket, Key=self._key(key))
 
     async def list(self, prefix: str) -> AsyncIterator[str]:
         """Yield every key under ``prefix``.
@@ -176,14 +176,14 @@ class S3ObjectStore(ObjectStore):
         Yields:
             Object key strings (including the ``prefix``).
         """
-        if not self._available:
+        if not self.__available:
             return
         # ``list_objects_v2`` returns paginated results; we collect
         # the entire listing before yielding to keep the call shape
         # simple. For very large buckets, switch to an async
         # generator that fetches pages lazily.
         full_prefix = self._key(prefix)
-        paginator = self._client.get_paginator("list_objects_v2")
+        paginator = self.__client.get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=self.bucket, Prefix=full_prefix):
             for obj in page.get("Contents", []):
                 yield obj["Key"]

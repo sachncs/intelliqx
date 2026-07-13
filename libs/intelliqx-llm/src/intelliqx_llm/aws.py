@@ -59,20 +59,20 @@ class BedrockLLMClient(LLMClient):
     def __init__(self, region: str | None = None, model: str | None = None) -> None:
         self.region = region or os.environ.get("AWS_REGION", "us-east-1")
         self.model = model or self.DEFAULT_MODEL
-        self._client: Any = None
-        self._available = self._try_init()
+        self.__client: Any = None
+        self.__available = self._try_init()
 
     def _try_init(self) -> bool:
         try:
             import boto3  # type: ignore
 
-            self._client = boto3.client("bedrock-runtime", region_name=self.region)
+            self.__client = boto3.client("bedrock-runtime", region_name=self.region)
             return True
         except (ImportError, OSError):
             return False
 
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
-        if not self._available:
+        if not self.__available:
             # Deterministic fallback for tests/dev.
             last_user = next(
                 (m["content"] for m in reversed(request.messages) if m.get("role") == "user"), ""
@@ -98,7 +98,7 @@ class BedrockLLMClient(LLMClient):
             body["system"] = system
         # Offload the boto3 call to a worker thread.
         response = await asyncio.to_thread(
-            self._client.invoke_model,
+            self.__client.invoke_model,
             modelId=request.model,
             body=str(body).replace("'", '"'),
         )
@@ -117,7 +117,7 @@ class BedrockLLMClient(LLMClient):
         )
 
     async def embed(self, texts: Sequence[str], *, model: str = "auto") -> list[list[float]]:
-        if not self._available:
+        if not self.__available:
             return deterministic_embedding(texts, 1024)
         try:
             import json as _json
@@ -127,7 +127,7 @@ class BedrockLLMClient(LLMClient):
             for t in texts:
                 body = _json.dumps({"inputText": t})
                 response = await asyncio.to_thread(
-                    self._client.invoke_model,
+                    self.__client.invoke_model,
                     modelId=TITAN_EMBED_MODEL,
                     body=body,
                 )

@@ -133,28 +133,28 @@ class InMemoryVectorIndex:
     """
 
     def __init__(self, dim: int) -> None:
-        self._dim = dim
+        self.__dim = dim
         # id -> VectorDoc
-        self._docs: dict[str, VectorDoc] = {}
+        self.__docs: dict[str, VectorDoc] = {}
 
     @property
     def dim(self) -> int:
-        return self._dim
+        return self.__dim
 
     async def upsert(self, docs: Sequence[VectorDoc]) -> int:
         added = 0
         for d in docs:
-            if len(d.vector) != self._dim:
-                raise ValueError(f"Vector dim mismatch: expected {self._dim}, got {len(d.vector)}")
-            self._docs[d.id] = d
+            if len(d.vector) != self.__dim:
+                raise ValueError(f"Vector dim mismatch: expected {self.__dim}, got {len(d.vector)}")
+            self.__docs[d.id] = d
             added += 1
         return added
 
     async def delete(self, ids: Sequence[str]) -> int:
         removed = 0
         for i in ids:
-            if i in self._docs:
-                del self._docs[i]
+            if i in self.__docs:
+                del self.__docs[i]
                 removed += 1
         return removed
 
@@ -166,14 +166,14 @@ class InMemoryVectorIndex:
         tenant_id: str | None = None,
         filter_metadata: dict[str, Any] | None = None,
     ) -> list[SearchResult]:
-        if len(vector) != self._dim:
-            raise ValueError(f"Vector dim mismatch: expected {self._dim}, got {len(vector)}")
+        if len(vector) != self.__dim:
+            raise ValueError(f"Vector dim mismatch: expected {self.__dim}, got {len(vector)}")
 
         # First filter: drop candidates that don't match tenant or
         # metadata pre-filters. The expensive part (cosine sim) only
         # runs on the survivors.
         candidates: list[VectorDoc] = []
-        for d in self._docs.values():
+        for d in self.__docs.values():
             if tenant_id is not None and d.tenant_id != tenant_id:
                 continue
             if filter_metadata:
@@ -212,8 +212,8 @@ class InMemoryVectorIndex:
 
     async def count(self, tenant_id: str | None = None) -> int:
         if tenant_id is None:
-            return len(self._docs)
-        return sum(1 for d in self._docs.values() if d.tenant_id == tenant_id)
+            return len(self.__docs)
+        return sum(1 for d in self.__docs.values() if d.tenant_id == tenant_id)
 
 
 _SINGLETON: VectorIndex | None = None

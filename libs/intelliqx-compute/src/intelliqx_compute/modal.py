@@ -41,16 +41,16 @@ class ModalComputeRuntime(ComputeRuntime):
 
     def __init__(self, app_name: str = "intelliqx") -> None:
         self.app_name = app_name
-        self._modal_app: Any = None
+        self.__modal_app: Any = None
         # agent_name -> modal.Function handle
-        self._functions: dict[str, Any] = {}
-        self._available = self._try_init()
+        self.__functions: dict[str, Any] = {}
+        self.__available = self._try_init()
 
     def _try_init(self) -> bool:
         try:
             import modal  # type: ignore
 
-            self._modal_app = modal.App(self.app_name)
+            self.__modal_app = modal.App(self.app_name)
             return True
         except (ImportError, OSError):
             return False
@@ -67,7 +67,7 @@ class ModalComputeRuntime(ComputeRuntime):
             InvocationResponse with status ``"ok"``, ``"error"``,
             or ``"not_found"``.
         """
-        if not self._available or request.agent_name not in self._functions:
+        if not self.__available or request.agent_name not in self.__functions:
             return InvocationResponse(
                 agent_name=request.agent_name,
                 output={},
@@ -75,7 +75,7 @@ class ModalComputeRuntime(ComputeRuntime):
                 status="not_found",
                 error=f"No modal function registered for {request.agent_name}",
             )
-        fn = self._functions[request.agent_name]
+        fn = self.__functions[request.agent_name]
         start = time.monotonic()
         try:
             # ``.remote`` is blocking; offload to a thread.
@@ -104,7 +104,7 @@ class ModalComputeRuntime(ComputeRuntime):
         must already be deployed (``modal deploy``); this method
         does not provision it.
         """
-        if not self._available:
+        if not self.__available:
             return
         import modal
 
@@ -112,4 +112,4 @@ class ModalComputeRuntime(ComputeRuntime):
         # (app, function-name). ``create_if_missing`` is a
         # no-op for functions that already exist.
         fn = modal.Function.from_name(self.app_name, agent_name, create_if_missing=True)
-        self._functions[agent_name] = fn
+        self.__functions[agent_name] = fn

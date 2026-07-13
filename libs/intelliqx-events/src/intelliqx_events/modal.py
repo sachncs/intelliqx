@@ -42,10 +42,10 @@ class ModalQueueBus(EventBus):
 
     def __init__(self, fallback: EventBus | None = None) -> None:
         # topic -> modal.Queue handle (populated lazily on first use)
-        self._queues: dict[str, Any] = {}
-        self._subscriptions: dict[str, list[EventHandler]] = {}
-        self._fallback = fallback
-        self._available = self._try_init()
+        self.__queues: dict[str, Any] = {}
+        self.__subscriptions: dict[str, list[EventHandler]] = {}
+        self.__fallback = fallback
+        self.__available = self._try_init()
 
     def _try_init(self) -> bool:
         """Try to import the Modal SDK.
@@ -56,16 +56,16 @@ class ModalQueueBus(EventBus):
         try:
             import modal  # type: ignore
 
-            self._modal = modal
+            self.__modal = modal
             return True
         except (ImportError, OSError):
-            self._modal = None
+            self.__modal = None
             return False
 
     @property
     def uses_modal(self) -> bool:
         """Return ``True`` when the Modal path is active."""
-        return self._available and self._fallback is None
+        return self.__available and self.__fallback is None
 
     def _get_queue(self, topic: str) -> Any:
         """Return the modal.Queue for ``topic``, creating it if needed.
@@ -74,11 +74,11 @@ class ModalQueueBus(EventBus):
         a handle without network I/O; the queue is provisioned on
         first ``put``/``get``.
         """
-        if topic not in self._queues:
-            self._queues[topic] = self._modal.Queue.from_name(
+        if topic not in self.__queues:
+            self.__queues[topic] = self.__modal.Queue.from_name(
                 f"intelliqx-{topic}", create_if_missing=True
             )
-        return self._queues[topic]
+        return self.__queues[topic]
 
     async def publish(self, topic: str, event: BaseModel) -> str:
         """Push the event to the modal.Queue for ``topic``.
@@ -87,7 +87,7 @@ class ModalQueueBus(EventBus):
         table.
         """
         if not self.uses_modal:
-            for handler in list(self._subscriptions.get(topic, [])):
+            for handler in list(self.__subscriptions.get(topic, [])):
                 try:
                     res = handler.handle(event)
                     if asyncio.iscoroutine(res):
@@ -119,8 +119,8 @@ class ModalQueueBus(EventBus):
             handler = EventHandler(name=handler.__name__, callback=handler, dlq=dlq)
         else:
             handler = handler.model_copy(update={"dlq": dlq or handler.dlq})
-        self._subscriptions.setdefault(topic, []).append(handler)
-        return f"modal-{topic}-{len(self._subscriptions[topic])}"
+        self.__subscriptions.setdefault(topic, []).append(handler)
+        return f"modal-{topic}-{len(self.__subscriptions[topic])}"
 
     async def start(self) -> None:
         """No-op: Modal delivery is pull-based via ``Queue.get()``."""

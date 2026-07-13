@@ -96,11 +96,11 @@ class InMemoryEventBus(EventBus):
 
     def __init__(self) -> None:
         # topic -> ordered list of handlers
-        self._subscriptions: dict[str, list[EventHandler]] = defaultdict(list)
-        self._next_sub_id = 0
+        self.__subscriptions: dict[str, list[EventHandler]] = defaultdict(list)
+        self.__next_sub_id = 0
         # dlq_name -> list of events that failed handling
-        self._dlqs: dict[str, list[BaseModel]] = defaultdict(list)
-        self._started = False
+        self.__dlqs: dict[str, list[BaseModel]] = defaultdict(list)
+        self.__started = False
 
     async def publish(self, topic: str, event: BaseModel) -> str:
         """Fan out ``event`` to every subscriber of ``topic``.
@@ -113,7 +113,7 @@ class InMemoryEventBus(EventBus):
         event_id = getattr(event_id, "event_id", None) or f"local-{id(event)}"
         # Snapshot the handler list to avoid surprises if a handler
         # subscribes/unsubscribes during dispatch.
-        for handler in list(self._subscriptions.get(topic, [])):
+        for handler in list(self.__subscriptions.get(topic, [])):
             try:
                 result = handler.handle(event)
                 if asyncio.iscoroutine(result):
@@ -122,7 +122,7 @@ class InMemoryEventBus(EventBus):
                 if handler.dlq:
                     # Re-publish to the DLQ. If the DLQ handler also
                     # fails, propagate that secondary failure.
-                    self._dlqs[handler.dlq].append(event)
+                    self.__dlqs[handler.dlq].append(event)
                 else:
                     raise
         return str(event_id)
@@ -135,8 +135,8 @@ class InMemoryEventBus(EventBus):
         dlq: str | None = None,
     ) -> str:
         """Register a handler. See :meth:`EventBus.subscribe`."""
-        self._next_sub_id += 1
-        sub_id = f"sub-{self._next_sub_id}"
+        self.__next_sub_id += 1
+        sub_id = f"sub-{self.__next_sub_id}"
         if not isinstance(handler, EventHandler):
             # Wrap a bare callable with a default name (the function's
             # ``__name__``) and the supplied DLQ.
@@ -144,7 +144,7 @@ class InMemoryEventBus(EventBus):
         else:
             # Override the handler's DLQ if the caller specified one.
             handler = handler.model_copy(update={"dlq": dlq or handler.dlq})
-        self._subscriptions[topic].append(handler)
+        self.__subscriptions[topic].append(handler)
         return sub_id
 
     def get_dlq(self, dlq_name: str) -> list[BaseModel]:
@@ -154,22 +154,22 @@ class InMemoryEventBus(EventBus):
         expected DLQ traffic. The list is a copy; mutating it does
         not affect the bus.
         """
-        return list(self._dlqs.get(dlq_name, []))
+        return list(self.__dlqs.get(dlq_name, []))
 
     def reset(self) -> None:
         """Drop every subscription and DLQ entry.
 
         Useful in test setup helpers.
         """
-        self._subscriptions.clear()
-        self._dlqs.clear()
-        self._next_sub_id = 0
+        self.__subscriptions.clear()
+        self.__dlqs.clear()
+        self.__next_sub_id = 0
 
     async def start(self) -> None:
-        self._started = True
+        self.__started = True
 
     async def stop(self) -> None:
-        self._started = False
+        self.__started = False
 
 
 _SINGLETON: EventBus | None = None

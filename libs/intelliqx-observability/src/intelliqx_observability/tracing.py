@@ -69,7 +69,7 @@ class Tracer:
     """
 
     def __init__(self) -> None:
-        self._tracer = trace.get_tracer("intelliqx")
+        self.__tracer = trace.get_tracer("intelliqx")
 
     @contextmanager
     def span(self, name: str, **attrs: Any):
@@ -85,7 +85,7 @@ class Tracer:
             An :class:`_SpanProxy` for setting additional attributes
             and adding events.
         """
-        span = self._tracer.start_span(name, attributes=_to_otel_attrs(attrs))
+        span = self.__tracer.start_span(name, attributes=_to_otel_attrs(attrs))
         start = time.monotonic()
         try:
             yield _SpanProxy(span)
@@ -109,7 +109,7 @@ class _SpanProxy:
     """
 
     def __init__(self, span: Any) -> None:
-        self._span = span
+        self.__span = span
 
     def set_attribute(self, key: str, value: Any) -> None:
         """Attach a typed attribute to the span.
@@ -118,7 +118,7 @@ class _SpanProxy:
             key: Attribute name (e.g. ``"tenant_id"``).
             value: Value; non-trivial types are stringified.
         """
-        self._span.set_attribute(key, _to_otel_value(value))
+        self.__span.set_attribute(key, _to_otel_value(value))
 
     def add_event(self, name: str, **attrs: Any) -> None:
         """Add a timestamped event to the span.
@@ -127,7 +127,7 @@ class _SpanProxy:
             name: Event name (e.g. ``"node_failed"``).
             **attrs: Event attributes.
         """
-        self._span.add_event(name, attributes=_to_otel_attrs(attrs))
+        self.__span.add_event(name, attributes=_to_otel_attrs(attrs))
 
 
 def _to_otel_attrs(attrs: dict[str, Any]) -> dict[str, Any]:

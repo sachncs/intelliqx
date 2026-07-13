@@ -93,31 +93,31 @@ class SqliteVecIndex:
 
         import sqlite_vec
 
-        self._dim = dim
-        self._db_path = db_path or ":memory:"
-        self._sqlite_vec = sqlite_vec
-        self._conn = sqlite3.connect(self._db_path, check_same_thread=False)
-        self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute("PRAGMA synchronous=NORMAL")
-        self._conn.enable_load_extension(True)
+        self.__dim = dim
+        self.__db_path = db_path or ":memory:"
+        self.__sqlite_vec = sqlite_vec
+        self.__conn = sqlite3.connect(self.__db_path, check_same_thread=False)
+        self.__conn.execute("PRAGMA journal_mode=WAL")
+        self.__conn.execute("PRAGMA synchronous=NORMAL")
+        self.__conn.enable_load_extension(True)
         for candidate in (
-            self._sqlite_vec.loadable_path(),
-            self._sqlite_vec.loadable_path() + ".dylib",
-            self._sqlite_vec.loadable_path() + ".so",
+            self.__sqlite_vec.loadable_path(),
+            self.__sqlite_vec.loadable_path() + ".dylib",
+            self.__sqlite_vec.loadable_path() + ".so",
         ):
             if os.path.exists(candidate):
-                self._conn.load_extension(candidate)
+                self.__conn.load_extension(candidate)
                 break
         else:
             raise RuntimeError(
-                f"sqlite-vec extension not found at {self._sqlite_vec.loadable_path()}"
+                f"sqlite-vec extension not found at {self.__sqlite_vec.loadable_path()}"
             )
-        self._write_lock = __import__("threading").Lock()
+        self.__write_lock = __import__("threading").Lock()
         self._ensure_schema()
 
     @property
     def dim(self) -> int:
-        return self._dim
+        return self.__dim
 
     def _ensure_schema(self) -> None:
         """Create tables if they don't exist.
@@ -127,8 +127,8 @@ class SqliteVecIndex:
         metadata updates don't require deleting+re-inserting the
         vector row.
         """
-        with self._write_lock:
-            self._conn.execute(
+        with self.__write_lock:
+            self.__conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS documents (
                     id TEXT PRIMARY KEY,
@@ -139,17 +139,17 @@ class SqliteVecIndex:
                 )
                 """
             )
-            self._conn.execute(
+            self.__conn.execute(
                 f"""
                 CREATE VIRTUAL TABLE IF NOT EXISTS doc_index USING vec0(
                     embedding float[{self.dim}]
                 )
                 """
             )
-            self._conn.execute(
+            self.__conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_documents_tenant ON documents(tenant_id)"
             )
-            self._conn.execute(
+            self.__conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS _meta (
                     key TEXT PRIMARY KEY,
@@ -157,7 +157,7 @@ class SqliteVecIndex:
                 )
                 """
             )
-            cur = self._conn.cursor()
+            cur = self.__conn.cursor()
             existing_dim_row = cur.execute("SELECT value FROM _meta WHERE key = 'dim'").fetchone()
             if existing_dim_row and existing_dim_row[0] != str(self.dim):
                 raise ValueError(
@@ -168,7 +168,7 @@ class SqliteVecIndex:
                 "INSERT OR REPLACE INTO _meta (key, value) VALUES ('dim', ?)",
                 (str(self.dim),),
             )
-            self._conn.commit()
+            self.__conn.commit()
 
     async def upsert(self, docs: Sequence[VectorDoc]) -> int:
         """Insert or update ``docs`` in the index.
@@ -178,8 +178,8 @@ class SqliteVecIndex:
         """
         if not docs:
             return 0
-        with self._write_lock:
-            cur = self._conn.cursor()
+        with self.__write_lock:
+            cur = self.__conn.cursor()
             added = 0
             for d in docs:
                 if len(d.vector) != self.dim:
@@ -219,7 +219,7 @@ class SqliteVecIndex:
                     (rowid, packed),
                 )
                 added += 1
-            self._conn.commit()
+            self.__conn.commit()
         return added
 
     async def delete(self, ids: Sequence[str]) -> int:
@@ -230,8 +230,8 @@ class SqliteVecIndex:
         """
         if not ids:
             return 0
-        with self._write_lock:
-            cur = self._conn.cursor()
+        with self.__write_lock:
+            cur = self.__conn.cursor()
             removed = 0
             for i in ids:
                 cur.execute(
@@ -240,7 +240,7 @@ class SqliteVecIndex:
                 )
                 cur.execute("DELETE FROM documents WHERE id = ?", (i,))
                 removed += cur.rowcount
-            self._conn.commit()
+            self.__conn.commit()
         return removed
 
     async def search(
@@ -268,7 +268,7 @@ class SqliteVecIndex:
         """
         if len(vector) != self.dim:
             raise ValueError(f"Vector dim mismatch: expected {self.dim}, got {len(vector)}")
-        cur = self._conn.cursor()
+        cur = self.__conn.cursor()
 
         # Step 1: Pre-filter — collect eligible rowids.
         eligible_sql = "SELECT rowid, id, tenant_id, metadata_json FROM documents"
@@ -340,7 +340,7 @@ class SqliteVecIndex:
 
     async def count(self, tenant_id: str | None = None) -> int:
         """Return the number of indexed documents (optionally per-tenant)."""
-        cur = self._conn.cursor()
+        cur = self.__conn.cursor()
         if tenant_id is None:
             cur.execute("SELECT COUNT(*) FROM documents")
         else:
@@ -349,7 +349,7 @@ class SqliteVecIndex:
 
     def close(self) -> None:
         """Close the underlying SQLite connection."""
-        self._conn.close()
+        self.__conn.close()
 
     def __del__(self) -> None:
         """Best-effort cleanup if the index is garbage-collected."""

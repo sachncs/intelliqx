@@ -105,13 +105,13 @@ class InMemoryObjectStore(ObjectStore):
     """
 
     def __init__(self) -> None:
-        self._store: dict[str, bytes] = {}
-        self._meta: dict[str, dict[str, Any]] = {}
+        self.__store: dict[str, bytes] = {}
+        self.__meta: dict[str, dict[str, Any]] = {}
 
     async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
-        self._store[key] = data
-        self._meta[key] = {"content_type": content_type, "size": len(data)}
-        return f"mem-{len(self._store)}"
+        self.__store[key] = data
+        self.__meta[key] = {"content_type": content_type, "size": len(data)}
+        return f"mem-{len(self.__store)}"
 
     def put_sync(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
         """Sync version of :meth:`put` for use outside an event loop.
@@ -119,31 +119,31 @@ class InMemoryObjectStore(ObjectStore):
         Used during object-store initialisation when the zvec index
         needs to write its initial manifest before any loop runs.
         """
-        self._store[key] = data
-        self._meta[key] = {"content_type": content_type, "size": len(data)}
-        return f"mem-{len(self._store)}"
+        self.__store[key] = data
+        self.__meta[key] = {"content_type": content_type, "size": len(data)}
+        return f"mem-{len(self.__store)}"
 
     async def get(self, key: str) -> bytes:
-        if key not in self._store:
+        if key not in self.__store:
             raise NotFoundError(f"Object not found: {key!r}")
-        return self._store[key]
+        return self.__store[key]
 
     async def exists(self, key: str) -> bool:
-        return key in self._store
+        return key in self.__store
 
     async def delete(self, key: str) -> None:
-        self._store.pop(key, None)
-        self._meta.pop(key, None)
+        self.__store.pop(key, None)
+        self.__meta.pop(key, None)
 
     async def list(self, prefix: str) -> AsyncIterator[str]:
-        for k in sorted(self._store.keys()):
+        for k in sorted(self.__store.keys()):
             if k.startswith(prefix):
                 yield k
 
     def reset(self) -> None:
         """Drop every entry. Used by tests for isolation."""
-        self._store.clear()
-        self._meta.clear()
+        self.__store.clear()
+        self.__meta.clear()
 
 
 class LocalFileSystemObjectStore(ObjectStore):

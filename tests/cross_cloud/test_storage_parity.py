@@ -42,17 +42,17 @@ async def test_store_roundtrip_via_in_memory_or_fs(profile, tmp_path):
 @pytest.mark.cross_cloud
 def test_store_lazy_init_aws():
     store = S3ObjectStore(bucket="intelliqx-test")
-    # No creds → _available is False → calls should fail clearly
-    assert not store._available
+    # No creds → the (name-mangled) available flag is False → calls should fail clearly
+    assert not store._S3ObjectStore__available
 
 
 @pytest.mark.cross_cloud
 def test_store_lazy_init_gcp():
     store = GCSObjectStore(bucket="intelliqx-test")
-    assert not store._available
+    assert not store._GCSObjectStore__available
 
 
 @pytest.mark.cross_cloud
 def test_store_lazy_init_modal():
     store = ModalVolumeObjectStore(volume_name="intelliqx-test")
-    assert not store._available
+    assert not store._ModalVolumeObjectStore__available

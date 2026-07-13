@@ -118,11 +118,11 @@ class InProcessComputeRuntime(ComputeRuntime):
     """
 
     def __init__(self) -> None:
-        self._handlers: dict[str, AgentCallable] = {}
+        self.__handlers: dict[str, AgentCallable] = {}
 
     def register(self, agent_name: str, handler: AgentCallable) -> None:
         """Register ``handler`` as the implementation of ``agent_name``."""
-        self._handlers[agent_name] = handler
+        self.__handlers[agent_name] = handler
 
     async def invoke(self, request: InvocationRequest) -> InvocationResponse:
         # Wrap the whole call in a tracer span so every agent
@@ -131,7 +131,7 @@ class InProcessComputeRuntime(ComputeRuntime):
         with tracer.span(f"agent.{request.agent_name}.invoke") as span:
             span.set_attribute("tenant_id", request.tenant_id)
             span.set_attribute("agent_name", request.agent_name)
-            handler = self._handlers.get(request.agent_name)
+            handler = self.__handlers.get(request.agent_name)
             if handler is None:
                 return InvocationResponse(
                     agent_name=request.agent_name,

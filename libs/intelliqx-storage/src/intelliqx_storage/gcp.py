@@ -43,17 +43,17 @@ class GCSObjectStore(ObjectStore):
     def __init__(self, bucket: str, prefix: str = "") -> None:
         self.bucket_name = bucket
         self.prefix = prefix.rstrip("/")
-        self._client: Any = None
-        self._bucket: Any = None
-        self._available = self._try_init()
+        self.__client: Any = None
+        self.__bucket: Any = None
+        self.__available = self._try_init()
 
     def _try_init(self) -> bool:
         try:
             from google.cloud import storage  # type: ignore
 
-            self._client = storage.Client()
+            self.__client = storage.Client()
             # ``bucket()`` is a lazy reference; no I/O.
-            self._bucket = self._client.bucket(self.bucket_name)
+            self.__bucket = self.__client.bucket(self.bucket_name)
             return True
         except (ImportError, OSError):
             return False
@@ -83,9 +83,9 @@ class GCSObjectStore(ObjectStore):
         Raises:
             RuntimeError: If the GCS SDK or credentials are missing.
         """
-        if not self._available:
+        if not self.__available:
             raise RuntimeError("GCSObjectStore requires google-cloud-storage + GCP credentials")
-        blob = self._bucket.blob(self._key(key))
+        blob = self.__bucket.blob(self._key(key))
         await asyncio.to_thread(
             blob.upload_from_string, data, content_type=content_type or "application/octet-stream"
         )
@@ -104,9 +104,9 @@ class GCSObjectStore(ObjectStore):
             NotFoundError: If the key does not exist.
             RuntimeError: If the GCS SDK or credentials are missing.
         """
-        if not self._available:
+        if not self.__available:
             raise RuntimeError("GCSObjectStore requires google-cloud-storage + GCP credentials")
-        blob = self._bucket.blob(self._key(key))
+        blob = self.__bucket.blob(self._key(key))
         try:
             return await asyncio.to_thread(blob.download_as_bytes)
         except Exception as e:
@@ -121,16 +121,16 @@ class GCSObjectStore(ObjectStore):
         Returns:
             True if the blob exists in the bucket.
         """
-        if not self._available:
+        if not self.__available:
             return False
-        blob = self._bucket.blob(self._key(key))
+        blob = self.__bucket.blob(self._key(key))
         return await asyncio.to_thread(blob.exists)
 
     async def delete(self, key: str) -> None:
         """Delete ``key`` from GCS (no-op when backend unavailable)."""
-        if not self._available:
+        if not self.__available:
             return
-        blob = self._bucket.blob(self._key(key))
+        blob = self.__bucket.blob(self._key(key))
         await asyncio.to_thread(blob.delete)
 
     async def list(self, prefix: str) -> AsyncIterator[str]:
@@ -142,8 +142,8 @@ class GCSObjectStore(ObjectStore):
         Yields:
             Blob name strings.
         """
-        if not self._available:
+        if not self.__available:
             return
         full = self._key(prefix)
-        for blob in self._client.list_blobs(self.bucket_name, prefix=full):
+        for blob in self.__client.list_blobs(self.bucket_name, prefix=full):
             yield blob.name
