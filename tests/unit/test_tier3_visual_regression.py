@@ -82,11 +82,7 @@ async def test_visual_regression_detects_regression():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="visual_regression",
-            input={
-                "tenant_id": "t1",
-                "image_bytes": b"x" * 100,
-                "baseline_key": "t1/visual/b.png",
-            },
+            input={"tenant_id": "t1", "image_bytes": b"x" * 100, "baseline_key": "t1/visual/b.png"},
             tenant_id="t1",
         )
     )

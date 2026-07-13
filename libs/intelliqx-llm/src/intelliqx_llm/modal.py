@@ -120,8 +120,7 @@ class VLLMModalLLMClient(LLMClient):
             raise RuntimeError("httpx required for VLLMModalLLMClient") from e
         async with httpx.AsyncClient(base_url=self.endpoint_url, timeout=60.0) as client:
             r = await client.post(
-                "/v1/embeddings",
-                json={"model": self.model, "input": list(texts)},
+                "/v1/embeddings", json={"model": self.model, "input": list(texts)}
             )
             r.raise_for_status()
             data = r.json()

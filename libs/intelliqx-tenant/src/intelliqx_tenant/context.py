@@ -122,7 +122,5 @@ class TenantResolver:
         if not tid:
             raise ValueError("Missing X-IntelliqX-Tenant header")
         return TenantContext(
-            tenant_id=tid,
-            user_id=lower.get("x-intelliqx-user"),
-            trace_id=lower.get("x-trace-id"),
+            tenant_id=tid, user_id=lower.get("x-intelliqx-user"), trace_id=lower.get("x-trace-id")
         )

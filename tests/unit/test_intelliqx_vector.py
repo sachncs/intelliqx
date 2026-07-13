@@ -1,11 +1,7 @@
 """Tests for intelliqx-vector."""
 
 import pytest
-from intelliqx_vector.index import (
-    InMemoryVectorIndex,
-    VectorDoc,
-    get_vector_index,
-)
+from intelliqx_vector.index import InMemoryVectorIndex, VectorDoc, get_vector_index
 
 
 def _random_vec(seed: int, dim: int = 8) -> list[float]:

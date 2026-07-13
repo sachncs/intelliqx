@@ -16,10 +16,4 @@ and executed in a :class:`Sandbox` enforced by the compute runtime.
 from intelliqx_sdk.manifest import AgentManifest, dump_manifest, load_manifest
 from intelliqx_sdk.sandbox import Sandbox, SandboxViolation
 
-__all__ = [
-    "AgentManifest",
-    "Sandbox",
-    "SandboxViolation",
-    "dump_manifest",
-    "load_manifest",
-]
+__all__ = ["AgentManifest", "Sandbox", "SandboxViolation", "dump_manifest", "load_manifest"]

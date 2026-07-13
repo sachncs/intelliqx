@@ -138,12 +138,7 @@ class KnowledgeRAGAgent(AgentBase):
         vec_results = await vec_index.search(query_vec, top_k=input.top_k * 3, tenant_id=tenant_id)
         for r in vec_results:
             source_lists["vector"].append(
-                KnowledgeRAGDocument(
-                    id=r.id,
-                    text=r.text or "",
-                    score=r.score,
-                    source="vector",
-                )
+                KnowledgeRAGDocument(id=r.id, text=r.text or "", score=r.score, source="vector")
             )
 
         # 2) KG neighbors
@@ -154,12 +149,7 @@ class KnowledgeRAGAgent(AgentBase):
         for row in kg_rows.rows[: input.top_k * 3]:
             text = str(row.get("attrs", ""))
             source_lists["kg"].append(
-                KnowledgeRAGDocument(
-                    id=str(row["id"]),
-                    text=text,
-                    score=0.5,
-                    source="kg",
-                )
+                KnowledgeRAGDocument(id=str(row["id"]), text=text, score=0.5, source="kg")
             )
 
         # 3) Lexical — search episodic memory
@@ -175,10 +165,7 @@ class KnowledgeRAGAgent(AgentBase):
             if hits > 0:
                 scored.append(
                     KnowledgeRAGDocument(
-                        id=key,
-                        text=text[:400],
-                        score=float(hits),
-                        source="lexical",
+                        id=key, text=text[:400], score=float(hits), source="lexical"
                     )
                 )
         scored.sort(key=lambda r: -r.score)
@@ -210,10 +197,7 @@ class KnowledgeRAGAgent(AgentBase):
             weight = self.SOURCE_WEIGHTS.get(source, 0.5)
             for rank, doc in enumerate(candidates):
                 if doc.id not in merged:
-                    merged[doc.id] = {
-                        "doc": doc,
-                        "rrf": 0.0,
-                    }
+                    merged[doc.id] = {"doc": doc, "rrf": 0.0}
                 merged[doc.id]["rrf"] += weight / (_RRF_K + rank + 1)
 
         fused = sorted(merged.values(), key=lambda x: x["rrf"], reverse=True)[: input.top_k]
@@ -245,11 +229,7 @@ class KnowledgeRAGAgent(AgentBase):
         await idx.upsert(
             [
                 VectorDoc(
-                    id=doc_id,
-                    tenant_id=tenant_id,
-                    text=text,
-                    vector=vec,
-                    metadata=metadata or {},
+                    id=doc_id, tenant_id=tenant_id, text=text, vector=vec, metadata=metadata or {}
                 )
             ]
         )
@@ -276,11 +256,7 @@ class KnowledgeRAGAgent(AgentBase):
         await idx.upsert(
             [
                 VectorDoc(
-                    id=vec_id,
-                    tenant_id=tenant_id,
-                    text=text,
-                    vector=vec,
-                    metadata=metadata or {},
+                    id=vec_id, tenant_id=tenant_id, text=text, vector=vec, metadata=metadata or {}
                 )
             ]
         )

@@ -82,11 +82,7 @@ async def test_release_readiness_decision_id_is_ulid():
     register_compute_handlers()
     agent = ReleaseReadinessAgent()
     out = await agent.invoke(
-        InvocationRequest(
-            agent_name="release_readiness",
-            input={"tenant_id": "t1"},
-            tenant_id="t1",
-        )
+        InvocationRequest(agent_name="release_readiness", input={"tenant_id": "t1"}, tenant_id="t1")
     )
     assert is_valid_id(out["decision_id"])
 

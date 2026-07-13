@@ -211,10 +211,7 @@ class ZvecIndex:
             for k in filter_metadata:
                 expr_parts.append(f'metadata CONTAINS "{k}"')
         flt = " AND ".join(expr_parts) if expr_parts else None
-        q = zvec.Query(
-            field_name=self.VECTOR_FIELD,
-            vector=vector,
-        )
+        q = zvec.Query(field_name=self.VECTOR_FIELD, vector=vector)
         try:
             doc_list = self.__coll.query(queries=q, topk=top_k, filter=flt)
         except Exception:

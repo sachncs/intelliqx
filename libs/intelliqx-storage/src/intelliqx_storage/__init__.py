@@ -24,9 +24,4 @@ from intelliqx_storage.store import (
     get_object_store,
 )
 
-__all__ = [
-    "InMemoryObjectStore",
-    "LocalFileSystemObjectStore",
-    "ObjectStore",
-    "get_object_store",
-]
+__all__ = ["InMemoryObjectStore", "LocalFileSystemObjectStore", "ObjectStore", "get_object_store"]

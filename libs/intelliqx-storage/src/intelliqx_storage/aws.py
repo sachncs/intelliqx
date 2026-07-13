@@ -92,11 +92,7 @@ class S3ObjectStore(ObjectStore):
         """
         if not self.__available:
             raise RuntimeError("S3ObjectStore requires boto3 + AWS credentials")
-        kwargs: dict[str, Any] = {
-            "Bucket": self.bucket,
-            "Key": self._key(key),
-            "Body": data,
-        }
+        kwargs: dict[str, Any] = {"Bucket": self.bucket, "Key": self._key(key), "Body": data}
         if content_type:
             kwargs["ContentType"] = content_type
         # Offload the synchronous boto3 call to a worker thread.

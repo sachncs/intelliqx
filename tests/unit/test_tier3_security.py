@@ -18,9 +18,7 @@ async def test_security_finds_aws_access_key():
             agent_name="security",
             input={
                 "tenant_id": "t1",
-                "source_files": {
-                    "config.py": "AWS_KEY = 'AKIAIOSFODNN7EXAMPLE'\n",
-                },
+                "source_files": {"config.py": "AWS_KEY = 'AKIAIOSFODNN7EXAMPLE'\n"},
             },
             tenant_id="t1",
         )
@@ -37,10 +35,7 @@ async def test_security_finds_eval():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="security",
-            input={
-                "tenant_id": "t1",
-                "source_files": {"app.py": "x = eval(input())\n"},
-            },
+            input={"tenant_id": "t1", "source_files": {"app.py": "x = eval(input())\n"}},
             tenant_id="t1",
         )
     )
@@ -56,10 +51,7 @@ async def test_security_finds_pickle():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="security",
-            input={
-                "tenant_id": "t1",
-                "source_files": {"app.py": "data = pickle.loads(blob)\n"},
-            },
+            input={"tenant_id": "t1", "source_files": {"app.py": "data = pickle.loads(blob)\n"}},
             tenant_id="t1",
         )
     )
@@ -76,10 +68,7 @@ async def test_security_finds_outdated_django():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="security",
-            input={
-                "tenant_id": "t1",
-                "source_files": {"requirements.txt": "django==1.11.0\n"},
-            },
+            input={"tenant_id": "t1", "source_files": {"requirements.txt": "django==1.11.0\n"}},
             tenant_id="t1",
         )
     )
@@ -97,9 +86,7 @@ async def test_security_clean_code_no_findings():
             agent_name="security",
             input={
                 "tenant_id": "t1",
-                "source_files": {
-                    "safe.py": "def add(a, b):\n    return a + b\n",
-                },
+                "source_files": {"safe.py": "def add(a, b):\n    return a + b\n"},
             },
             tenant_id="t1",
         )

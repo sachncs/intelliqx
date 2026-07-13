@@ -1,6 +1,6 @@
 [project]
 name = "intelliqx"
-version = "0.1.0"
+version = "0.2.0"
 description = "Autonomous QA Intelligence Platform"
 requires-python = ">=3.12,<3.13"
 readme = "README.md"
@@ -68,6 +68,7 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 ignore = ["E501", "UP042", "UP046", "B905", "RUF005"]
+external = ["VU", "VUE"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -99,8 +100,19 @@ omit = ["*/tests/*", "*/__init__.py"]
 show_missing = true
 skip_covered = false
 
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+skip_magic_trailing_comma = true
+skip_string_normalization = true
+
+[tool.vulture]
+min_confidence = 80
+
 [dependency-groups]
 dev = [
     "fastapi>=0.139.0",
     "uvicorn>=0.51.0",
+    "vulture>=2.13",
+    "black>=24.0",
 ]

@@ -133,8 +133,7 @@ class AgentBase(abc.ABC, Generic[InputT, OutputT]):
         inp = input_model.model_validate(request.input)
         ctx = AgentContext(
             tenant=TenantContext(
-                tenant_id=request.tenant_id,
-                trace_id=request.metadata.get("trace_id"),
+                tenant_id=request.tenant_id, trace_id=request.metadata.get("trace_id")
             ),
             run_id=request.metadata.get("run_id", "unknown"),
         )
@@ -149,10 +148,7 @@ class AgentBase(abc.ABC, Generic[InputT, OutputT]):
         schemas, SLAs, cost ceilings).
         """
         m = cls.META
-        return AgentCapability(
-            name=m.name,
-            description=m.description,
-        )
+        return AgentCapability(name=m.name, description=m.description)
 
 
 AgentFactory = Callable[[], AgentBase]

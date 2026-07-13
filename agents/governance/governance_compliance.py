@@ -96,10 +96,7 @@ def _check(input: GovernanceInput) -> GovernanceOutput:
     ):
         allowed = False
         reasons.append("tenant mismatch")
-    return GovernanceOutput(
-        allowed=allowed,
-        reason="; ".join(reasons) if not allowed else "ok",
-    )
+    return GovernanceOutput(allowed=allowed, reason="; ".join(reasons) if not allowed else "ok")
 
 
 async def _record_audit(input: GovernanceInput) -> GovernanceOutput:
@@ -117,11 +114,7 @@ async def _record_audit(input: GovernanceInput) -> GovernanceOutput:
         "actor_user": input.actor.user_id,
         "resource": input.resource,
     }
-    await state.set(
-        f"audit:{audit_id}",
-        str(payload).encode("utf-8"),
-        ttl_seconds=86400 * 365,
-    )
+    await state.set(f"audit:{audit_id}", str(payload).encode("utf-8"), ttl_seconds=86400 * 365)
     return GovernanceOutput(allowed=True, audit_id=audit_id)
 
 
@@ -134,16 +127,9 @@ async def _request_approval(input: GovernanceInput) -> GovernanceOutput:
     """
     state = get_state_store()
     approval_id = input.approval_id or f"approval-{int(time.time() * 1000)}"
-    await state.set(
-        f"approval:{approval_id}",
-        b"pending",
-        ttl_seconds=86400 * 7,
-    )
+    await state.set(f"approval:{approval_id}", b"pending", ttl_seconds=86400 * 7)
     return GovernanceOutput(
-        allowed=False,
-        reason="approval required",
-        audit_id=approval_id,
-        approval_state="pending",
+        allowed=False, reason="approval required", audit_id=approval_id, approval_state="pending"
     )
 
 
@@ -155,9 +141,5 @@ async def _grant(input: GovernanceInput) -> GovernanceOutput:
     if not input.approval_id:
         return GovernanceOutput(allowed=False, reason="missing approval_id")
     state = get_state_store()
-    await state.set(
-        f"approval:{input.approval_id}",
-        b"approved",
-        ttl_seconds=86400 * 7,
-    )
+    await state.set(f"approval:{input.approval_id}", b"approved", ttl_seconds=86400 * 7)
     return GovernanceOutput(allowed=True, audit_id=input.approval_id, approval_state="approved")

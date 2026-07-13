@@ -82,10 +82,7 @@ class ModalComputeRuntime(ComputeRuntime):
             output = await asyncio.to_thread(fn.remote, request.model_dump(mode="json"))
             duration_ms = int((time.monotonic() - start) * 1000)
             return InvocationResponse(
-                agent_name=request.agent_name,
-                output=output,
-                duration_ms=duration_ms,
-                status="ok",
+                agent_name=request.agent_name, output=output, duration_ms=duration_ms, status="ok"
             )
         except Exception as e:
             duration_ms = int((time.monotonic() - start) * 1000)

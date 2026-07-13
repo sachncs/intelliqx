@@ -45,11 +45,7 @@ class GCPPubSubBus(EventBus):
             SDK is unavailable.
     """
 
-    def __init__(
-        self,
-        project_id: str | None = None,
-        fallback: EventBus | None = None,
-    ) -> None:
+    def __init__(self, project_id: str | None = None, fallback: EventBus | None = None) -> None:
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
         self.__publisher: Any = None
         self.__subscriptions: dict[str, list[EventHandler]] = {}
@@ -104,11 +100,7 @@ class GCPPubSubBus(EventBus):
         return await asyncio.wrap_future(future)
 
     def subscribe(
-        self,
-        topic: str,
-        handler: Callable | EventHandler,
-        *,
-        dlq: str | None = None,
+        self, topic: str, handler: Callable | EventHandler, *, dlq: str | None = None
     ) -> str:
         """Register a handler.
 

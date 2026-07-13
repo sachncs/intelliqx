@@ -84,10 +84,7 @@ async def test_code_intel_impact_when_no_changes():
         InvocationRequest(
             agent_name="code_intel",
             input={
-                "files": [
-                    {"path": "src/a.py", "content": ""},
-                    {"path": "src/b.py", "content": ""},
-                ],
+                "files": [{"path": "src/a.py", "content": ""}, {"path": "src/b.py", "content": ""}],
                 "tenant_id": "t1",
                 "changed_paths": [],
             },

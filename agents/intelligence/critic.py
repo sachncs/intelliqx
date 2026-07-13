@@ -108,9 +108,6 @@ class CriticAgent(AgentBase):
         passed = not issues
         return CriticOutput(
             critique=CritiqueRecord(
-                target=input.target,
-                passed=passed,
-                issues=issues,
-                suggestions=suggestions,
+                target=input.target, passed=passed, issues=issues, suggestions=suggestions
             )
         )

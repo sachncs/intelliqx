@@ -128,8 +128,7 @@ class SqliteVecIndex:
         vector row.
         """
         with self.__write_lock:
-            self.__conn.execute(
-                """
+            self.__conn.execute("""
                 CREATE TABLE IF NOT EXISTS documents (
                     id TEXT PRIMARY KEY,
                     tenant_id TEXT NOT NULL,
@@ -137,26 +136,21 @@ class SqliteVecIndex:
                     metadata_json TEXT,
                     vector BLOB NOT NULL
                 )
-                """
-            )
-            self.__conn.execute(
-                f"""
+                """)
+            self.__conn.execute(f"""
                 CREATE VIRTUAL TABLE IF NOT EXISTS doc_index USING vec0(
                     embedding float[{self.dim}]
                 )
-                """
-            )
+                """)
             self.__conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_documents_tenant ON documents(tenant_id)"
             )
-            self.__conn.execute(
-                """
+            self.__conn.execute("""
                 CREATE TABLE IF NOT EXISTS _meta (
                     key TEXT PRIMARY KEY,
                     value TEXT NOT NULL
                 )
-                """
-            )
+                """)
             cur = self.__conn.cursor()
             existing_dim_row = cur.execute("SELECT value FROM _meta WHERE key = 'dim'").fetchone()
             if existing_dim_row and existing_dim_row[0] != str(self.dim):
@@ -165,8 +159,7 @@ class SqliteVecIndex:
                     f"but SqliteVecIndex was constructed with dim={self.dim}"
                 )
             cur.execute(
-                "INSERT OR REPLACE INTO _meta (key, value) VALUES ('dim', ?)",
-                (str(self.dim),),
+                "INSERT OR REPLACE INTO _meta (key, value) VALUES ('dim', ?)", (str(self.dim),)
             )
             self.__conn.commit()
 
@@ -197,26 +190,16 @@ class SqliteVecIndex:
                         metadata_json = excluded.metadata_json,
                         vector = excluded.vector
                     """,
-                    (
-                        d.id,
-                        d.tenant_id,
-                        d.text or "",
-                        json.dumps(d.metadata),
-                        packed,
-                    ),
+                    (d.id, d.tenant_id, d.text or "", json.dumps(d.metadata), packed),
                 )
                 cur.execute("SELECT rowid FROM documents WHERE id = ?", (d.id,))
                 row = cur.fetchone()
                 if row is None:
                     continue
                 rowid = row[0]
+                cur.execute("DELETE FROM doc_index WHERE rowid = ?", (rowid,))
                 cur.execute(
-                    "DELETE FROM doc_index WHERE rowid = ?",
-                    (rowid,),
-                )
-                cur.execute(
-                    "INSERT INTO doc_index (rowid, embedding) VALUES (?, ?)",
-                    (rowid, packed),
+                    "INSERT INTO doc_index (rowid, embedding) VALUES (?, ?)", (rowid, packed)
                 )
                 added += 1
             self.__conn.commit()
@@ -291,12 +274,7 @@ class SqliteVecIndex:
 
         eligible_rowids = {row[0] for row in eligible}
         eligible_meta = {
-            row[0]: {
-                "id": row[1],
-                "tenant_id": row[2],
-                "metadata_json": row[3],
-            }
-            for row in eligible
+            row[0]: {"id": row[1], "tenant_id": row[2], "metadata_json": row[3]} for row in eligible
         }
 
         # Step 2: Vector search — retrieve enough candidates.
@@ -325,12 +303,7 @@ class SqliteVecIndex:
             except json.JSONDecodeError:
                 meta = {}
             results.append(
-                SearchResult(
-                    id=str(meta_info["id"]),
-                    score=score,
-                    metadata=meta,
-                    text=None,
-                )
+                SearchResult(id=str(meta_info["id"]), score=score, metadata=meta, text=None)
             )
             if len(results) >= top_k:
                 break

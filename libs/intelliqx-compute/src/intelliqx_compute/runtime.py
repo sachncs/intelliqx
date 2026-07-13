@@ -166,10 +166,7 @@ class InProcessComputeRuntime(ComputeRuntime):
             duration_ms = int((time.monotonic() - start) * 1000)
             span.set_attribute("duration_ms", duration_ms)
             return InvocationResponse(
-                agent_name=request.agent_name,
-                output=output,
-                duration_ms=duration_ms,
-                status="ok",
+                agent_name=request.agent_name, output=output, duration_ms=duration_ms, status="ok"
             )
 
 

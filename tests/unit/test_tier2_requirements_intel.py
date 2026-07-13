@@ -88,10 +88,7 @@ async def test_requirements_intel_creates_traceability():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="requirements_intel",
-            input={
-                "text": "1. Users can login\n2. User login tracking",
-                "tenant_id": "t1",
-            },
+            input={"text": "1. Users can login\n2. User login tracking", "tenant_id": "t1"},
             tenant_id="t1",
         )
     )
@@ -127,9 +124,7 @@ async def test_requirements_intel_empty_text():
     agent = RequirementsIntelAgent()
     out = await agent.invoke(
         InvocationRequest(
-            agent_name="requirements_intel",
-            input={"text": "", "tenant_id": "t1"},
-            tenant_id="t1",
+            agent_name="requirements_intel", input={"text": "", "tenant_id": "t1"}, tenant_id="t1"
         )
     )
     assert out["requirement_count"] == 0

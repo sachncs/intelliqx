@@ -203,15 +203,7 @@ def _split_frontmatter_from_extras(parsed: dict) -> tuple[OKFFrontmatter, dict]:
     a top-level field because the spec uses it for version
     negotiation.
     """
-    known = {
-        "type",
-        "title",
-        "description",
-        "resource",
-        "tags",
-        "timestamp",
-        "okf_version",
-    }
+    known = {"type", "title", "description", "resource", "tags", "timestamp", "okf_version"}
     fm_data: dict[str, Any] = {}
     extras: dict[str, Any] = {}
     for k, v in parsed.items():

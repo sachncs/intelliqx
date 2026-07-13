@@ -34,11 +34,7 @@ async def test_smoke_agent_identical_output_across_profiles(monkeypatch, profile
     _setup_test_world(profile)
 
     agent = SmokeAgent()
-    req = InvocationRequest(
-        agent_name="smoke",
-        input={"marker": "cross_cloud"},
-        tenant_id="t1",
-    )
+    req = InvocationRequest(agent_name="smoke", input={"marker": "cross_cloud"}, tenant_id="t1")
     out = await agent.invoke(req)
     assert out["echo"] == "cross_cloud"
     assert out["metadata"]["tenant"] == "t1"
@@ -76,9 +72,7 @@ async def test_compute_runtime_invokes_agent_across_profiles(monkeypatch, profil
     _setup_test_world(profile)
     runtime = get_compute_runtime()
     req = InvocationRequest(
-        agent_name="smoke",
-        input={"marker": f"profile-{profile}"},
-        tenant_id="t1",
+        agent_name="smoke", input={"marker": f"profile-{profile}"}, tenant_id="t1"
     )
     resp = await runtime.invoke(req)
     # All profiles use InProcessComputeRuntime in tests (cloud adapters require creds)

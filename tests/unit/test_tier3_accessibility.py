@@ -109,9 +109,7 @@ async def test_a11y_detects_missing_h1():
     agent = AccessibilityAgent()
     out = await agent.invoke(
         InvocationRequest(
-            agent_name="accessibility",
-            input={"dom_html": bad, "tenant_id": "t1"},
-            tenant_id="t1",
+            agent_name="accessibility", input={"dom_html": bad, "tenant_id": "t1"}, tenant_id="t1"
         )
     )
     assert any(i["rule"] == "page-has-h1" for i in out["issues"])

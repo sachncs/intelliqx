@@ -83,14 +83,10 @@ def test_load_concept_missing_type_raises(tmp_path: Path):
 @pytest.mark.unit
 def test_save_concept_round_trip(tmp_path: Path):
     p = tmp_path / "out.md"
-    c = (
-        load_concept(p)
-        if False
-        else OKFConcept(
-            concept_id="out",
-            frontmatter=OKFFrontmatter(type="Table", title="Users"),
-            body="The users table.\n",
-        )
+    c = OKFConcept(
+        concept_id="out",
+        frontmatter=OKFFrontmatter(type="Table", title="Users"),
+        body="The users table.\n",
     )
     save_concept(c, p)
     c2 = load_concept(p)
@@ -103,8 +99,7 @@ def test_save_concept_round_trip(tmp_path: Path):
 def test_load_concept_sections(tmp_path: Path):
     p = tmp_path / "sections.md"
     p.write_text(
-        "---\ntype: X\n---\nIntro\n\n# Schema\nid INT\n# Examples\nfoo\n",
-        encoding="utf-8",
+        "---\ntype: X\n---\nIntro\n\n# Schema\nid INT\n# Examples\nfoo\n", encoding="utf-8"
     )
     c = load_concept(p)
     headings = [s.heading for s in c.sections]
@@ -296,9 +291,7 @@ def test_catalog_type_filter():
                 body="Body A.",
             ),
             "b": OKFConcept(
-                concept_id="b",
-                frontmatter=OKFFrontmatter(type="Table", title="B"),
-                body="Body B.",
+                concept_id="b", frontmatter=OKFFrontmatter(type="Table", title="B"), body="Body B."
             ),
         },
     )
@@ -364,7 +357,7 @@ def test_catalog_tenant_isolation():
                 concept_id="a",
                 frontmatter=OKFFrontmatter(type="X", title="Tenant A doc"),
                 body="Body A.",
-            ),
+            )
         },
     )
     bundle_b = OKFBundle(
@@ -374,7 +367,7 @@ def test_catalog_tenant_isolation():
                 concept_id="b",
                 frontmatter=OKFFrontmatter(type="X", title="Tenant B doc"),
                 body="Body B.",
-            ),
+            )
         },
     )
     cat.build_catalog(bundle_a, tenant_id="tA")
@@ -399,7 +392,7 @@ def test_catalog_tenant_list_types():
                     concept_id="a",
                     frontmatter=OKFFrontmatter(type="Endpoint", title="A"),
                     body="Body.",
-                ),
+                )
             },
         ),
         tenant_id="t1",
@@ -412,7 +405,7 @@ def test_catalog_tenant_list_types():
                     concept_id="b",
                     frontmatter=OKFFrontmatter(type="Table", title="B"),
                     body="Body.",
-                ),
+                )
             },
         ),
         tenant_id="t2",
@@ -437,7 +430,7 @@ def test_catalog_fts_punctuation_query():
                 concept_id="a",
                 frontmatter=OKFFrontmatter(type="X", title="User API"),
                 body="The user API handles authentication.",
-            ),
+            )
         },
     )
     cat.build_catalog(bundle)
@@ -468,9 +461,7 @@ def test_catalog_empty_query_type_filter():
                 body="Body A.",
             ),
             "b": OKFConcept(
-                concept_id="b",
-                frontmatter=OKFFrontmatter(type="Table", title="B"),
-                body="Body B.",
+                concept_id="b", frontmatter=OKFFrontmatter(type="Table", title="B"), body="Body B."
             ),
         },
     )
@@ -543,9 +534,7 @@ def test_catalog_reserve_reserved():
                 body="Index body.",
             ),
             "a": OKFConcept(
-                concept_id="a",
-                frontmatter=OKFFrontmatter(type="X", title="A"),
-                body="Body.",
+                concept_id="a", frontmatter=OKFFrontmatter(type="X", title="A"), body="Body."
             ),
         },
         reserved={"index"},

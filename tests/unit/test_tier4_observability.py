@@ -33,11 +33,7 @@ async def test_observability_returns_sla_records():
     register_compute_handlers()
     agent = ObservabilityAgent()
     out = await agent.invoke(
-        InvocationRequest(
-            agent_name="observability",
-            input={"tenant_id": "t1"},
-            tenant_id="t1",
-        )
+        InvocationRequest(agent_name="observability", input={"tenant_id": "t1"}, tenant_id="t1")
     )
     names = {s["name"] for s in out["slas"]}
     assert "agent_latency_ms" in names
@@ -56,11 +52,7 @@ async def test_observability_sla_compliance_reflects_metrics():
     counter.inc(1)
     agent = ObservabilityAgent()
     out = await agent.invoke(
-        InvocationRequest(
-            agent_name="observability",
-            input={"tenant_id": "t1"},
-            tenant_id="t1",
-        )
+        InvocationRequest(agent_name="observability", input={"tenant_id": "t1"}, tenant_id="t1")
     )
     success_rate_sla = next(s for s in out["slas"] if s["name"] == "agent_success_rate")
     # 10/11 ≈ 0.909; SLA target 0.95 → not compliant

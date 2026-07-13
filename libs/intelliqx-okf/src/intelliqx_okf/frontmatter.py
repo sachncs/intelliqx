@@ -79,9 +79,7 @@ class OKFFrontmatter(BaseModel):
         * Keeps ``okf_version`` under the ``okf_version`` key
           even though Pydantic would alias it.
         """
-        out: dict[str, Any] = {
-            "type": self.type,
-        }
+        out: dict[str, Any] = {"type": self.type}
         if self.title is not None:
             out["title"] = self.title
         if self.description is not None:

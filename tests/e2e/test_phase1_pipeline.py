@@ -127,11 +127,7 @@ async def test_e2e_smoke_agent_direct():
     register_compute_handlers()
     agent = SmokeAgent()
     out = await agent.invoke(
-        InvocationRequest(
-            agent_name="smoke",
-            input={"marker": "ok"},
-            tenant_id="t1",
-        )
+        InvocationRequest(agent_name="smoke", input={"marker": "ok"}, tenant_id="t1")
     )
     assert out["echo"] == "ok"
     assert out["metadata"]["tenant"] == "t1"

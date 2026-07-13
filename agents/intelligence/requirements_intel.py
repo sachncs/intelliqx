@@ -139,13 +139,7 @@ def _extract_requirements(text: str) -> list[dict[str, Any]]:
         ac_match = re.search(r"(?:AC|Acceptance)[:\s]+(.*?)(?:\.\s|$)", content)
         if ac_match:
             ac = [ac_match.group(1).strip()]
-        out.append(
-            {
-                "title": content,
-                "priority": priority,
-                "acceptance_criteria": ac,
-            }
-        )
+        out.append({"title": content, "priority": priority, "acceptance_criteria": ac})
     return out
 
 

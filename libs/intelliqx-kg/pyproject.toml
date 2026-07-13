@@ -1,12 +1,12 @@
 [project]
 name = "intelliqx-kg"
-version = "0.1.0"
+version = "0.2.0"
 description = "IntelliqX Knowledge Graph: Parquet + DuckDB"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "pydantic>=2.7",
-    "duckdb>=1.0",
-    "pyarrow>=16",
+    "pydantic>=2.8",
+    "duckdb>=1.1",
+    "pyarrow>=17",
     "intelliqx-core",
     "intelliqx-portability",
     "intelliqx-storage",

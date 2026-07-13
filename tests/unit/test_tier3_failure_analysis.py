@@ -89,9 +89,7 @@ async def test_failure_unknown_error():
     agent = FailureAnalysisAgent()
     out = await agent.invoke(
         InvocationRequest(
-            agent_name="failure_analysis",
-            input={"error": "wat", "tenant_id": "t1"},
-            tenant_id="t1",
+            agent_name="failure_analysis", input={"error": "wat", "tenant_id": "t1"}, tenant_id="t1"
         )
     )
     assert out["classification"] == "unknown"

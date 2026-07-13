@@ -35,7 +35,7 @@ async def test_execution_runs_passing_test():
                     TestSpec(
                         name="health_check",
                         steps=[TestStep(action="get", path="/health", expected_status=200)],
-                    ).model_dump(),
+                    ).model_dump()
                 ],
             },
             tenant_id="t1",
@@ -72,7 +72,7 @@ async def test_execution_reports_failure_on_bad_status():
                     TestSpec(
                         name="wrong_status",
                         steps=[TestStep(action="get", path="/health", expected_status=404)],
-                    ).model_dump(),
+                    ).model_dump()
                 ],
             },
             tenant_id="t1",
@@ -115,7 +115,7 @@ async def test_execution_post_step():
                                 expected_status=200,
                             )
                         ],
-                    ).model_dump(),
+                    ).model_dump()
                 ],
             },
             tenant_id="t1",
@@ -150,7 +150,7 @@ async def test_execution_uploads_artifacts():
                     TestSpec(
                         name="artifact_test",
                         steps=[TestStep(action="get", path="/", expected_status=200)],
-                    ).model_dump(),
+                    ).model_dump()
                 ],
             },
             tenant_id="t1",
@@ -193,7 +193,7 @@ async def test_execution_assert_json():
                                 action="assert_json", path="/health", expected_json={"status": "ok"}
                             )
                         ],
-                    ).model_dump(),
+                    ).model_dump()
                 ],
             },
             tenant_id="t1",

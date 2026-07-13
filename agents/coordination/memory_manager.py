@@ -164,8 +164,7 @@ class MemoryManagerAgent(AgentBase):
         inp = model.model_validate(payload)
         ctx = AgentContext(
             tenant=TenantContext(
-                tenant_id=request.tenant_id,
-                trace_id=request.metadata.get("trace_id"),
+                tenant_id=request.tenant_id, trace_id=request.metadata.get("trace_id")
             ),
             run_id=request.metadata.get("run_id", "unknown"),
         )
@@ -280,17 +279,11 @@ class MemoryManagerAgent(AgentBase):
             data = b""
         else:
             data = ("SUMMARY(" + str(time.time()) + "): " + " | ".join(snippets)).encode("utf-8")
-        await store.put(
-            f"{tenant_id}/semantic/{op.target_key}",
-            data,
-            content_type="text/plain",
-        )
+        await store.put(f"{tenant_id}/semantic/{op.target_key}", data, content_type="text/plain")
         # Invalidate any stale working-memory cache copy.
         await state.delete(f"{tenant_id}:semantic:{op.target_key}")
         return MemoryOutput(
-            operation="summarize",
-            success=True,
-            value=data.decode("utf-8") if data else None,
+            operation="summarize", success=True, value=data.decode("utf-8") if data else None
         )
 
     async def _forget(self, tenant_id: str, op: MemoryForget) -> MemoryOutput:

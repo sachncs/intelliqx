@@ -304,7 +304,7 @@ class KnowledgeGraph:
         tenant_id: str | None = None,
         edge_type: str | None = None,
         direction: str = "out",
-        depth: int = 1,
+        depth: int = 1,  # noqa: VU001 — reserved for future multi-hop traversal
     ) -> KGQueryResult:
         """Return the neighbour nodes of ``node_id``.
 

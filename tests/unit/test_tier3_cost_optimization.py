@@ -38,11 +38,7 @@ async def test_cost_opt_detects_long_tail_histogram():
         h.observe(float(v))
     agent = CostOptimizationAgent()
     out = await agent.invoke(
-        InvocationRequest(
-            agent_name="cost_optimization",
-            input={"tenant_id": "t1"},
-            tenant_id="t1",
-        )
+        InvocationRequest(agent_name="cost_optimization", input={"tenant_id": "t1"}, tenant_id="t1")
     )
     assert any("spot" in r["action"] or "long_tail" in r["action"] for r in out["recommendations"])
 
@@ -56,11 +52,7 @@ async def test_cost_opt_estimates_total_savings():
     metrics.counter("agent.invocation").inc(1000)
     agent = CostOptimizationAgent()
     out = await agent.invoke(
-        InvocationRequest(
-            agent_name="cost_optimization",
-            input={"tenant_id": "t1"},
-            tenant_id="t1",
-        )
+        InvocationRequest(agent_name="cost_optimization", input={"tenant_id": "t1"}, tenant_id="t1")
     )
     assert out["estimated_total_savings_usd"] >= 0
 

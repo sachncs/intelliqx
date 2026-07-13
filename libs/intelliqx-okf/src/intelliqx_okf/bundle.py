@@ -25,10 +25,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from intelliqx_okf.concept import (
-    OKFConcept,
-    load_concept,
-)
+from intelliqx_okf.concept import OKFConcept, load_concept
 
 # Reserved filenames per §3.1. These files are still parsed as
 # concepts when present (so the bundle-root ``index.md`` can carry
@@ -57,11 +54,7 @@ class OKFBundle:
         return iter(self.concepts.values())
 
 
-def load_bundle(
-    root: Path | str,
-    *,
-    follow_symlinks: bool = False,
-) -> OKFBundle:
+def load_bundle(root: Path | str, *, follow_symlinks: bool = False) -> OKFBundle:
     """Walk a directory tree and return every ``.md`` file as an OKF concept.
 
     The root directory itself is the bundle root. ``index.md`` and

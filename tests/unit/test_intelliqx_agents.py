@@ -3,11 +3,7 @@
 import pytest
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
-from intelliqx_agents.registry import (
-    get_agent_registry,
-    register_agent,
-    reset_agent_registry,
-)
+from intelliqx_agents.registry import get_agent_registry, register_agent, reset_agent_registry
 from pydantic import BaseModel
 
 

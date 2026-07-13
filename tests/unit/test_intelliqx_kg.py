@@ -98,10 +98,7 @@ async def test_persists_to_object_store():
 async def test_neighbors_edge_type_filter():
     kg = KnowledgeGraph()
     await kg.add_nodes(
-        [
-            Node(id="x", type="X", tenant_id="t1"),
-            Node(id="y", type="Y", tenant_id="t1"),
-        ]
+        [Node(id="x", type="X", tenant_id="t1"), Node(id="y", type="Y", tenant_id="t1")]
     )
     await kg.add_edges(
         [

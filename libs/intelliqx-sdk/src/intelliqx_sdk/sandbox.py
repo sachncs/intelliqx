@@ -65,11 +65,7 @@ class Sandbox:
     """
 
     def __init__(
-        self,
-        *,
-        cpu_time_seconds: int = 60,
-        memory_mb: int = 512,
-        max_file_descriptors: int = 64,
+        self, *, cpu_time_seconds: int = 60, memory_mb: int = 512, max_file_descriptors: int = 64
     ) -> None:
         self.cpu_time_seconds = cpu_time_seconds
         self.memory_mb = memory_mb

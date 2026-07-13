@@ -119,11 +119,7 @@ async def test_tool_manager_unknown_tool():
     register_compute_handlers()
     agent = ToolManagerAgent()
     out = await agent.invoke(
-        InvocationRequest(
-            agent_name="tool_manager",
-            input={"tool": "missing"},
-            tenant_id="t1",
-        )
+        InvocationRequest(agent_name="tool_manager", input={"tool": "missing"}, tenant_id="t1")
     )
     assert out["status"] == "not_found"
 

@@ -116,12 +116,7 @@ class PerformanceAgent(AgentBase):
         return PerformanceOutput(
             profile=input.profile,
             result=PerformanceResult(
-                requests=total,
-                errors=errors,
-                p50_ms=p50,
-                p95_ms=p95,
-                p99_ms=p99,
-                slo_pass=slo_pass,
+                requests=total, errors=errors, p50_ms=p50, p95_ms=p95, p99_ms=p99, slo_pass=slo_pass
             ),
             slo_breaches=breaches,
         )

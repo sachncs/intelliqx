@@ -62,8 +62,7 @@ class CoverageAnalysisAgent(AgentBase):
         # Untested requirements
         for rid in all_reqs - covered_reqs:
             gap_title = next(
-                (r.get("title", rid) for r in input.requirements if r.get("id") == rid),
-                rid,
+                (r.get("title", rid) for r in input.requirements if r.get("id") == rid), rid
             )
             gaps.append(f"Requirement {gap_title} has no tests")
         # Unexecuted tests

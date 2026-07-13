@@ -96,12 +96,7 @@ class DesignIntelAgent(AgentBase):
                     id=el.selector,
                     type="UIElement",
                     tenant_id=input.tenant_id,
-                    attrs={
-                        "tag": el.tag,
-                        "label": el.label,
-                        "role": el.role,
-                        "text": el.text,
-                    },
+                    attrs={"tag": el.tag, "label": el.label, "role": el.role, "text": el.text},
                 )
             )
         if nodes:

@@ -116,20 +116,14 @@ class TestDesignAgent(AgentBase):
             # Optional exploratory test for high-priority requirements
             # when the caller asked for at least four tests per
             # requirement.
-            if input.min_tests_per_requirement >= 4 and req.get("priority") in {
-                "high",
-                "critical",
-            }:
+            if input.min_tests_per_requirement >= 4 and req.get("priority") in {"high", "critical"}:
                 tests.append(
                     {
                         "id": f"test-{new_id()}",
                         "type": "exploratory",
                         "requirement_id": req_id,
                         "title": f"Exploratory scenarios for {title}",
-                        "steps": [
-                            "Explore permutations",
-                            "Document unexpected behaviors",
-                        ],
+                        "steps": ["Explore permutations", "Document unexpected behaviors"],
                         "priority": req.get("priority", input.risk_priority),
                     }
                 )

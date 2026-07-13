@@ -186,9 +186,7 @@ async def test_test_data_int_age_in_range():
     agent = TestDataAgent()
     out = await agent.invoke(
         InvocationRequest(
-            agent_name="test_data",
-            input={"schema": {"age": "int"}, "count": 30},
-            tenant_id="t1",
+            agent_name="test_data", input={"schema": {"age": "int"}, "count": 30}, tenant_id="t1"
         )
     )
     for item in out["output"]["items"]:
@@ -341,10 +339,7 @@ async def test_critic_detects_hallucination_marker():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="critic",
-            input={
-                "target": "test",
-                "output": {"result": "[fake:abc123]"},
-            },
+            input={"target": "test", "output": {"result": "[fake:abc123]"}},
             tenant_id="t1",
         )
     )
@@ -359,11 +354,7 @@ async def test_critic_rule_non_empty():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="critic",
-            input={
-                "target": "test",
-                "output": {"name": ""},
-                "rules": ["non_empty:name"],
-            },
+            input={"target": "test", "output": {"name": ""}, "rules": ["non_empty:name"]},
             tenant_id="t1",
         )
     )
@@ -394,9 +385,7 @@ async def test_critic_empty_output_fails():
     agent = CriticAgent()
     out = await agent.invoke(
         InvocationRequest(
-            agent_name="critic",
-            input={"target": "test", "output": {}},
-            tenant_id="t1",
+            agent_name="critic", input={"target": "test", "output": {}}, tenant_id="t1"
         )
     )
     assert not out["critique"]["passed"]

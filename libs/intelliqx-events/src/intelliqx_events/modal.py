@@ -104,11 +104,7 @@ class ModalQueueBus(EventBus):
         return event.metadata.event_id  # type: ignore[attr-defined]
 
     def subscribe(
-        self,
-        topic: str,
-        handler: Callable | EventHandler,
-        *,
-        dlq: str | None = None,
+        self, topic: str, handler: Callable | EventHandler, *, dlq: str | None = None
     ) -> str:
         """Register a handler.
 

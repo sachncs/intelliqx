@@ -75,9 +75,7 @@ class LearningAgent(AgentBase):
         # the run id so re-runs of the same run don't double-count.
         feedback_key = f"learning:{input.tenant_id}:{input.run_id}"
         await state.set(
-            feedback_key,
-            json.dumps(input.feedback).encode("utf-8"),
-            ttl_seconds=86400 * 30,
+            feedback_key, json.dumps(input.feedback).encode("utf-8"), ttl_seconds=86400 * 30
         )
 
         # Aggregate pass/fail per prompt_id. The state store yields

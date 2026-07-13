@@ -127,9 +127,7 @@ def make_metadata(
             goal → plan → run).
     """
     return EventMetadata(
-        tenant_id=tenant_id,
-        produced_by=produced_by,
-        correlation_id=correlation_id,
+        tenant_id=tenant_id, produced_by=produced_by, correlation_id=correlation_id
     )
 
 

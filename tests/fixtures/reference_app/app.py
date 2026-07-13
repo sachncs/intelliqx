@@ -36,12 +36,7 @@ def health() -> dict[str, str]:
 def index() -> dict[str, Any]:
     return {
         "title": "IntelliqX Reference",
-        "endpoints": [
-            "/health",
-            "/login",
-            "/items",
-            "/secret/{id}",
-        ],
+        "endpoints": ["/health", "/login", "/items", "/secret/{id}"],
     }
 
 

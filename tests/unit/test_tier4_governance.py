@@ -172,11 +172,7 @@ async def test_grant_requires_approval_id():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="governance_compliance",
-            input={
-                "action": "grant",
-                "actor": _admin().model_dump(),
-                "resource": "prod-deploy",
-            },
+            input={"action": "grant", "actor": _admin().model_dump(), "resource": "prod-deploy"},
             tenant_id="t1",
         )
     )
@@ -192,11 +188,7 @@ async def test_unknown_action_denied():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="governance_compliance",
-            input={
-                "action": "frobnicate",
-                "actor": _admin().model_dump(),
-                "resource": "x",
-            },
+            input={"action": "frobnicate", "actor": _admin().model_dump(), "resource": "x"},
             tenant_id="t1",
         )
     )

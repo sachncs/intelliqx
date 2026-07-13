@@ -78,9 +78,7 @@ class SelfHealingAgent(AgentBase):
             prompt = f"Selector {c.selector!r} intent {input.intent!r} → confidence 0..1"
             resp = await llm.complete(
                 CompletionRequest(
-                    model="auto",
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0.0,
+                    model="auto", messages=[{"role": "user", "content": prompt}], temperature=0.0
                 )
             )
             ranked.append(

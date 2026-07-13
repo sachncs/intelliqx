@@ -45,12 +45,7 @@ async def test_state_store_contract():
 @pytest.mark.asyncio
 async def test_vector_index_contract():
     async def check_index(i: VectorIndex) -> None:
-        await i.upsert(
-            [
-                _doc("a", [1.0, 0.0, 0.0, 0.0]),
-                _doc("b", [0.0, 1.0, 0.0, 0.0]),
-            ]
-        )
+        await i.upsert([_doc("a", [1.0, 0.0, 0.0, 0.0]), _doc("b", [0.0, 1.0, 0.0, 0.0])])
         res = await i.search([1.0, 0.0, 0.0, 0.0], top_k=1)
         assert res[0].id == "a"
         await i.delete(["a", "b"])

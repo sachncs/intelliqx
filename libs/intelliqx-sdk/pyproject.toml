@@ -1,10 +1,10 @@
 [project]
 name = "intelliqx-sdk"
-version = "0.1.0"
+version = "0.2.0"
 description = "IntelliqX third-party agent SDK"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "pydantic>=2.7",
+    "pydantic>=2.8",
     "intelliqx-core",
     "intelliqx-agents",
 ]

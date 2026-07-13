@@ -182,8 +182,7 @@ def _trim_to_cost(nodes: list[PlanNode], ceiling: float) -> list[PlanNode]:
     doesn't include the downstream work.
     """
     sorted_nodes = sorted(
-        nodes,
-        key=lambda n: (0 if n.inputs.get("optional") else 1, -_node_cost(n)),
+        nodes, key=lambda n: (0 if n.inputs.get("optional") else 1, -_node_cost(n))
     )
     dropped: set[str] = set()
     cur = sum(_node_cost(n) for n in nodes)

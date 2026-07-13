@@ -128,9 +128,7 @@ async def test_bootstrap_and_search(tmp_path):
     )
 
     count = await bootstrap_okf_retrieval(
-        {"tenant1": bundle_dir},
-        db_path=str(tmp_path / "catalog.db"),
-        dim=128,
+        {"tenant1": bundle_dir}, db_path=str(tmp_path / "catalog.db"), dim=128
     )
     assert count == 1
 
@@ -264,11 +262,7 @@ def test_structured_where_alias(tmp_path):
     catalog.build_catalog(bundle, tenant_id="alias")
 
     results = catalog.search(
-        "order",
-        tenant_id="alias",
-        type_filter=["Event"],
-        tag_filter=["orders"],
-        top_k=5,
+        "order", tenant_id="alias", type_filter=["Event"], tag_filter=["orders"], top_k=5
     )
     assert len(results) == 1
     assert results[0].concept_id == "x"
@@ -311,22 +305,10 @@ def test_empty_query_no_filter_returns_all(tmp_path):
     """Empty query with no filter returns all non-reserved concepts."""
     bundle_dir = tmp_path / "all"
     _write_concept(
-        bundle_dir / "a.md",
-        {
-            "type": "Guide",
-            "title": "A",
-            "description": "A.",
-            "tags": [],
-        },
+        bundle_dir / "a.md", {"type": "Guide", "title": "A", "description": "A.", "tags": []}
     )
     _write_concept(
-        bundle_dir / "b.md",
-        {
-            "type": "Guide",
-            "title": "B",
-            "description": "B.",
-            "tags": [],
-        },
+        bundle_dir / "b.md", {"type": "Guide", "title": "B", "description": "B.", "tags": []}
     )
 
     bundle = load_bundle(bundle_dir)

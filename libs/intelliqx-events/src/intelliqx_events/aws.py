@@ -143,11 +143,7 @@ class AWSEventBridgeBus(EventBus):
         return entry["Detail"][:36]
 
     def subscribe(
-        self,
-        topic: str,
-        handler: Callable | EventHandler,
-        *,
-        dlq: str | None = None,
+        self, topic: str, handler: Callable | EventHandler, *, dlq: str | None = None
     ) -> str:
         """Register a handler.
 

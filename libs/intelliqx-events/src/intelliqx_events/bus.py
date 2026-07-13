@@ -52,11 +52,7 @@ class EventBus(abc.ABC):
 
     @abc.abstractmethod
     def subscribe(
-        self,
-        topic: str,
-        handler: Callable | EventHandler,
-        *,
-        dlq: str | None = None,
+        self, topic: str, handler: Callable | EventHandler, *, dlq: str | None = None
     ) -> str:
         """Register a handler for a topic.
 
@@ -128,11 +124,7 @@ class InMemoryEventBus(EventBus):
         return str(event_id)
 
     def subscribe(
-        self,
-        topic: str,
-        handler: Callable | EventHandler,
-        *,
-        dlq: str | None = None,
+        self, topic: str, handler: Callable | EventHandler, *, dlq: str | None = None
     ) -> str:
         """Register a handler. See :meth:`EventBus.subscribe`."""
         self.__next_sub_id += 1

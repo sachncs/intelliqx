@@ -1,12 +1,7 @@
 """Tests for intelliqx-llm."""
 
 import pytest
-from intelliqx_llm.client import (
-    CompletionRequest,
-    FakeLLMClient,
-    get_llm_client,
-    set_llm_client,
-)
+from intelliqx_llm.client import CompletionRequest, FakeLLMClient, get_llm_client, set_llm_client
 
 
 @pytest.mark.unit

@@ -53,10 +53,7 @@ class VertexLLMClient(LLMClient):
     DEFAULT_MODEL = "gemini-2.0-flash-exp"
 
     def __init__(
-        self,
-        project_id: str | None = None,
-        region: str | None = None,
-        model: str | None = None,
+        self, project_id: str | None = None, region: str | None = None, model: str | None = None
     ) -> None:
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
         self.region = region or os.environ.get("INTELLIQX_GCP_REGION", "us-central1")
@@ -96,16 +93,12 @@ class VertexLLMClient(LLMClient):
                 if m.get("role") != "system"
             ]
             gen_config = GenerationConfig(
-                temperature=request.temperature,
-                max_output_tokens=request.max_tokens,
+                temperature=request.temperature, max_output_tokens=request.max_tokens
             )
             gen_kwargs: dict[str, Any] = {"generation_config": gen_config}
             if system_msg:
                 gen_kwargs["system_instruction"] = system_msg
-            response = await self.__client.generate_content_async(
-                contents=contents,
-                **gen_kwargs,
-            )
+            response = await self.__client.generate_content_async(contents=contents, **gen_kwargs)
             text = response.text or ""
             usage = LLMUsage()
             if response.usage_metadata:
@@ -114,11 +107,7 @@ class VertexLLMClient(LLMClient):
                     completion_tokens=getattr(response.usage_metadata, "candidates_token_count", 0)
                     or 0,
                 )
-            return CompletionResponse(
-                content=text,
-                model=request.model,
-                usage=usage,
-            )
+            return CompletionResponse(content=text, model=request.model, usage=usage)
         except Exception:
             last_user = next(
                 (m["content"] for m in reversed(request.messages) if m.get("role") == "user"), ""

@@ -98,9 +98,7 @@ class BedrockLLMClient(LLMClient):
             body["system"] = system
         # Offload the boto3 call to a worker thread.
         response = await asyncio.to_thread(
-            self.__client.invoke_model,
-            modelId=request.model,
-            body=str(body).replace("'", '"'),
+            self.__client.invoke_model, modelId=request.model, body=str(body).replace("'", '"')
         )
         import json as _json
 
@@ -127,9 +125,7 @@ class BedrockLLMClient(LLMClient):
             for t in texts:
                 body = _json.dumps({"inputText": t})
                 response = await asyncio.to_thread(
-                    self.__client.invoke_model,
-                    modelId=TITAN_EMBED_MODEL,
-                    body=body,
+                    self.__client.invoke_model, modelId=TITAN_EMBED_MODEL, body=body
                 )
                 payload = _json.loads(response["body"].read())
                 out.append(payload["embedding"])

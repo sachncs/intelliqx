@@ -171,8 +171,7 @@ class OKFCatalog:
 
     def _ensure_schema(self) -> None:
         """Create the catalog tables if they don't exist."""
-        self.__conn.execute(
-            """
+        self.__conn.execute("""
             CREATE TABLE IF NOT EXISTS concepts (
                 concept_id TEXT NOT NULL,
                 tenant_id TEXT NOT NULL DEFAULT '_global',
@@ -187,16 +186,14 @@ class OKFCatalog:
                 source_path TEXT,
                 PRIMARY KEY (concept_id, tenant_id)
             )
-            """
-        )
+            """)
         self.__conn.execute("CREATE INDEX IF NOT EXISTS idx_concepts_type ON concepts(type)")
         self.__conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_concepts_timestamp ON concepts(timestamp)"
         )
         self.__conn.execute("CREATE INDEX IF NOT EXISTS idx_concepts_tenant ON concepts(tenant_id)")
         if self._has_fts5:
-            self.__conn.execute(
-                """
+            self.__conn.execute("""
                 CREATE VIRTUAL TABLE IF NOT EXISTS concepts_fts USING fts5(
                     concept_id,
                     tenant_id,
@@ -205,16 +202,11 @@ class OKFCatalog:
                     body,
                     tokenize = 'porter unicode61'
                 )
-                """
-            )
+                """)
         self.__conn.commit()
 
     def build_catalog(
-        self,
-        bundle: OKFBundle,
-        *,
-        tenant_id: str = "_global",
-        reserve_reserved: bool = False,
+        self, bundle: OKFBundle, *, tenant_id: str = "_global", reserve_reserved: bool = False
     ) -> int:
         """Ingest concepts from ``bundle`` for a specific tenant.
 
@@ -262,9 +254,11 @@ class OKFCatalog:
                     concept.frontmatter.description,
                     concept.body,
                     json.dumps(concept.frontmatter.tags or []),
-                    concept.frontmatter.timestamp.isoformat()
-                    if concept.frontmatter.timestamp
-                    else None,
+                    (
+                        concept.frontmatter.timestamp.isoformat()
+                        if concept.frontmatter.timestamp
+                        else None
+                    ),
                     concept.frontmatter.resource,
                     json.dumps(concept.frontmatter.extra_fields),
                     str(concept.source_path) if concept.source_path else None,
@@ -385,10 +379,7 @@ class OKFCatalog:
             return []
         cur = self.__conn.cursor()
         conditions, params = self._structured_where(
-            table_alias="c",
-            tenant_id=tenant_id,
-            type_filter=type_filter,
-            tag_filter=tag_filter,
+            table_alias="c", tenant_id=tenant_id, type_filter=type_filter, tag_filter=tag_filter
         )
         where_clause = " AND ".join(conditions) if conditions else "1=1"
         sql = f"""
@@ -447,10 +438,7 @@ class OKFCatalog:
         """Retrieve all concepts matching structured filters (no FTS)."""
         cur = self.__conn.cursor()
         conditions, params = self._structured_where(
-            table_alias="c",
-            tenant_id=tenant_id,
-            type_filter=type_filter,
-            tag_filter=tag_filter,
+            table_alias="c", tenant_id=tenant_id, type_filter=type_filter, tag_filter=tag_filter
         )
         where_clause = " AND ".join(conditions) if conditions else "1=1"
         sql = f"""
@@ -465,16 +453,7 @@ class OKFCatalog:
         cur.execute(sql, full_params)
         candidates: list[dict[str, Any]] = []
         for row in cur.fetchall():
-            (
-                concept_id,
-                type_,
-                title,
-                description,
-                body,
-                tags_json,
-                timestamp,
-                snippet,
-            ) = row
+            concept_id, type_, title, description, body, tags_json, timestamp, snippet = row
             try:
                 tags = json.loads(tags_json) if tags_json else []
             except json.JSONDecodeError:
@@ -513,10 +492,7 @@ class OKFCatalog:
             return []
         cur = self.__conn.cursor()
         conditions, params = self._structured_where(
-            table_alias="c",
-            tenant_id=tenant_id,
-            type_filter=type_filter,
-            tag_filter=tag_filter,
+            table_alias="c", tenant_id=tenant_id, type_filter=type_filter, tag_filter=tag_filter
         )
         where_clause = " AND ".join(conditions) if conditions else "1=1"
         cur.execute(
@@ -748,10 +724,7 @@ def reset_catalog() -> None:
 
 
 def load_okf_catalog_from_bundle(
-    bundle: OKFBundle,
-    *,
-    catalog: OKFCatalog | None = None,
-    tenant_id: str = "_global",
+    bundle: OKFBundle, *, catalog: OKFCatalog | None = None, tenant_id: str = "_global"
 ) -> int:
     """Build (or rebuild) a catalog from a loaded :class:`OKFBundle`.
 

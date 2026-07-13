@@ -32,11 +32,7 @@ import os
 import time
 from typing import Any
 
-from intelliqx_compute.runtime import (
-    ComputeRuntime,
-    InvocationRequest,
-    InvocationResponse,
-)
+from intelliqx_compute.runtime import ComputeRuntime, InvocationRequest, InvocationResponse
 
 
 class AWSLambdaComputeRuntime(ComputeRuntime):

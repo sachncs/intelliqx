@@ -82,12 +82,7 @@ async def test_reporting_without_metrics():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="reporting",
-            input={
-                "run_id": "r1",
-                "tenant_id": "t1",
-                "summary": {},
-                "include_metrics": False,
-            },
+            input={"run_id": "r1", "tenant_id": "t1", "summary": {}, "include_metrics": False},
             tenant_id="t1",
         )
     )

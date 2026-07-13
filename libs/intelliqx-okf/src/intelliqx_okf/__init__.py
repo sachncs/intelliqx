@@ -24,12 +24,7 @@ The optional catalog adds :class:`sqlite3` (stdlib) and
 FTS5-only if missing).
 """
 
-from intelliqx_okf.bundle import (
-    OKFBundle,
-    OKFEdge,
-    OKFLinkResolver,
-    load_bundle,
-)
+from intelliqx_okf.bundle import OKFBundle, OKFEdge, OKFLinkResolver, load_bundle
 from intelliqx_okf.concept import (
     Citation,
     OKFConcept,

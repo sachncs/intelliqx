@@ -83,7 +83,7 @@ class StateStore(abc.ABC):
         (e.g. agent startup) and prefer explicit indexes for hot paths.
         """
         raise NotImplementedError
-        yield ""  # pragma: no cover
+        yield ""  # pragma: no cover  # noqa: VUE106 — needed to mark method as async generator
 
     @abc.abstractmethod
     async def hset(self, key: str, field: str, value: str) -> None:

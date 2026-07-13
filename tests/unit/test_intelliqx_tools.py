@@ -15,8 +15,7 @@ async def test_register_and_invoke():
         return {"echo": payload}
 
     m.register_tool(
-        ToolDefinition(name="echo", description="echoes", rate_limit_per_minute=600),
-        handler,
+        ToolDefinition(name="echo", description="echoes", rate_limit_per_minute=600), handler
     )
     res = await m.invoke("echo", payload={"x": 1})
     assert res.status == "ok"

@@ -113,11 +113,7 @@ async def test_self_healing_against_reference_app_html():
     heal_out = await healing_agent.invoke(
         InvocationRequest(
             agent_name="self_healing",
-            input={
-                "failed_selector": "#missing-id",
-                "dom_html": r.text,
-                "min_confidence": 0.7,
-            },
+            input={"failed_selector": "#missing-id", "dom_html": r.text, "min_confidence": 0.7},
             tenant_id="t1",
         )
     )
@@ -171,7 +167,7 @@ async def test_orchestrator_with_planner_for_run_tests():
                     TestSpec(
                         name="health",
                         steps=[TestStep(action="get", path="/health", expected_status=200)],
-                    ).model_dump(),
+                    ).model_dump()
                 ],
             }
         nodes.append(n)

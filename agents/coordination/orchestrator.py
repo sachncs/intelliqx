@@ -117,10 +117,7 @@ class OrchestratorAgent(AgentBase[OrchestratorInput, OrchestratorOutput]):
         await bus.publish(
             "run.started",
             RunStarted(
-                metadata=metadata,
-                run_id=input.run_id,
-                plan_id=input.plan_id,
-                goal_id=input.goal_id,
+                metadata=metadata, run_id=input.run_id, plan_id=input.plan_id, goal_id=input.goal_id
             ),
         )
         await state.set(f"run:{input.run_id}", b"PENDING", ttl_seconds=3600)
@@ -153,10 +150,7 @@ class OrchestratorAgent(AgentBase[OrchestratorInput, OrchestratorOutput]):
             await bus.publish(
                 "plan.node.started",
                 PlanNodeStarted(
-                    metadata=metadata,
-                    plan_id=input.plan_id,
-                    node_id=nid,
-                    agent=agent_name,
+                    metadata=metadata, plan_id=input.plan_id, node_id=nid, agent=agent_name
                 ),
             )
             attempts = 0
@@ -174,11 +168,7 @@ class OrchestratorAgent(AgentBase[OrchestratorInput, OrchestratorOutput]):
                         input=node.get("inputs", {}),
                         tenant_id=tenant_id,
                         timeout_seconds=int(node.get("timeout_seconds", 300)),
-                        metadata={
-                            "run_id": input.run_id,
-                            "plan_id": input.plan_id,
-                            "node_id": nid,
-                        },
+                        metadata={"run_id": input.run_id, "plan_id": input.plan_id, "node_id": nid},
                     )
                 )
                 last_duration_ms = resp.duration_ms
@@ -236,10 +226,7 @@ class OrchestratorAgent(AgentBase[OrchestratorInput, OrchestratorOutput]):
                 # converts every exception into an error response),
                 # but if it does we still want a structured result.
                 res = NodeResult(
-                    node_id=nid,
-                    agent=node_map[nid]["agent"],
-                    status="error",
-                    error=str(e),
+                    node_id=nid, agent=node_map[nid]["agent"], status="error", error=str(e)
                 )
             node_results.append(res)
             if res.status != "ok":
