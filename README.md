@@ -127,6 +127,33 @@ export MODAL_TOKEN_SECRET=...
 uv run pytest tests/cross_cloud -q
 ```
 
+### Running against MiniMax
+
+```bash
+# Get an API key from https://api.minimax.io
+export INTELLIQX_LLM_BACKEND=minimax
+export MINIMAX_API_KEY=sk-...
+# Optional: override the base URL (default https://api.minimax.io/v1)
+export MINIMAX_API_BASE=https://api.minimax.io/v1
+
+uv run python -c "
+import asyncio
+from intelliqx_llm import get_llm_client
+from intelliqx_llm.client import CompletionRequest
+
+async def main():
+    client = get_llm_client()
+    req = CompletionRequest(
+        model='minimax/MiniMax-M2.1',
+        messages=[{'role': 'user', 'content': 'Hello!'}],
+    )
+    resp = await client.complete(req)
+    print(resp.content)
+
+asyncio.run(main())
+"
+```
+
 ---
 
 ## Configuration
@@ -142,6 +169,7 @@ activates the matching adapter at startup.
 | `aws`     | EventBridge, S3, ElastiCache (Redis), Bedrock          |
 | `gcp`     | Pub/Sub, GCS, Memorystore (Redis), Vertex AI            |
 | `modal`   | Modal Queues, Modal Volume, vLLM on Modal GPU           |
+| `minimax` | MiniMax via [litellm](https://docs.litellm.ai/docs/providers/minimax) (MiniMax-M2.1, text-embedding-01) |
 
 ### LLM backend
 
@@ -151,6 +179,7 @@ activates the matching adapter at startup.
 | `bedrock`              | AWS Bedrock (Anthropic Claude, Titan embeddings)         |
 | `vertex`               | GCP Vertex AI (Gemini, text-embedding-005)               |
 | `vllm`                 | OpenAI-compatible endpoint at `INTELLIQX_VLLM_URL`       |
+| `minimax`              | [MiniMax](https://api.minimax.io) via litellm — set `MINIMAX_API_KEY` |
 
 ### Other environment variables
 
@@ -283,7 +312,7 @@ Breaking changes use the `!` suffix (`feat!:`) and are documented in
 | State          | Redis-compatible (ElastiCache / Memorystore / Modal Dict) |
 | Events         | EventBridge / Pub/Sub / Modal Queue                      |
 | Storage        | S3 / GCS / Modal Volume                                  |
-| LLM            | [litellm](https://litellm.ai) (Bedrock, Vertex, vLLM)    |
+| LLM            | [litellm](https://litellm.ai) (Bedrock, Vertex, vLLM, MiniMax) |
 | Lint           | [ruff](https://docs.astral.sh/ruff/)                    |
 | Format         | [black](https://black.readthedocs.io/)                  |
 | Type Check     | [mypy](https://mypy-lang.org/) (strict)                 |

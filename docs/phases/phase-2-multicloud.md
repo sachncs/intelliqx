@@ -13,6 +13,7 @@
 | AWS | Lambda + Step Functions (Phase 1) | EventBridge + SQS | S3 | ElastiCache | Bedrock | CDK |
 | GCP | Cloud Functions gen 2 + Workflows | Pub/Sub | GCS | Memorystore | Vertex AI | cdktf |
 | Modal | `modal.Function` | `modal.Queue` | `modal.Volume` | `modal.Dict` / Upstash | vLLM or LiteLLM | Modal SDK |
+| MiniMax | any (chat-completions HTTP) | — | — | — | [MiniMax](https://api.minimax.io) via litellm (`INTELLIQX_LLM_BACKEND=minimax`) | — |
 
 ## 2.2 Architecture
 
