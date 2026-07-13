@@ -1,7 +1,7 @@
 # IntelliqX Makefile
 
 .PHONY: help install sync lint typecheck vulture format test test-unit \
-        test-contract test-integration test-e2e run-agent \
+        test-contract test-integration test-e2e run-agent llm-smoke \
         docker-up docker-down clean
 
 UV       ?= uv
@@ -23,6 +23,7 @@ help:
 	@echo "  make test-e2e          Run end-to-end tests"
 	@echo "  make run-agent AGENT=execution/execution"
 	@echo "                         Run a specific agent module (category/agent)"
+	@echo "  make llm-smoke          Smoke-test the configured LLM backend"
 	@echo "  make docker-up         Start docker compose (core services)"
 	@echo "  make docker-down       Stop docker compose"
 
@@ -62,6 +63,9 @@ test-e2e:
 run-agent:
 	@if [ -z "$(AGENT)" ]; then echo "Usage: make run-agent AGENT=<category>/<agent>"; exit 1; fi
 	$(UV) run python -m agents.$(AGENT).agent
+
+llm-smoke:
+	$(UV) run intelliqx-llm-smoke --show-env
 
 docker-up:
 	docker compose up -d

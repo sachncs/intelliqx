@@ -34,8 +34,8 @@ Each phase:
 - **Portability layer**: agents never import cloud SDKs directly; all access via `intelliqx-*` libs.
 - **Storage**: object store (S3/GCS/modal.Volume) + zvec (vector) + Parquet+DuckDB (KG).
 - **Events**: Pub/Sub semantics (EventBridge+SQS / Pub/Sub / modal.Queue).
-- **LLM**: Bedrock / Vertex AI / vLLM or LiteLLM — selected per cloud via `intelliqx-llm`.
+- **LLM**: Bedrock / Vertex AI / vLLM / [MiniMax](https://docs.litellm.ai/docs/providers/minimax) via litellm — selected per cloud via `intelliqx-llm` (see ADR-0012).
 
 ## Top-Level Decisions Locked
 
-See `/docs/adr/` (ADRs 0001–0011) and Phase 0 plan.
+See `/docs/adr/` (ADRs 0001–0012) and Phase 0 plan.

@@ -6,6 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+* **MiniMax LLM adapter** — new
+  `intelliqx_llm.minimax.MiniMaxLLMClient` routes chat and embed
+  through
+  [`litellm`](https://docs.litellm.ai/docs/providers/minimax).
+  Set `INTELLIQX_LLM_BACKEND=minimax` plus `MINIMAX_API_KEY` (and
+  optional `MINIMAX_API_BASE`) to use it. Graceful-degradation
+  pattern matches the existing cloud adapters: a missing SDK or
+  key produces a `[minimax-fallback:<sha256>...]` response so
+  CI on a laptop with no cloud credentials keeps working.
+* **`intelliqx-llm-smoke` console script** — installed by
+  `intelliqx-llm`; runs a one-shot `complete()` (or `embed()`
+  with `--embed`) against the configured backend and prints
+  the response plus per-call latency. Exits 0 on success, 1
+  on any failure (including an unknown `INTELLIQX_LLM_BACKEND`).
+* **ADR-0012** — documents the decision to standardise on
+  `litellm` as the provider-agnostic SDK and the trade-offs
+  (large dependency, broad-except catch, smoke-CLI pattern).
+
 ### Changed — Quality hardening (comprehensive refactor)
 
 This release contains a top-to-bottom quality pass: every commit on
