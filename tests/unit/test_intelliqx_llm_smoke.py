@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 import pytest
 from intelliqx_llm import client as client_mod
 from intelliqx_llm._smoke import _parse_args, main
@@ -99,3 +102,19 @@ def test_main_show_env(monkeypatch: pytest.MonkeyPatch, capsys):
     out = capsys.readouterr().out
     assert "backend=fake" in out
     assert "dim=128" in out
+
+
+@pytest.mark.unit
+def test_python_m_intelliqx_llm_runs_smoke_cli(monkeypatch: pytest.MonkeyPatch):
+    """``python -m intelliqx_llm`` should run the same smoke CLI."""
+    monkeypatch.setenv("INTELLIQX_LLM_BACKEND", "fake")
+    result = subprocess.run(
+        [sys.executable, "-m", "intelliqx_llm"],
+        capture_output=True,
+        text=True,
+        env={**__import__("os").environ, "INTELLIQX_LLM_BACKEND": "fake"},
+        check=False,
+    )
+    assert result.returncode == 0
+    assert "--- response ---" in result.stdout
+    assert "--- meta ---" in result.stdout

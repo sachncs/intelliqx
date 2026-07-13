@@ -4,7 +4,9 @@ The platform supports three deployment targets: AWS, GCP, and
 Modal. Each lib under `libs/intelliqx-*` exposes a cloud-specific
 adapter that satisfies the same interface, so agent code is
 portable without changes. The matrix below maps each lib to its
-adapters.
+adapters. The LLM layer additionally supports
+[MiniMax](https://api.minimax.io) via litellm — see ADR-0012 and
+the `intelliqx-llm-smoke` CLI.
 
 | Lib | Abstract | AWS | GCP | Modal | Local / Dev |
 |---|---|---|---|---|---|
@@ -13,7 +15,7 @@ adapters.
 | `intelliqx-state` | `StateStore` | `ElastiCacheStateStore` | `MemorystoreStateStore` | `ModalDictStateStore` | `InMemoryStateStore` |
 | `intelliqx-vector` | `VectorIndex` (Protocol) | `ZvecIndex` (persisted to S3 / GCS / Volume) | (same zvec binary) | (same zvec binary) | `InMemoryVectorIndex` / `SqliteVecIndex` |
 | `intelliqx-okf` | `OKFCatalog` | SQLite catalog with FTS5 + sqlite-vec hybrid retrieval | (same SQLite) | (same SQLite) | `OKFCatalog` (in-memory or file-backed) |
-| `intelliqx-llm` | `LLMClient` | `BedrockLLMClient` | `VertexLLMClient` | `VLLMModalLLMClient` | `FakeLLMClient` |
+| `intelliqx-llm` | `LLMClient` | `BedrockLLMClient` | `VertexLLMClient` | `VLLMModalLLMClient` | `FakeLLMClient` (also `MiniMaxLLMClient` via litellm, selectable by `INTELLIQX_LLM_BACKEND=minimax`) |
 | `intelliqx-compute` | `ComputeRuntime` | `AWSLambdaComputeRuntime` | `GCPFunctionsComputeRuntime` | `ModalComputeRuntime` | `InProcessComputeRuntime` |
 | `intelliqx-portability` | `CloudAdapter` | `AWSAdapter` | `GCPAdapter` | `ModalAdapter` | `LocalAdapter` |
 
