@@ -64,7 +64,7 @@ class ToolRegistry:
             raise KeyError(f"Tool not found: {name!r}")
         return self._tools[name]
 
-    def list(self) -> list[ToolDefinition]:
+    def list_tools(self) -> list[ToolDefinition]:
         """Return every registered definition."""
         return list(self._tools.values())
 

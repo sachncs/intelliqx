@@ -1,8 +1,8 @@
 # IntelliqX Event Taxonomy
 
-This document describes the event topics the Tier 1 agents publish
+This document describes the event topics the Coordination agents publish
 and consume. Every event is an instance of a class defined in
-`agents/tier1/events.py` and carries an
+`agents/coordination/events.py` and carries an
 :class:`intelliqx_core.events.EventMetadata` envelope.
 
 ## Event topics
@@ -62,10 +62,10 @@ version and handle older payloads gracefully.
 
 | Class | Module | META |
 |---|---|---|
-| `PlanGenerated` | `agents.tier1.events` | Orchestrator or Planner |
-| `PlanNodeStarted` / `PlanNodeCompleted` | `agents.tier1.events` | Orchestrator |
-| `RunStarted` / `RunCompleted` | `agents.tier1.events` | Orchestrator |
-| `AgentInvocationStarted` / `AgentInvocationCompleted` | `agents.tier1.events` | Compute runtime hooks |
+| `PlanGenerated` | `agents.coordination.events` | Orchestrator or Planner |
+| `PlanNodeStarted` / `PlanNodeCompleted` | `agents.coordination.events` | Orchestrator |
+| `RunStarted` / `RunCompleted` | `agents.coordination.events` | Orchestrator |
+| `AgentInvocationStarted` / `AgentInvocationCompleted` | `agents.coordination.events` | Compute runtime hooks |
 
 ## Persistence vs. transient
 

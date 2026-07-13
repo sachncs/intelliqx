@@ -19,6 +19,7 @@ LIBS = [
     "intelliqx_agents",
     "intelliqx_tenant",
     "intelliqx_sdk",
+    "intelliqx_okf",
 ]
 
 

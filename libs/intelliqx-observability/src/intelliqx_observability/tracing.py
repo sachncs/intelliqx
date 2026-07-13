@@ -18,10 +18,10 @@ import time
 from contextlib import contextmanager
 from typing import Any
 
-from opentelemetry import trace
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
+from opentelemetry import trace  # type: ignore[import-not-found]
+from opentelemetry.sdk.resources import Resource  # type: ignore[import-not-found]
+from opentelemetry.sdk.trace import TracerProvider  # type: ignore[import-not-found]
+from opentelemetry.sdk.trace.export import (  # type: ignore[import-not-found]
     BatchSpanProcessor,
     ConsoleSpanExporter,
     SimpleSpanProcessor,

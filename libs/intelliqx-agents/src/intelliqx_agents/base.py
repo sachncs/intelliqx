@@ -15,6 +15,7 @@ agent for an example.
 
 from __future__ import annotations
 
+import abc
 from collections.abc import Callable
 from typing import Any, ClassVar, Generic, TypeVar
 
@@ -75,7 +76,7 @@ class AgentContext(BaseModel):
     trace_id: str | None = None
 
 
-class AgentBase(Generic[InputT, OutputT]):
+class AgentBase(abc.ABC, Generic[InputT, OutputT]):
     """Base class for all agents.
 
     Subclasses must:
@@ -94,6 +95,7 @@ class AgentBase(Generic[InputT, OutputT]):
         self.metrics = get_metrics()
         self.tracer = get_tracer()
 
+    @abc.abstractmethod
     async def run(self, ctx: AgentContext, input: InputT) -> OutputT:
         """Implement the agent's behaviour.
 

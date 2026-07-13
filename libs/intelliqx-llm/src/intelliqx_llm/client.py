@@ -121,6 +121,27 @@ class LLMClient:
         raise NotImplementedError
 
 
+def deterministic_embedding(texts: Sequence[str], dim: int) -> list[list[float]]:
+    """Build deterministic hash-based embeddings for fallback / test paths.
+
+    Each output vector is derived from the SHA-256 of the input text,
+    repeated and scaled to ``[-1, 1]`` until it reaches ``dim`` entries.
+    The result is **not** semantically meaningful but is deterministic
+    and bounded, which is sufficient for RAG pipeline tests.
+    """
+    out: list[list[float]] = []
+    for t in texts:
+        digest = hashlib.sha256(t.encode("utf-8")).digest()
+        vals: list[float] = []
+        while len(vals) < dim:
+            for b in digest:
+                vals.append((b / 255.0) * 2 - 1)
+                if len(vals) >= dim:
+                    break
+        out.append(vals[:dim])
+    return out
+
+
 class FakeLLMClient(LLMClient):
     """Deterministic fake LLM client for tests.
 
@@ -195,23 +216,12 @@ class FakeLLMClient(LLMClient):
     async def embed(self, texts: Sequence[str], *, model: str = "auto") -> list[list[float]]:
         """Embed ``texts`` deterministically.
 
-        Each output vector is built by repeating the SHA-256 digest
-        of the input until it reaches ``self.dim`` entries. The
-        result is bounded in ``[-1, 1]`` but **not** a meaningful
-        semantic embedding.
+        Each output vector is derived from the SHA-256 of the input,
+        repeated and scaled to ``[-1, 1]`` until it reaches ``self.dim``
+        entries.  The result is bounded but **not** semantically meaningful.
         """
         await asyncio.sleep(self._latency_ms / 1000.0)
-        out: list[list[float]] = []
-        for t in texts:
-            digest = hashlib.sha256(t.encode("utf-8")).digest()
-            vals: list[float] = []
-            while len(vals) < self._dim:
-                for b in digest:
-                    vals.append((b / 255.0) * 2 - 1)
-                    if len(vals) >= self._dim:
-                        break
-            out.append(vals[: self._dim])
-        return out
+        return deterministic_embedding(texts, self._dim)
 
 
 _SINGLETON: LLMClient | None = None

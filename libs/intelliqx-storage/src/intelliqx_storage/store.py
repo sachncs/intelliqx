@@ -18,6 +18,7 @@ that supports it.
 
 from __future__ import annotations
 
+import abc
 import asyncio
 import os
 from collections.abc import AsyncIterator
@@ -27,7 +28,7 @@ from typing import Any
 from intelliqx_core.errors import NotFoundError
 
 
-class ObjectStore:
+class ObjectStore(abc.ABC):
     """Abstract object store (S3 / GCS / Modal Volume / filesystem).
 
     All methods are coroutines so the same interface works in async
@@ -37,6 +38,7 @@ class ObjectStore:
     do this).
     """
 
+    @abc.abstractmethod
     async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
         """Store ``data`` at ``key``.
 
@@ -51,6 +53,7 @@ class ObjectStore:
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def get(self, key: str) -> bytes:
         """Fetch the bytes at ``key``.
 
@@ -62,14 +65,17 @@ class ObjectStore:
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def exists(self, key: str) -> bool:
         """Return ``True`` if ``key`` is present."""
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def delete(self, key: str) -> None:
         """Remove ``key``. Idempotent: deleting a missing key is a no-op."""
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def list(self, prefix: str) -> AsyncIterator[str]:
         """Yield every key with the given prefix.
 
@@ -201,7 +207,7 @@ class LocalFileSystemObjectStore(ObjectStore):
                 yield str(p.relative_to(self.root))
 
 
-_STORE_SINGLETON: ObjectStore | None = None
+_SINGLETON: ObjectStore | None = None
 
 
 def get_object_store() -> ObjectStore:
@@ -217,24 +223,24 @@ def get_object_store() -> ObjectStore:
     persistent backend (S3, GCS, Modal Volume) via a cloud adapter
     in their bootstrap.
     """
-    global _STORE_SINGLETON
-    if _STORE_SINGLETON is not None:
-        return _STORE_SINGLETON
+    global _SINGLETON
+    if _SINGLETON is not None:
+        return _SINGLETON
     override = os.environ.get("INTELLIQX_OBJECT_STORE", "memory")
     if override.startswith("fs:"):
-        _STORE_SINGLETON = LocalFileSystemObjectStore(override[3:])
+        _SINGLETON = LocalFileSystemObjectStore(override[3:])
     else:
-        _STORE_SINGLETON = InMemoryObjectStore()
-    return _STORE_SINGLETON
+        _SINGLETON = InMemoryObjectStore()
+    return _SINGLETON
 
 
 def reset_object_store() -> None:
     """Clear the singleton object store (for tests)."""
-    global _STORE_SINGLETON
-    _STORE_SINGLETON = None
+    global _SINGLETON
+    _SINGLETON = None
 
 
 def set_object_store(store: ObjectStore) -> None:
     """Replace the singleton object store (for tests and bootstrap)."""
-    global _STORE_SINGLETON
-    _STORE_SINGLETON = store
+    global _SINGLETON
+    _SINGLETON = store

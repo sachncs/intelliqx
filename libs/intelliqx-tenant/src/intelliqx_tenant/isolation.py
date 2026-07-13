@@ -11,6 +11,29 @@ Use it as a per-request object in API handlers:
     enforcer.check_object(resource)
 
 The enforcer raises :class:`TenantViolation` on any mismatch.
+
+Security / isolation guarantees:
+
+* The enforcer is a **defense-in-depth** layer, not the primary
+  access-control mechanism. It catches accidental cross-tenant
+  leaks (bugs), not intentional privilege escalation. The primary
+  access control should be enforced at the API gateway / auth
+  middleware layer before the request reaches agent code.
+* ``check(resource_tenant_id)`` raises ``TenantViolation`` when a
+  non-``None`` tenant id differs from the current tenant. A
+  ``None`` value is treated as "not tenant-scoped" and is
+  allowed — this is intentional for global resources (e.g. the
+  OKF catalog's ``_global`` tenant).
+* ``namespace(key)`` prefixes a key with the current tenant id,
+  producing ``"{tenant_id}/{key}"``. Use this for stores that do
+  not natively enforce tenant isolation (object store, state store,
+  KG ids). The namespace prevents key collisions between tenants
+  but does **not** prevent a tenant from constructing a key that
+  includes another tenant's prefix — that is the job of the
+  authorization layer.
+* The enforcer is **stateless** except for the bound tenant; one
+  instance per request avoids stale-tenant bugs across request
+  boundaries.
 """
 
 from __future__ import annotations

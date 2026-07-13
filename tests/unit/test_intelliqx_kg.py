@@ -74,7 +74,9 @@ async def test_node_count_by_tenant():
 @pytest.mark.asyncio
 async def test_edge_count():
     kg = KnowledgeGraph()
-    await kg.add_nodes([Node(id="a", type="X", tenant_id="t1"), Node(id="b", type="X", tenant_id="t1")])
+    await kg.add_nodes(
+        [Node(id="a", type="X", tenant_id="t1"), Node(id="b", type="X", tenant_id="t1")]
+    )
     await kg.add_edges([Edge(src="a", dst="b", type="REL", tenant_id="t1")])
     assert kg.edge_count() == 1
 

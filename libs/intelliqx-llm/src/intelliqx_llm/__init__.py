@@ -27,6 +27,7 @@ from intelliqx_llm.client import (
     FakeLLMClient,
     LLMClient,
     LLMUsage,
+    deterministic_embedding,
     get_llm_client,
 )
 
@@ -36,5 +37,6 @@ __all__ = [
     "FakeLLMClient",
     "LLMClient",
     "LLMUsage",
+    "deterministic_embedding",
     "get_llm_client",
 ]

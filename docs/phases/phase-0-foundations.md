@@ -2,7 +2,7 @@
 
 **Goal**: Stand up the IntelliqX monorepo, portability layer, shared libs, local infra config, and CI so every subsequent phase can build on a verified base.
 
-**Status**: PENDING
+**Status**: COMPLETE
 
 ---
 
@@ -11,7 +11,7 @@
 | Area | Deliverable |
 |---|---|
 | Monorepo | `uv` workspace with `libs/`, `agents/`, `services/`, `workflows/`, `tests/`, `docs/`, `infra/`, `config/` |
-| Shared libs | `intelliqx-core`, `intelliqx-agents`, `intelliqx-portability`, `intelliqx-events`, `intelliqx-storage`, `intelliqx-vector` (zvec), `intelliqx-kg` (DuckDB+Parquet), `intelliqx-llm`, `intelliqx-state`, `intelliqx-compute`, `intelliqx-observability`, `intelliqx-tools` |
+| Shared libs | `intelliqx-core`, `intelliqx-agents`, `intelliqx-portability`, `intelliqx-events`, `intelliqx-storage`, `intelliqx-vector` (zvec + sqlite-vec), `intelliqx-kg` (DuckDB+Parquet), `intelliqx-llm`, `intelliqx-state`, `intelliqx-compute`, `intelliqx-observability`, `intelliqx-tools`, `intelliqx-okf` (OKF bundles + catalog) |
 | Local infra | `docker-compose.yml` (Redpanda, Redis, MinIO, LiteLLM, Temporal, Jaeger, Prometheus, Grafana) and in-process test adapters |
 | CI | GitHub Actions: lint (ruff), typecheck (mypy), unit tests (pytest), contract tests |
 | Schemas | Event JSON Schemas, OpenAPI 3.1, KG parquet schema v1 |
@@ -45,7 +45,8 @@
 - [ ] `intelliqx-tools` (ToolManager + MCP scaffolding)
 - [ ] Schemas: `schemas/events/*.json`, `schemas/openapi.yaml`, `schemas/kg/v1.json`
 - [ ] GitHub Actions: `.github/workflows/ci.yaml`
-- [ ] ADRs: `docs/adr/0001..0010.md`
+- [ ] ADRs: `docs/adr/0001..0011.md`
+- [ ] `intelliqx-okf` (OKF bundles, catalog, validator)
 - [ ] `docs/architecture/c4.dsl` (System + Container + Component)
 - [ ] Unit + contract test suites green
 

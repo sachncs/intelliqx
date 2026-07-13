@@ -4,6 +4,20 @@ Each event topic maps to a named ``modal.Queue``. The Modal SDK is
 lazy-imported; when it is missing the adapter falls back to an
 in-process fan-out table, which keeps tests and CI on Modal-less
 machines working.
+
+Error handling pattern (``_try_init`` / ``_available``):
+
+* ``_try_init`` catches ``(ImportError, OSError)``. ``ImportError``
+  covers the absence of the ``modal`` SDK. ``OSError`` covers
+  failures when importing the Modal module (e.g. a corrupted
+  installation or platform-specific binary issue).
+* When ``_try_init`` returns ``False``, ``publish`` falls through
+  to the in-process fan-out table using ``_subscriptions`` (or an
+  explicit ``fallback`` bus). This is **graceful degradation** —
+  Modal-less CI and local dev keep working.
+* The ``uses_modal`` property combines ``_available`` with the
+  absence of an explicit ``fallback``. When a fallback is provided,
+  the adapter delegates to it even if Modal is available.
 """
 
 from __future__ import annotations
@@ -44,7 +58,7 @@ class ModalQueueBus(EventBus):
 
             self._modal = modal
             return True
-        except Exception:
+        except (ImportError, OSError):
             self._modal = None
             return False
 
@@ -87,7 +101,7 @@ class ModalQueueBus(EventBus):
         # Production: enqueue to modal.Queue (synchronous call)
         queue = self._get_queue(topic)
         await asyncio.to_thread(queue.put, event.model_dump(mode="json"))
-        return event.metadata.event_id
+        return event.metadata.event_id  # type: ignore[attr-defined]
 
     def subscribe(
         self,

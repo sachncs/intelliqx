@@ -19,7 +19,7 @@ dependencies = [
     "intelliqx-agents",
     "intelliqx-tenant",
     "intelliqx-sdk",
-    "intelliqx-agents-impl",
+    "intelliqx-okf",
 ]
 
 [tool.uv.sources]
@@ -37,7 +37,8 @@ intelliqx-tools = { workspace = true }
 intelliqx-agents = { workspace = true }
 intelliqx-tenant = { workspace = true }
 intelliqx-sdk = { workspace = true }
-intelliqx-agents-impl = { workspace = true }
+agents = { workspace = true }
+intelliqx-okf = { workspace = true }
 
 [tool.uv.workspace]
 members = [
@@ -56,6 +57,7 @@ members = [
     "libs/intelliqx-tenant",
     "libs/intelliqx-sdk",
     "agents",
+    "libs/intelliqx-okf",
     "tests",
 ]
 

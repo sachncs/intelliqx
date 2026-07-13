@@ -24,6 +24,7 @@ dependencies = [
     "intelliqx-agents",
     "intelliqx-tenant",
     "intelliqx-sdk",
+    "intelliqx-okf",
 ]
 
 [tool.uv.sources]
@@ -41,6 +42,7 @@ intelliqx-tools = { workspace = true }
 intelliqx-agents = { workspace = true }
 intelliqx-tenant = { workspace = true }
 intelliqx-sdk = { workspace = true }
+intelliqx-okf = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

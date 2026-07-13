@@ -5,7 +5,7 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_storage.store import InMemoryObjectStore
 
 from agents import register_all, register_compute_handlers
-from agents.tier3.visual_regression import VisualRegressionAgent, _pixel_diff_pct
+from agents.execution.visual_regression import VisualRegressionAgent, _pixel_diff_pct
 
 
 @pytest.mark.unit

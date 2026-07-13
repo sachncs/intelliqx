@@ -145,9 +145,7 @@ class InMemoryVectorIndex:
         added = 0
         for d in docs:
             if len(d.vector) != self._dim:
-                raise ValueError(
-                    f"Vector dim mismatch: expected {self._dim}, got {len(d.vector)}"
-                )
+                raise ValueError(f"Vector dim mismatch: expected {self._dim}, got {len(d.vector)}")
             self._docs[d.id] = d
             added += 1
         return added
@@ -218,37 +216,58 @@ class InMemoryVectorIndex:
         return sum(1 for d in self._docs.values() if d.tenant_id == tenant_id)
 
 
-_INSTANCE: VectorIndex | None = None
+_SINGLETON: VectorIndex | None = None
 
 
 def get_vector_index() -> VectorIndex:
     """Return the singleton vector index.
 
-    Defaults to a 768-dimensional in-memory index (the size IntelliqX uses
-    for most embedding models). Production should construct a
-    :class:`ZvecIndex` once at startup and call :func:`set_vector_index`.
+    Defaults to a 768-dimensional in-memory index. Tests rely on
+    this default; production deployments construct a
+    :class:`SqliteVecIndex` (or :class:`ZvecIndex`) once at startup
+    and install it via :func:`set_vector_index`.
+
+    The ``INTELLIQX_VECTOR_BACKEND`` env var selects the default
+    backend at first call:
+
+    * ``"memory"`` (default) — :class:`InMemoryVectorIndex`.
+    * ``"sqlite_vec"`` — :class:`SqliteVecIndex` against the path
+      in ``INTELLIQX_VECTOR_DB`` (default ``:memory:``).
+    * ``"zvec"`` — :class:`ZvecIndex` (Zilliz).
     """
-    global _INSTANCE
-    if _INSTANCE is None:
+    global _SINGLETON
+    if _SINGLETON is None:
         import os
 
+        backend = os.environ.get("INTELLIQX_VECTOR_BACKEND", "memory")
         dim = int(os.environ.get("INTELLIQX_VECTOR_DIM", "768"))
-        _INSTANCE = InMemoryVectorIndex(dim=dim)
-    return _INSTANCE
+        if backend == "sqlite_vec":
+            from intelliqx_vector.sqlite_vec_index import SqliteVecIndex
+
+            db_path = os.environ.get("INTELLIQX_VECTOR_DB", ":memory:")
+            _SINGLETON = SqliteVecIndex(dim=dim, db_path=db_path)
+        elif backend == "zvec":
+            from intelliqx_vector.zvec_index import ZvecIndex
+
+            _SINGLETON = ZvecIndex(dim=dim)
+        else:
+            _SINGLETON = InMemoryVectorIndex(dim=dim)
+    return _SINGLETON
 
 
 def set_vector_index(idx: VectorIndex) -> None:
     """Replace the singleton vector index.
 
     Used by application bootstrap to install a configured
-    :class:`ZvecIndex` (or any other ``VectorIndex`` implementation)
-    before the first ``get_vector_index`` call.
+    :class:`SqliteVecIndex` (or :class:`ZvecIndex`, or any other
+    ``VectorIndex`` implementation) before the first
+    :func:`get_vector_index` call.
     """
-    global _INSTANCE
-    _INSTANCE = idx
+    global _SINGLETON
+    _SINGLETON = idx
 
 
 def reset_vector_index() -> None:
     """Clear the singleton (for tests)."""
-    global _INSTANCE
-    _INSTANCE = None
+    global _SINGLETON
+    _SINGLETON = None

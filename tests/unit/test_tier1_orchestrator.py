@@ -7,7 +7,7 @@ from intelliqx_events.bus import get_event_bus
 from intelliqx_state.store import get_state_store
 
 from agents import register_all, register_compute_handlers
-from agents.tier1.orchestrator import OrchestratorAgent
+from agents.coordination.orchestrator import OrchestratorAgent
 
 
 def _ensure_registered():

@@ -31,13 +31,13 @@
 
 ## 6.3 Deliverables
 
-- [ ] `agents/tier3/visual_regression/` — pixel diff + LLM diff.
-- [ ] `agents/tier3/accessibility/` — axe + keyboard.
-- [ ] `agents/tier3/performance/` — k6 runner; SLO definitions.
-- [ ] `agents/tier3/security/` — SAST/DAST/dep/secrets adapters.
-- [ ] `agents/tier2/learning/` — feedback loop.
-- [ ] `agents/tier2/prompt_management/` — versions + bandit.
-- [ ] `agents/tier3/cost_optimization/` — analyzer + recommender.
+- [ ] `agents/execution/visual_regression/` — pixel diff + LLM diff.
+- [ ] `agents/execution/accessibility/` — axe + keyboard.
+- [ ] `agents/execution/performance/` — k6 runner; SLO definitions.
+- [ ] `agents/execution/security/` — SAST/DAST/dep/secrets adapters.
+- [ ] `agents/intelligence/learning/` — feedback loop.
+- [ ] `agents/intelligence/prompt_management/` — versions + bandit.
+- [ ] `agents/execution/cost_optimization/` — analyzer + recommender.
 - [ ] Reference app extended with performance + a11y + visual baselines.
 - [ ] v2 GA release notes.
 

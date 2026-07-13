@@ -94,6 +94,4 @@ async def test_agent_requires_input_output_models():
     from intelliqx_compute.runtime import InvocationRequest
 
     with pytest.raises(RuntimeError):
-        await bad.invoke(
-            InvocationRequest(agent_name="bad", input={}, tenant_id="t1")
-        )
+        await bad.invoke(InvocationRequest(agent_name="bad", input={}, tenant_id="t1"))

@@ -1,7 +1,7 @@
 """Modal infrastructure.
 
 This module is a placeholder for the Phase 2 implementation. The Modal app
-defines Tier 1 agents as modal.Functions and mounts the agent container image.
+defines Coordination agents as modal.Functions and mounts the agent container image.
 """
 
 # Reference skeleton (uncomment in Phase 2):
@@ -21,7 +21,7 @@ defines Tier 1 agents as modal.Functions and mounts the agent container image.
 #     from agents import register_all, register_compute_handlers
 #     register_all()
 #     register_compute_handlers()
-#     from agents.tier1.planner import PlannerAgent
+#     from agents.coordination.planner import PlannerAgent
 #     from intelliqx_compute.runtime import InvocationRequest
 #     agent = PlannerAgent()
 #     out = await agent.invoke(InvocationRequest(agent_name="planner", input=payload, tenant_id=payload.get("tenant_id", "default")))

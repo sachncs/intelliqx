@@ -13,6 +13,24 @@ Two strategies:
 The OpenAI-compatible wire format (``/v1/chat/completions`` and
 ``/v1/embeddings``) means the same code works against any vLLM
 deployment regardless of the underlying model.
+
+Error handling pattern (``_available`` flag):
+
+* Unlike other adapters, ``_available`` is set from
+  ``bool(self.endpoint_url)`` — a simple env-var check rather than
+  an import test — because the real dependency (``httpx``) is only
+  imported inside ``complete``/``embed`` when ``_available`` is
+  ``True``. If ``httpx`` is missing at that point, a loud
+  ``RuntimeError`` is raised.
+* When ``_available`` is ``False`` (no ``endpoint_url`` configured),
+  ``complete`` returns a deterministic mock response prefixed with
+  ``[vllm-fallback:]`` and ``embed`` returns a deterministic
+  pseudo-embedding. This is **graceful degradation** — Modal-less
+  CI and local dev keep working.
+* When ``_available`` is ``True`` but the vLLM endpoint is
+  unreachable or returns an error, the ``httpx`` exception
+  propagates (via ``r.raise_for_status()``). This is **fail loud**
+  — silent fallback would mask a real deployment problem.
 """
 
 from __future__ import annotations
@@ -21,7 +39,13 @@ import hashlib
 import os
 from collections.abc import Sequence
 
-from intelliqx_llm.client import CompletionRequest, CompletionResponse, LLMClient, LLMUsage
+from intelliqx_llm.client import (
+    CompletionRequest,
+    CompletionResponse,
+    LLMClient,
+    LLMUsage,
+    deterministic_embedding,
+)
 
 
 class VLLMModalLLMClient(LLMClient):
@@ -38,7 +62,9 @@ class VLLMModalLLMClient(LLMClient):
         model: The model name to send in requests.
     """
 
-    def __init__(self, endpoint_url: str | None = None, model: str = "Qwen/Qwen2.5-72B-Instruct") -> None:
+    def __init__(
+        self, endpoint_url: str | None = None, model: str = "Qwen/Qwen2.5-72B-Instruct"
+    ) -> None:
         self.endpoint_url = endpoint_url or os.environ.get("INTELLIQX_VLLM_URL", "")
         self.model = model
         self._client = None
@@ -59,7 +85,7 @@ class VLLMModalLLMClient(LLMClient):
             )
         # Real vLLM HTTP call (OpenAI-compatible /v1/chat/completions).
         try:
-            import httpx  # type: ignore
+            import httpx
         except ImportError as e:
             raise RuntimeError("httpx required for VLLMModalLLMClient") from e
         async with httpx.AsyncClient(base_url=self.endpoint_url, timeout=60.0) as client:
@@ -86,20 +112,10 @@ class VLLMModalLLMClient(LLMClient):
 
     async def embed(self, texts: Sequence[str], *, model: str = "auto") -> list[list[float]]:
         if not self._available:
-            out = []
-            for t in texts:
-                digest = hashlib.sha256(t.encode("utf-8")).digest()
-                vals: list[float] = []
-                while len(vals) < 768:
-                    for b in digest:
-                        vals.append((b / 255.0) * 2 - 1)
-                        if len(vals) >= 768:
-                            break
-                out.append(vals[:768])
-            return out
+            return deterministic_embedding(texts, 768)
         # Real vLLM /v1/embeddings call.
         try:
-            import httpx  # type: ignore
+            import httpx
         except ImportError as e:
             raise RuntimeError("httpx required for VLLMModalLLMClient") from e
         async with httpx.AsyncClient(base_url=self.endpoint_url, timeout=60.0) as client:

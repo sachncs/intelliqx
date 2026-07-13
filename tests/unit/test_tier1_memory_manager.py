@@ -4,7 +4,7 @@ import pytest
 from intelliqx_compute.runtime import InvocationRequest
 
 from agents import register_all, register_compute_handlers
-from agents.tier1.memory_manager import MemoryManagerAgent
+from agents.coordination.memory_manager import MemoryManagerAgent
 
 
 def _put(agent, tenant, key, value, mtype="working", **kw):

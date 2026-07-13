@@ -14,12 +14,13 @@ handler — only the small critical sections that touch the dicts.
 
 from __future__ import annotations
 
+import abc
 import asyncio
 import time
 from collections.abc import AsyncIterator
 
 
-class StateStore:
+class StateStore(abc.ABC):
     """Abstract state store.
 
     All methods are coroutines; the in-memory implementation is fully
@@ -27,6 +28,7 @@ class StateStore:
     (JSON, msgpack, etc.) is the caller's responsibility.
     """
 
+    @abc.abstractmethod
     async def get(self, key: str) -> bytes | None:
         """Return the value for ``key`` or ``None`` if missing/expired.
 
@@ -38,6 +40,7 @@ class StateStore:
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def set(self, key: str, value: bytes, *, ttl_seconds: int | None = None) -> None:
         """Store ``value`` at ``key`` with optional expiry.
 
@@ -49,10 +52,12 @@ class StateStore:
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def delete(self, key: str) -> None:
         """Remove the key and any hash/list entries under the same name."""
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def incr(self, key: str, amount: int = 1) -> int:
         """Atomically increment an integer counter.
 
@@ -65,10 +70,12 @@ class StateStore:
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def expire(self, key: str, ttl_seconds: int) -> None:
         """Set the expiry on an existing key (Redis-style)."""
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def keys(self, prefix: str) -> AsyncIterator[str]:
         """Yield every non-expired key with the given prefix.
 
@@ -78,10 +85,12 @@ class StateStore:
         raise NotImplementedError
         yield ""  # pragma: no cover
 
+    @abc.abstractmethod
     async def hset(self, key: str, field: str, value: str) -> None:
         """Set a single hash field under ``key``."""
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def hgetall(self, key: str) -> dict[str, str]:
         """Return all hash fields under ``key``.
 
@@ -90,6 +99,7 @@ class StateStore:
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def lpush(self, key: str, value: str) -> int:
         """Push ``value`` to the head of the list at ``key``.
 
@@ -98,6 +108,7 @@ class StateStore:
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def rpop(self, key: str) -> str | None:
         """Pop the tail of the list at ``key`` and return it, or ``None``."""
         raise NotImplementedError

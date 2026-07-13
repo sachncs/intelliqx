@@ -27,11 +27,11 @@ Deferred to Phase 6: Visual Regression, Accessibility, Performance, Security.
 
 ## 4.3 Deliverables
 
-- [ ] `agents/tier3/environment/` — env provisioner (k8s manifest generator + terraform).
-- [ ] `agents/tier3/design_intel/` — DOM/a11y tree semantic extractor.
-- [ ] `agents/tier3/execution/` — Playwright runner; artifact uploader; event emitter.
-- [ ] `agents/tier3/self_healing/` — selector repair (LLM + heuristics).
-- [ ] `agents/tier3/failure_analysis/` — root cause classifier.
+- [ ] `agents/execution/environment/` — env provisioner (k8s manifest generator + terraform).
+- [ ] `agents/execution/design_intel/` — DOM/a11y tree semantic extractor.
+- [ ] `agents/execution/execution/` — Playwright runner; artifact uploader; event emitter.
+- [ ] `agents/execution/self_healing/` — selector repair (LLM + heuristics).
+- [ ] `agents/execution/failure_analysis/` — root cause classifier.
 - [ ] `workflows/full_qa_workflow.asl.json` updated to include Tier 3.
 - [ ] Reference web app under `tests/fixtures/reference_app/` (multi-page, accessible, intentionally broken in places for healing tests).
 - [ ] E2E test: full pipeline runs against reference app locally; ≥ 80% of "broken" tests heal successfully.

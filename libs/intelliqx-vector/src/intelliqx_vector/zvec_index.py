@@ -142,9 +142,7 @@ class ZvecIndex:
         added = 0
         for d in docs:
             if len(d.vector) != self._dim:
-                raise ValueError(
-                    f"Vector dim mismatch: expected {self._dim}, got {len(d.vector)}"
-                )
+                raise ValueError(f"Vector dim mismatch: expected {self._dim}, got {len(d.vector)}")
             doc = zvec.Doc(
                 id=d.id,
                 fields={
@@ -174,6 +172,13 @@ class ZvecIndex:
                 self._coll.delete(id=i)
                 removed += 1
             except Exception:
+                # Silent pass is intentional: zvec may raise if the id
+                # does not exist in the collection (e.g. already deleted
+                # or never upserted).  Failing the entire batch for one
+                # missing id would force callers to pre-validate every
+                # id, which is expensive and error-prone.  Instead we
+                # count successful deletions and let the caller inspect
+                # the returned count.
                 pass
         await self._persist()
         return removed

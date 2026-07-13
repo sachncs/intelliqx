@@ -1,6 +1,5 @@
 """Tests for intelliqx-tools."""
 
-
 import pytest
 from intelliqx_tools.manager import ToolManager
 from intelliqx_tools.rate_limit import RateLimiter

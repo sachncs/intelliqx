@@ -44,6 +44,7 @@ def _reset_singletons():
     from intelliqx_llm.client import reset_llm_client
     from intelliqx_observability.metrics import reset_metrics
     from intelliqx_observability.tracing import reset_tracer
+    from intelliqx_okf.catalog import reset_catalog
     from intelliqx_portability.adapter import reset_adapter_cache
     from intelliqx_state.store import reset_state_store
     from intelliqx_storage.store import reset_object_store
@@ -61,6 +62,7 @@ def _reset_singletons():
     reset_object_store()
     reset_tool_manager()
     reset_vector_index()
+    reset_catalog()
     EventRegistry._contracts.clear()
     yield
 

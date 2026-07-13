@@ -4,7 +4,7 @@ import pytest
 from intelliqx_compute.runtime import InvocationRequest
 
 from agents import register_all, register_compute_handlers
-from agents.tier3.self_healing import SelfHealingAgent, _generate_candidates
+from agents.execution.self_healing import SelfHealingAgent, _generate_candidates
 
 SAMPLE_HTML = """
 <form id="login-form">

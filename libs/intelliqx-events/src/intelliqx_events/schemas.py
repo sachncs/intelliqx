@@ -90,7 +90,7 @@ class EventRegistry:
         jsonschema.validate(payload, contract.schema_)
 
 
-def get_registry() -> EventRegistry:
+def get_registry() -> type[EventRegistry]:
     """Return the :class:`EventRegistry` class.
 
     The registry is class-level state, so this is a trivial accessor
@@ -127,7 +127,7 @@ def load_contracts_from_dir(path: Path) -> int:
         contract = EventContract(
             topic=topic,
             description=data.get("description", ""),
-            schema_=data,
+            schema_=data,  # type: ignore[call-arg]
         )
         EventRegistry.register(contract)
         count += 1

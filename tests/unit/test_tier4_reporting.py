@@ -4,7 +4,7 @@ import pytest
 from intelliqx_compute.runtime import InvocationRequest
 
 from agents import register_all, register_compute_handlers
-from agents.tier4.reporting import ReportingAgent
+from agents.governance.reporting import ReportingAgent
 
 
 @pytest.mark.unit

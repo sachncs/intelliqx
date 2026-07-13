@@ -4,6 +4,21 @@ Uses Pub/Sub topics for fan-out and subscriptions for delivery. The
 ``google-cloud-pubsub`` SDK is lazy-imported; if it is missing or
 credentials aren't available, the adapter falls back to an in-process
 fan-out table.
+
+Error handling pattern (``_try_init`` / ``_available``):
+
+* ``_try_init`` catches ``(ImportError, OSError)``. ``ImportError``
+  covers the absence of ``google-cloud-pubsub``. ``OSError`` covers
+  credential resolution failures at publisher-client creation time
+  (missing ``GOOGLE_APPLICATION_CREDENTIALS``, expired key, or
+  unreachable metadata server on GCE).
+* When ``_try_init`` returns ``False``, ``publish`` falls through
+  to the in-process fan-out table using ``_subscriptions`` (or an
+  explicit ``fallback`` bus). This is **graceful degradation** —
+  local dev and CI keep working without GCP credentials.
+* The ``uses_gcp`` property combines ``_available`` with the
+  absence of an explicit ``fallback``. When a fallback is provided,
+  the adapter delegates to it even if GCP is available.
 """
 
 from __future__ import annotations
@@ -12,6 +27,7 @@ import asyncio
 import json
 import os
 from collections.abc import Callable
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -35,7 +51,7 @@ class GCPPubSubBus(EventBus):
         fallback: EventBus | None = None,
     ) -> None:
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
-        self._publisher = None
+        self._publisher: Any = None
         self._subscriptions: dict[str, list[EventHandler]] = {}
         self._fallback = fallback
         self._available = self._try_init()
@@ -51,7 +67,7 @@ class GCPPubSubBus(EventBus):
 
             self._publisher = pubsub_v1.PublisherClient()
             return True
-        except Exception:
+        except (ImportError, OSError):
             return False
 
     @property

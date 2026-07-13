@@ -6,8 +6,8 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_core.models import PlanNode
 
 from agents import register_all, register_compute_handlers
-from agents.tier1.planner import PlannerAgent, _trim_to_cost, _validate_dag
-from agents.tier1.templates import plan_for
+from agents.coordination.planner import PlannerAgent, _trim_to_cost, _validate_dag
+from agents.coordination.templates import plan_for
 
 
 @pytest.mark.unit

@@ -1,6 +1,6 @@
 # IntelliqX — Autonomous QA Intelligence Platform
 
-Multi-cloud, agent-native QA platform. See `docs/phases/README.md` for the phased implementation plan.
+Multi-cloud, agent-native QA platform with 29 agents across 15 independent libraries. See `docs/phases/README.md` for the phased implementation plan and [`docs/adr/`](docs/adr/) for Architecture Decision Records.
 
 ## Quick start
 
@@ -8,8 +8,8 @@ Multi-cloud, agent-native QA platform. See `docs/phases/README.md` for the phase
 # Install workspace dependencies
 uv sync --all-extras
 
-# Run unit tests
-uv run pytest tests/unit -q
+# Run unit + integration tests
+uv run pytest tests/unit tests/integration -q
 
 # Lint + typecheck
 uv run ruff check .
@@ -22,8 +22,17 @@ docker compose up -d   # requires Docker
 ## Layout
 
 ```
-libs/          Shared libraries (intelliqx-core, intelliqx-events, intelliqx-vector, ...)
-agents/        Agent implementations by tier
+libs/          15 shared libraries (intelliqx-core, intelliqx-events, intelliqx-vector, intelliqx-okf, ...)
+agents/        29 agent implementations by tier
+  coordination/  Planner, Orchestrator, Memory, Knowledge/RAG, Tool Manager, Smoke
+  intelligence/  Requirements Intel, Code Intel, Risk, Test Design, Test Data, Coverage, Critic, Learning, Prompt Mgmt
+  execution/     Environment, Design Intel, Execution, Self-Healing, Failure Analysis, Visual Regression, A11y, Perf, Security, Cost Opt
+  governance/    Observability, Reporting, Governance & Compliance, Release Readiness
+schemas/       Event JSON Schemas, KG schema
+dashboards/    Dashboard definitions
+prompts/       Prompt templates
+evals/         Evaluation suites per tier
+scripts/       Utility scripts
 services/      HTTP/WebSocket entrypoints
 workflows/     Step Functions / LangGraph definitions
 infra/         IaC (AWS CDK, GCP cdktf, Modal SDK)

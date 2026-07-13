@@ -11,7 +11,8 @@ adapters.
 | `intelliqx-events` | `EventBus` | `AWSEventBridgeBus` (EventBridge + SQS) | `GCPPubSubBus` (Pub/Sub) | `ModalQueueBus` (`modal.Queue`) | `InMemoryEventBus` |
 | `intelliqx-storage` | `ObjectStore` | `S3ObjectStore` | `GCSObjectStore` | `ModalVolumeObjectStore` | `InMemoryObjectStore` / `LocalFileSystemObjectStore` |
 | `intelliqx-state` | `StateStore` | `ElastiCacheStateStore` | `MemorystoreStateStore` | `ModalDictStateStore` | `InMemoryStateStore` |
-| `intelliqx-vector` | `VectorIndex` (Protocol) | `ZvecIndex` (persisted to S3 / GCS / Volume) | (same zvec binary) | (same zvec binary) | `InMemoryVectorIndex` |
+| `intelliqx-vector` | `VectorIndex` (Protocol) | `ZvecIndex` (persisted to S3 / GCS / Volume) | (same zvec binary) | (same zvec binary) | `InMemoryVectorIndex` / `SqliteVecIndex` |
+| `intelliqx-okf` | `OKFCatalog` | SQLite catalog with FTS5 + sqlite-vec hybrid retrieval | (same SQLite) | (same SQLite) | `OKFCatalog` (in-memory or file-backed) |
 | `intelliqx-llm` | `LLMClient` | `BedrockLLMClient` | `VertexLLMClient` | `VLLMModalLLMClient` | `FakeLLMClient` |
 | `intelliqx-compute` | `ComputeRuntime` | `AWSLambdaComputeRuntime` | `GCPFunctionsComputeRuntime` | `ModalComputeRuntime` | `InProcessComputeRuntime` |
 | `intelliqx-portability` | `CloudAdapter` | `AWSAdapter` | `GCPAdapter` | `ModalAdapter` | `LocalAdapter` |

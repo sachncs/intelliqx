@@ -6,9 +6,9 @@ from intelliqx_core.ids import new_id
 from intelliqx_core.models import RunStatus
 
 from agents import register_all, register_compute_handlers
-from agents.tier1.orchestrator import OrchestratorAgent
-from agents.tier1.planner import PlannerAgent
-from agents.tier1.smoke import SmokeAgent
+from agents.coordination.orchestrator import OrchestratorAgent
+from agents.coordination.planner import PlannerAgent
+from agents.coordination.smoke import SmokeAgent
 
 
 @pytest.mark.unit
@@ -85,7 +85,12 @@ async def test_e2e_planner_then_orchestrator_chain():
         InvocationRequest(
             agent_name="planner",
             input={
-                "goal": {"goal_id": "g1", "kind": "analyze_prd", "description": "d", "tenant_id": "t1"},
+                "goal": {
+                    "goal_id": "g1",
+                    "kind": "analyze_prd",
+                    "description": "d",
+                    "tenant_id": "t1",
+                },
                 "tenant_id": "t1",
             },
             tenant_id="t1",

@@ -5,8 +5,8 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_state.store import get_state_store
 
 from agents import register_all, register_compute_handlers
-from agents.tier2.learning import LearningAgent
-from agents.tier2.prompt_management import PromptManagementAgent
+from agents.intelligence.learning import LearningAgent
+from agents.intelligence.prompt_management import PromptManagementAgent
 
 # --- Learning ----------------------------------------------------------------
 
@@ -53,7 +53,11 @@ async def test_learning_deprecates_low_passing_prompt():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="learning",
-            input={"tenant_id": "t1", "run_id": "r-new", "feedback": {"prompt_id": "p1", "outcome": "passed"}},
+            input={
+                "tenant_id": "t1",
+                "run_id": "r-new",
+                "feedback": {"prompt_id": "p1", "outcome": "passed"},
+            },
             tenant_id="t1",
         )
     )
@@ -200,7 +204,13 @@ async def test_prompt_bandit_select_returns_version():
         await agent.invoke(
             InvocationRequest(
                 agent_name="prompt_management",
-                input={"action": "register", "tenant_id": "t1", "prompt_id": "p1", "version": v, "text": v},
+                input={
+                    "action": "register",
+                    "tenant_id": "t1",
+                    "prompt_id": "p1",
+                    "version": v,
+                    "text": v,
+                },
                 tenant_id="t1",
             )
         )

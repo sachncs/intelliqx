@@ -29,15 +29,15 @@ Deferred to Phase 6: Learning Agent, Prompt Management Agent.
 
 ## 3.3 Deliverables
 
-- [ ] `agents/tier2/requirements_intel/` — PRD parser, entity extractor (LLM), traceability matrix writer.
-- [ ] `agents/tier2/code_intel/` — tree-sitter AST ingestion, diff impact analyzer.
-- [ ] `agents/tier2/risk_assessment/` — risk scorer (LLM-as-judge + heuristic).
-- [ ] `agents/tier2/test_design/` — Gherkin + structured test spec generator.
-- [ ] `agents/tier2/test_data/` — Faker-based synthetic data + boundary datasets.
-- [ ] `agents/tier2/coverage_analysis/` — coverage aggregator.
-- [ ] `agents/tier2/critic/` — output validator (rules + LLM).
+- [ ] `agents/intelligence/requirements_intel/` — PRD parser, entity extractor (LLM), traceability matrix writer.
+- [ ] `agents/intelligence/code_intel/` — tree-sitter AST ingestion, diff impact analyzer.
+- [ ] `agents/intelligence/risk_assessment/` — risk scorer (LLM-as-judge + heuristic).
+- [ ] `agents/intelligence/test_design/` — Gherkin + structured test spec generator.
+- [ ] `agents/intelligence/test_data/` — Faker-based synthetic data + boundary datasets.
+- [ ] `agents/intelligence/coverage_analysis/` — coverage aggregator.
+- [ ] `agents/intelligence/critic/` — output validator (rules + LLM).
 - [ ] Schemas: `requirements.graph.v1`, `test.design.v1`, `risk.score.v1`, `critique.v1`.
-- [ ] Eval datasets in `evals/tier2/` (goldens).
+- [ ] Eval datasets in `evals/intelligence/` (goldens).
 - [ ] Integration with Planner: a goal of `analyze_prd` produces Requirements Intel → Test Design chain.
 
 ## 3.4 Test/verification criteria

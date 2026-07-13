@@ -4,7 +4,7 @@ import pytest
 from intelliqx_compute.runtime import InvocationRequest
 
 from agents import register_all, register_compute_handlers
-from agents.tier3.environment import EnvironmentAgent
+from agents.execution.environment import EnvironmentAgent
 
 
 @pytest.mark.unit
@@ -60,7 +60,7 @@ async def test_environment_fails_for_unreachable_app():
     register_compute_handlers()
     agent = EnvironmentAgent()
     # Patch the agent to use a bogus app path so it fails to bind
-    from agents.tier3 import environment as env_module
+    from agents.execution import environment as env_module
 
     original = env_module._find_free_port
 
@@ -73,7 +73,12 @@ async def test_environment_fails_for_unreachable_app():
             await agent.invoke(
                 InvocationRequest(
                     agent_name="environment",
-                    input={"port": 0, "health_path": "/health", "timeout_seconds": 1, "tenant_id": "t1"},
+                    input={
+                        "port": 0,
+                        "health_path": "/health",
+                        "timeout_seconds": 1,
+                        "tenant_id": "t1",
+                    },
                     tenant_id="t1",
                 )
             )

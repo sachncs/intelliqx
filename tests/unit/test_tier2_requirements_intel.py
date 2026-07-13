@@ -5,7 +5,7 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_kg.graph import get_kg
 
 from agents import register_all, register_compute_handlers
-from agents.tier2.requirements_intel import (
+from agents.intelligence.requirements_intel import (
     RequirementsIntelAgent,
     _extract_requirements,
     _shared_keywords,

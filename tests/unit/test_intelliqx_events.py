@@ -86,9 +86,7 @@ def test_event_registry_get_missing():
 def test_event_registry_validate_known_topic():
     """Validation runs without error for a registered topic with any payload."""
     EventRegistry._contracts.clear()
-    EventRegistry.register(
-        EventContract(topic="t.x", description="d", schema_={"type": "object"})
-    )
+    EventRegistry.register(EventContract(topic="t.x", description="d", schema_={"type": "object"}))
     # Should not raise even though schema is valid for the payload.
     EventRegistry.validate("t.x", {"foo": "bar"})
 

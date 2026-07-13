@@ -5,11 +5,11 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_core.models import RunStatus
 
 from agents import register_all, register_compute_handlers
-from agents.tier1.orchestrator import OrchestratorAgent
-from agents.tier1.planner import PlannerAgent
-from agents.tier3.environment import EnvironmentAgent
-from agents.tier3.execution import TestSpec, TestStep
-from agents.tier3.self_healing import SelfHealingAgent
+from agents.coordination.orchestrator import OrchestratorAgent
+from agents.coordination.planner import PlannerAgent
+from agents.execution.environment import EnvironmentAgent
+from agents.execution.execution import TestSpec, TestStep
+from agents.execution.self_healing import SelfHealingAgent
 
 
 @pytest.mark.e2e
@@ -51,11 +51,15 @@ async def test_full_pipeline_goal_to_failure_analysis():
                             "tests": [
                                 TestSpec(
                                     name="health",
-                                    steps=[TestStep(action="get", path="/health", expected_status=200)],
+                                    steps=[
+                                        TestStep(action="get", path="/health", expected_status=200)
+                                    ],
                                 ).model_dump(),
                                 TestSpec(
                                     name="bad_status",
-                                    steps=[TestStep(action="get", path="/health", expected_status=404)],
+                                    steps=[
+                                        TestStep(action="get", path="/health", expected_status=404)
+                                    ],
                                 ).model_dump(),
                             ],
                         },
@@ -132,7 +136,12 @@ async def test_orchestrator_with_planner_for_run_tests():
         InvocationRequest(
             agent_name="planner",
             input={
-                "goal": {"goal_id": "g1", "kind": "run_tests", "description": "d", "tenant_id": "t1"},
+                "goal": {
+                    "goal_id": "g1",
+                    "kind": "run_tests",
+                    "description": "d",
+                    "tenant_id": "t1",
+                },
                 "tenant_id": "t1",
             },
             tenant_id="t1",

@@ -73,7 +73,9 @@ class ToolManager:
         self.registry.register(definition)
         self._handlers[definition.name] = handler
 
-    async def invoke(self, name: str, *, payload: dict[str, Any] | None = None) -> ToolInvocationResult:
+    async def invoke(
+        self, name: str, *, payload: dict[str, Any] | None = None
+    ) -> ToolInvocationResult:
         """Invoke a registered tool.
 
         Args:
@@ -99,9 +101,7 @@ class ToolManager:
             output = await self._handlers[name](payload or {})
             return ToolInvocationResult(tool=name, status="ok", output=output)
         except Exception as e:
-            return ToolInvocationResult(
-                tool=name, status="error", error=f"{type(e).__name__}: {e}"
-            )
+            return ToolInvocationResult(tool=name, status="error", error=f"{type(e).__name__}: {e}")
 
 
 _SINGLETON: ToolManager | None = None

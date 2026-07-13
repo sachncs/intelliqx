@@ -21,9 +21,9 @@ import json
 from collections.abc import Iterable
 from typing import Any
 
-import duckdb
-import pyarrow as pa
-import pyarrow.parquet as pq
+import duckdb  # type: ignore[import-not-found]
+import pyarrow as pa  # type: ignore[import-not-found]
+import pyarrow.parquet as pq  # type: ignore[import-not-found]
 from intelliqx_storage.store import ObjectStore, get_object_store
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -394,7 +394,7 @@ class KnowledgeGraph:
         self._edges_arrow.clear()
 
 
-_KG_SINGLETON: KnowledgeGraph | None = None
+_SINGLETON: KnowledgeGraph | None = None
 
 
 def get_kg() -> KnowledgeGraph:
@@ -402,15 +402,15 @@ def get_kg() -> KnowledgeGraph:
 
     Use :func:`reset_kg` between tests for isolation.
     """
-    global _KG_SINGLETON
-    if _KG_SINGLETON is None:
-        _KG_SINGLETON = KnowledgeGraph()
-    return _KG_SINGLETON
+    global _SINGLETON
+    if _SINGLETON is None:
+        _SINGLETON = KnowledgeGraph()
+    return _SINGLETON
 
 
 def reset_kg() -> None:
     """Clear the singleton knowledge graph (for tests)."""
-    global _KG_SINGLETON
-    if _KG_SINGLETON is not None:
-        _KG_SINGLETON.reset()
-    _KG_SINGLETON = None
+    global _SINGLETON
+    if _SINGLETON is not None:
+        _SINGLETON.reset()
+    _SINGLETON = None

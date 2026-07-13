@@ -8,14 +8,14 @@ This directory contains the per-phase implementation plans for the Autonomous QA
 
 | Phase | Scope | Status |
 |---|---|---|
-| [Phase 0](phase-0-foundations.md) | Foundations — monorepo, libs, infra, CI | PENDING |
-| [Phase 1](phase-1-tier1-aws.md) | Tier 1 agents on AWS | PENDING |
-| [Phase 2](phase-2-multicloud.md) | Tier 1 multi-cloud parity (GCP + Modal) | PENDING |
-| [Phase 3](phase-3-tier2-core.md) | Tier 2 domain intelligence core | PENDING |
-| [Phase 4](phase-4-tier3-execution.md) | Tier 3 execution core | PENDING |
-| [Phase 5](phase-5-tier4-v1-ga.md) | Tier 4 governance + v1 GA | PENDING |
-| [Phase 6](phase-6-v2-expansion.md) | v2 expansion (Performance/Security/A11y/Visual/Learning) | PENDING |
-| [Phase 7](phase-7-v3-enterprise.md) | v3 enterprise (multi-tenant, federated KG, marketplace) | PENDING |
+| [Phase 0](phase-0-foundations.md) | Foundations — monorepo, libs, infra, CI | COMPLETE |
+| [Phase 1](phase-1-coordination.md) | Coordination layer on AWS | COMPLETE |
+| [Phase 2](phase-2-multicloud.md) | Coordination multi-cloud parity (GCP + Modal) | COMPLETE |
+| [Phase 3](phase-3-tier2-core.md) | Intelligence domain core | COMPLETE |
+| [Phase 4](phase-4-tier3-execution.md) | Execution core | COMPLETE |
+| [Phase 5](phase-5-tier4-v1-ga.md) | Governance + v1 GA | COMPLETE |
+| [Phase 6](phase-6-v2-expansion.md) | v2 expansion (Performance/Security/A11y/Visual/Learning) | COMPLETE |
+| [Phase 7](phase-7-v3-enterprise.md) | v3 enterprise (multi-tenant, federated KG, marketplace) | IN PROGRESS |
 
 ## Execution Order
 
@@ -38,4 +38,4 @@ Each phase:
 
 ## Top-Level Decisions Locked
 
-See `/docs/adr/` (ADRs 0001–0010) and Phase 0 plan.
+See `/docs/adr/` (ADRs 0001–0011) and Phase 0 plan.

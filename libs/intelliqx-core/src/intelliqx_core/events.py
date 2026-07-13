@@ -88,7 +88,7 @@ class EventEnvelope(BaseModel, Generic[T]):
         Args:
             event: The event instance to wrap.
             metadata: The metadata to attach. Typically produced by
-                ``agents.tier1.events.make_metadata``.
+                ``agents.coordination.events.make_metadata``.
 
         Returns:
             A new ``EventEnvelope`` whose ``detail_type`` is the event

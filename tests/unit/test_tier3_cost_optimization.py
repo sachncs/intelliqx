@@ -5,7 +5,7 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_observability.metrics import get_metrics
 
 from agents import register_all, register_compute_handlers
-from agents.tier3.cost_optimization import CostOptimizationAgent
+from agents.execution.cost_optimization import CostOptimizationAgent
 
 
 @pytest.mark.unit

@@ -4,7 +4,7 @@ import pytest
 from intelliqx_compute.runtime import InvocationRequest
 
 from agents import register_all, register_compute_handlers
-from agents.tier1.tool_manager import ToolManagerAgent, default_tool_manager
+from agents.coordination.tool_manager import ToolManagerAgent, default_tool_manager
 
 
 @pytest.mark.unit
@@ -13,7 +13,7 @@ async def test_tool_manager_github():
     register_all()
     register_compute_handlers()
     mgr = default_tool_manager()
-    assert any(t.name == "github.issue" for t in mgr.registry.list())
+    assert any(t.name == "github.issue" for t in mgr.registry.list_tools())
 
     agent = ToolManagerAgent()
     out = await agent.invoke(
@@ -138,7 +138,7 @@ async def test_tool_manager_rate_limit(monkeypatch):
     from intelliqx_tools.manager import get_tool_manager
 
     mgr = get_tool_manager()
-    for t in mgr.registry.list():
+    for t in mgr.registry.list_tools():
         if t.name == "slack.message":
             t.rate_limit_per_minute = 1
     # First call OK; subsequent calls should be throttled but eventually succeed.

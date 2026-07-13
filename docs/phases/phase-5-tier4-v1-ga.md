@@ -24,10 +24,10 @@
 
 ## 5.3 Deliverables
 
-- [ ] `agents/tier4/observability/` — token tracker, latency tracker, cost tracker.
-- [ ] `agents/tier4/reporting/` — Markdown + JSON report generators; Slack delivery.
-- [ ] `agents/tier4/governance_compliance/` — RBAC, ABAC, audit, approval workflow.
-- [ ] `agents/tier4/release_readiness/` — readiness scorer + explainer.
+- [ ] `agents/governance/observability/` — token tracker, latency tracker, cost tracker.
+- [ ] `agents/governance/reporting/` — Markdown + JSON report generators; Slack delivery.
+- [ ] `agents/governance/governance_compliance/` — RBAC, ABAC, audit, approval workflow.
+- [ ] `agents/governance/release_readiness/` — readiness scorer + explainer.
 - [ ] Grafana dashboards under `dashboards/` (JSON).
 - [ ] v1 GA release notes (`docs/releases/v1.0.md`).
 - [ ] Runbooks under `docs/runbooks/`.

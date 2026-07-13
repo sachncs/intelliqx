@@ -5,7 +5,7 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_core.ids import is_valid_id
 
 from agents import register_all, register_compute_handlers
-from agents.tier4.release_readiness import ReleaseReadinessAgent
+from agents.governance.release_readiness import ReleaseReadinessAgent
 
 
 @pytest.mark.unit

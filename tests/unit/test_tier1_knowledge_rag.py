@@ -5,7 +5,7 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_kg.graph import Node, get_kg
 
 from agents import register_all, register_compute_handlers
-from agents.tier1.knowledge_rag import KnowledgeRAGAgent
+from agents.coordination.knowledge_rag import KnowledgeRAGAgent
 
 
 @pytest.mark.unit
@@ -72,7 +72,10 @@ async def test_rag_lexical_retrieval():
         )
     )
     # lexical or vector path may return the doc depending on embeddings.
-    assert any("regression" in (d["text"] or "").lower() for d in out["documents"]) or len(out["documents"]) >= 1
+    assert (
+        any("regression" in (d["text"] or "").lower() for d in out["documents"])
+        or len(out["documents"]) >= 1
+    )
 
 
 @pytest.mark.unit
@@ -122,7 +125,9 @@ async def test_rag_merged_results_dedupe():
     kg.reset()
     # Add the same id to both vector and KG paths
     await agent_ingest("t1", "shared", "shared content")
-    await kg.add_nodes([Node(id="shared", type="X", tenant_id="t1", attrs={"text": "shared content here"})])
+    await kg.add_nodes(
+        [Node(id="shared", type="X", tenant_id="t1", attrs={"text": "shared content here"})]
+    )
     agent = KnowledgeRAGAgent()
     out = await agent.invoke(
         InvocationRequest(

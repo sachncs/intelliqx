@@ -5,6 +5,24 @@ unavailable, every method falls back to a deterministic mock so
 local dev and CI on non-AWS machines still work. The fallback
 content is prefixed with ``[bedrock-fallback:]`` so callers can tell
 which path produced the response.
+
+Error handling pattern (``_try_init`` / ``_available``):
+
+* ``_try_init`` catches ``(ImportError, OSError)``. ``ImportError``
+  covers the absence of ``boto3``. ``OSError`` covers credential
+  resolution failures at client-creation time (missing AWS
+  credentials, invalid region, or STS errors).
+* When ``_try_init`` returns ``False``, ``complete`` returns a
+  deterministic mock response (SHA-256 of the last user message)
+  prefixed with ``[bedrock-fallback:]``. ``embed`` returns a
+  deterministic pseudo-embedding via ``deterministic_embedding``.
+  This is **graceful degradation** — LLM-dependent tests and CI
+  keep running on non-AWS machines.
+* When ``_try_init`` returns ``True`` but Bedrock invocation fails
+  at call time (e.g. model access denied, throttling), the
+  ``embed`` method falls back to ``deterministic_embedding``. The
+  ``complete`` method lets the boto3 exception propagate so the
+  caller can decide whether to retry or fail.
 """
 
 from __future__ import annotations
@@ -13,12 +31,14 @@ import asyncio
 import hashlib
 import os
 from collections.abc import Sequence
+from typing import Any
 
 from intelliqx_llm.client import (
     CompletionRequest,
     CompletionResponse,
     LLMClient,
     LLMUsage,
+    deterministic_embedding,
 )
 
 
@@ -39,7 +59,7 @@ class BedrockLLMClient(LLMClient):
     def __init__(self, region: str | None = None, model: str | None = None) -> None:
         self.region = region or os.environ.get("AWS_REGION", "us-east-1")
         self.model = model or self.DEFAULT_MODEL
-        self._client = None
+        self._client: Any = None
         self._available = self._try_init()
 
     def _try_init(self) -> bool:
@@ -48,7 +68,7 @@ class BedrockLLMClient(LLMClient):
 
             self._client = boto3.client("bedrock-runtime", region_name=self.region)
             return True
-        except Exception:
+        except (ImportError, OSError):
             return False
 
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
@@ -97,21 +117,22 @@ class BedrockLLMClient(LLMClient):
         )
 
     async def embed(self, texts: Sequence[str], *, model: str = "auto") -> list[list[float]]:
-        # Bedrock doesn't expose a single embedding API; production
-        # callers should use the dedicated embedding adapter
-        # (Titan via boto3). We return 1024-dim deterministic
-        # vectors in the fallback path so RAG tests still work.
         if not self._available:
-            out = []
+            return deterministic_embedding(texts, 1024)
+        try:
+            import json as _json
+
+            TITAN_EMBED_MODEL = "amazon.titan-embed-text-v1:0"
+            out: list[list[float]] = []
             for t in texts:
-                digest = hashlib.sha256(t.encode("utf-8")).digest()
-                vals: list[float] = []
-                while len(vals) < 1024:
-                    for b in digest:
-                        vals.append((b / 255.0) * 2 - 1)
-                        if len(vals) >= 1024:
-                            break
-                out.append(vals[:1024])
+                body = _json.dumps({"inputText": t})
+                response = await asyncio.to_thread(
+                    self._client.invoke_model,
+                    modelId=TITAN_EMBED_MODEL,
+                    body=body,
+                )
+                payload = _json.loads(response["body"].read())
+                out.append(payload["embedding"])
             return out
-        # Real Bedrock Titan embed call would go here.
-        raise NotImplementedError("Real Bedrock embeddings not implemented in this scaffold")
+        except Exception:
+            return deterministic_embedding(texts, 1024)

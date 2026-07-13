@@ -16,6 +16,10 @@ dependencies = [
     "intelliqx-vector",
     "intelliqx-kg",
     "intelliqx-storage",
+    "intelliqx-okf",
+    "httpx>=0.27",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
 ]
 
 [tool.uv.sources]
@@ -31,6 +35,7 @@ intelliqx-tools = { workspace = true }
 intelliqx-vector = { workspace = true }
 intelliqx-kg = { workspace = true }
 intelliqx-storage = { workspace = true }
+intelliqx-okf = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

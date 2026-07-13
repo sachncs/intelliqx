@@ -4,6 +4,22 @@ A Modal Volume is a filesystem-backed, read-write blob mount that
 persists across function invocations within a Modal app. The
 adapter writes files into a local mount directory; Modal handles
 persistence and replication.
+
+Error handling pattern (``_try_init`` / ``_available``):
+
+* ``_try_init`` catches ``(ImportError, OSError)``. ``ImportError``
+  covers the absence of the ``modal`` SDK. ``OSError`` covers the
+  case where the SDK is installed but ``Volume.from_name`` fails
+  (e.g. invalid ``MODAL_TOKEN_ID``, network error reaching the
+  Modal API, or a volume name that doesn't exist and
+  ``create_if_missing`` is denied by permissions).
+* When ``_try_init`` returns ``False``, write/read methods raise
+  ``RuntimeError`` while ``exists`` and ``list`` return safe no-ops.
+  This is **graceful degradation** — Modal-less CI and local dev
+  keep working for the rest of the platform.
+* When ``_try_init`` returns ``True`` but the volume is
+  misconfigured at call time (e.g. the mount path is read-only),
+  errors propagate loudly. Silent fallback would lose data.
 """
 
 from __future__ import annotations
@@ -11,6 +27,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator
 from pathlib import Path
+from typing import Any
 
 from intelliqx_core.errors import NotFoundError
 
@@ -30,7 +47,7 @@ class ModalVolumeObjectStore(ObjectStore):
     def __init__(self, volume_name: str, mount_path: str | None = None) -> None:
         self.volume_name = volume_name
         self.mount_path = Path(mount_path or f"/mnt/{volume_name}")
-        self._volume = None
+        self._volume: Any = None
         self._available = self._try_init()
 
     def _try_init(self) -> bool:
@@ -39,7 +56,7 @@ class ModalVolumeObjectStore(ObjectStore):
 
             self._volume = modal.Volume.from_name(self.volume_name, create_if_missing=True)
             return True
-        except Exception:
+        except (ImportError, OSError):
             return False
 
     def _path(self, key: str) -> Path:
@@ -48,6 +65,23 @@ class ModalVolumeObjectStore(ObjectStore):
         return self.mount_path / key
 
     async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
+        """Write ``data`` to ``key`` in the Modal Volume.
+
+        Creates parent directories automatically. Commits the volume
+        after writing so the persisted snapshot reflects the change.
+
+        Args:
+            key: The object key.
+            data: The bytes to write.
+            content_type: Accepted for interface compatibility; Modal
+                Volumes don't store MIME types.
+
+        Returns:
+            A ``modal://{volume_name}/{key}`` URI string.
+
+        Raises:
+            RuntimeError: If the Modal SDK or token is missing.
+        """
         if not self._available:
             raise RuntimeError("ModalVolumeObjectStore requires modal SDK + token")
         p = self._path(key)
@@ -59,6 +93,18 @@ class ModalVolumeObjectStore(ObjectStore):
         return f"modal://{self.volume_name}/{key}"
 
     async def get(self, key: str) -> bytes:
+        """Read the bytes stored at ``key``.
+
+        Args:
+            key: The object key.
+
+        Returns:
+            The stored bytes.
+
+        Raises:
+            NotFoundError: If the key does not exist on disk.
+            RuntimeError: If the Modal SDK or token is missing.
+        """
         if not self._available:
             raise RuntimeError("ModalVolumeObjectStore requires modal SDK + token")
         p = self._path(key)
@@ -67,11 +113,20 @@ class ModalVolumeObjectStore(ObjectStore):
         return await asyncio.to_thread(p.read_bytes)
 
     async def exists(self, key: str) -> bool:
+        """Check whether ``key`` exists on the volume mount.
+
+        Args:
+            key: The object key.
+
+        Returns:
+            True if the file exists at the resolved path.
+        """
         if not self._available:
             return False
         return self._path(key).exists()
 
     async def delete(self, key: str) -> None:
+        """Delete ``key`` from the volume mount and commit the change."""
         if not self._available:
             return
         p = self._path(key)
@@ -81,6 +136,14 @@ class ModalVolumeObjectStore(ObjectStore):
             await asyncio.to_thread(self._volume.commit)
 
     async def list(self, prefix: str) -> AsyncIterator[str]:
+        """Yield every file path under ``prefix`` on the volume.
+
+        Args:
+            prefix: Key prefix to filter by.
+
+        Yields:
+            Relative file path strings.
+        """
         if not self._available:
             return
         if prefix.startswith("/"):

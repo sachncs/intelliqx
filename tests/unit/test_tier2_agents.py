@@ -4,11 +4,11 @@ import pytest
 from intelliqx_compute.runtime import InvocationRequest
 
 from agents import register_all
-from agents.tier2.coverage_analysis import CoverageAnalysisAgent
-from agents.tier2.critic import CriticAgent
-from agents.tier2.risk_assessment import RiskAssessmentAgent
-from agents.tier2.test_data import TestDataAgent
-from agents.tier2.test_design import TestDesignAgent
+from agents.intelligence.coverage_analysis import CoverageAnalysisAgent
+from agents.intelligence.critic import CriticAgent
+from agents.intelligence.risk_assessment import RiskAssessmentAgent
+from agents.intelligence.test_data import TestDataAgent
+from agents.intelligence.test_design import TestDesignAgent
 
 # --- Risk Assessment ---------------------------------------------------------
 
@@ -82,7 +82,9 @@ async def test_test_design_generates_three_per_requirement():
         InvocationRequest(
             agent_name="test_design",
             input={
-                "requirements": [{"id": f"r{i}", "title": f"req {i}", "priority": "medium"} for i in range(5)],
+                "requirements": [
+                    {"id": f"r{i}", "title": f"req {i}", "priority": "medium"} for i in range(5)
+                ],
                 "tenant_id": "t1",
             },
             tenant_id="t1",

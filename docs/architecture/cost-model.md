@@ -2,7 +2,7 @@
 
 Per-invocation USD cost estimates used by the Planner to enforce
 the ``cost_ceiling_usd`` goal constraint. Values live in
-`_node_cost` in `agents/tier1/planner.py`; they are tuned for AWS
+`_node_cost` in `agents/coordination/planner.py`; they are tuned for AWS
 Bedrock + Lambda pricing and are *estimates*, not billable
 amounts.
 
@@ -35,7 +35,7 @@ amounts.
    estimates above.
 3. If the total exceeds ``cost_ceiling_usd`` (default 50.0,
    overridable per goal), the Planner runs
-   :func:`agents.tier1.planner._trim_to_cost`, which drops nodes
+   :func:`agents.coordination.planner._trim_to_cost`, which drops nodes
    (optional first, then by descending cost) until the total
    fits. The trim propagates to transitive dependents, so
    "required" nodes that depended on dropped "optional" nodes

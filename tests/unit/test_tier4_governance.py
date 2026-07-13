@@ -6,7 +6,7 @@ from intelliqx_core.models import TenantContext
 from intelliqx_state.store import get_state_store
 
 from agents import register_all, register_compute_handlers
-from agents.tier4.governance_compliance import GovernanceComplianceAgent
+from agents.governance.governance_compliance import GovernanceComplianceAgent
 
 
 def _admin(tid: str = "t1") -> TenantContext:

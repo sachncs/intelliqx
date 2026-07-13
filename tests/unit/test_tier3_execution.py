@@ -5,8 +5,8 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_storage.store import get_object_store
 
 from agents import register_all, register_compute_handlers
-from agents.tier3.environment import EnvironmentAgent
-from agents.tier3.execution import ExecutionAgent, TestSpec, TestStep
+from agents.execution.environment import EnvironmentAgent
+from agents.execution.execution import ExecutionAgent, TestSpec, TestStep
 
 
 @pytest.mark.unit
@@ -188,7 +188,11 @@ async def test_execution_assert_json():
                 "tests": [
                     TestSpec(
                         name="json_check",
-                        steps=[TestStep(action="assert_json", path="/health", expected_json={"status": "ok"})],
+                        steps=[
+                            TestStep(
+                                action="assert_json", path="/health", expected_json={"status": "ok"}
+                            )
+                        ],
                     ).model_dump(),
                 ],
             },
@@ -221,8 +225,14 @@ async def test_execution_multiple_tests_summary():
                 "base_url": base_url,
                 "tenant_id": "t1",
                 "tests": [
-                    TestSpec(name="t1", steps=[TestStep(action="get", path="/health", expected_status=200)]).model_dump(),
-                    TestSpec(name="t2", steps=[TestStep(action="get", path="/health", expected_status=404)]).model_dump(),
+                    TestSpec(
+                        name="t1",
+                        steps=[TestStep(action="get", path="/health", expected_status=200)],
+                    ).model_dump(),
+                    TestSpec(
+                        name="t2",
+                        steps=[TestStep(action="get", path="/health", expected_status=404)],
+                    ).model_dump(),
                 ],
             },
             tenant_id="t1",

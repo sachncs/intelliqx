@@ -16,6 +16,22 @@ Production topology:
 The adapter is intentionally minimal: no batching, no partial
 batches, no native consumer. The compute runtime is responsible for
 draining SQS in production.
+
+Error handling pattern (``_try_init_aws`` / ``_aws_available``):
+
+* ``_try_init_aws`` catches ``(ImportError, OSError)``.
+  ``ImportError`` covers the absence of ``boto3``. ``OSError``
+  covers credential resolution failures at client-creation time
+  (missing AWS credentials, invalid region, or network errors).
+* When ``_aws_available`` is ``False``, ``publish`` falls through
+  to an in-process fan-out using the ``_subscriptions`` table (or
+  an explicit ``fallback`` bus if one was provided). This is
+  **graceful degradation** — local dev and CI keep working without
+  AWS credentials.
+* The ``uses_aws`` property combines ``_aws_available`` with the
+  absence of an explicit ``fallback``. When a fallback is provided,
+  the adapter delegates to it even if AWS is available, giving
+  callers full control over the routing.
 """
 
 from __future__ import annotations
@@ -24,6 +40,7 @@ import asyncio
 import json
 import os
 from collections.abc import Callable
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -53,7 +70,7 @@ class AWSEventBridgeBus(EventBus):
     ) -> None:
         self.bus_name = bus_name
         self.region = region or os.environ.get("AWS_REGION", "us-east-1")
-        self._client = None
+        self._client: Any = None
         self._subscriptions: dict[str, list[EventHandler]] = {}
         self._fallback = fallback
         self._aws_available = self._try_init_aws()
@@ -70,7 +87,7 @@ class AWSEventBridgeBus(EventBus):
 
             self._client = boto3.client("events", region_name=self.region)
             return True
-        except Exception:
+        except (ImportError, OSError):
             return False
 
     @property

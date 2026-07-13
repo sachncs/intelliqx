@@ -10,6 +10,26 @@ Production deployments should layer a heavier sandbox (nsjail,
 firecracker, gVisor) on top of this. The :class:`SandboxViolation`
 exception is the single error type the sandbox emits; higher layers
 can map it to their own policy violations.
+
+Security / trust boundary:
+
+* The sandbox enforces **resource limits only** — it is not a
+  security boundary. A malicious agent can still open files, make
+  network requests, and execute arbitrary system calls. Do **not**
+  use :class:`Sandbox` as the sole defence against untrusted code.
+* ``setrlimit`` applies to the **entire process**, not just the
+  code block. Nested sandboxes share the same process, so the
+  innermost limit wins. On macOS, ``RLIMIT_AS`` is advisory and
+  may not be enforced by the kernel.
+* The ``enforce()`` context manager **restores** the original
+  limits on exit, even on exception. If the restore itself fails
+  (e.g. the process is already inside a tighter sandbox), the
+  failure is silently ignored — the block is exiting anyway and
+  crashing on cleanup is worse than leaving stale limits.
+* ``SandboxViolation`` is raised when ``setrlimit`` fails (e.g.
+  on macOS where raising the FD limit past the system ceiling is
+  rejected). Higher layers should catch it and return a policy
+  error (HTTP 403 or equivalent).
 """
 
 from __future__ import annotations
@@ -74,9 +94,7 @@ class Sandbox:
             resource.getrlimit(resource.RLIMIT_NOFILE),
         )
         try:
-            resource.setrlimit(
-                resource.RLIMIT_CPU, (self.cpu_time_seconds, self.cpu_time_seconds)
-            )
+            resource.setrlimit(resource.RLIMIT_CPU, (self.cpu_time_seconds, self.cpu_time_seconds))
             resource.setrlimit(
                 resource.RLIMIT_AS, (self.memory_mb * 1024 * 1024, self.memory_mb * 1024 * 1024)
             )

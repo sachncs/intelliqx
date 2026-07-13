@@ -4,6 +4,26 @@ Lazy-imports ``boto3``. If the SDK is missing or AWS credentials are
 not available, ``_available`` stays ``False`` and every method
 raises a clear ``RuntimeError`` rather than silently falling back —
 silent fallback would lose data in production.
+
+Error handling pattern (``_try_init`` / ``_available``):
+
+* ``_try_init`` catches ``(ImportError, OSError)``. ``ImportError``
+  covers the case where ``boto3`` is not installed at all.
+  ``OSError`` covers the case where ``boto3`` is installed but
+  credential resolution fails at client-creation time (e.g. missing
+  ``~/.aws/credentials``, invalid ``AWS_ACCESS_KEY_ID``, or an
+  unreachable STS endpoint when using assume-role).
+* When ``_try_init`` returns ``False``, every public method either
+  raises ``RuntimeError`` (for operations that must succeed) or
+  returns a safe no-op value (``False`` for ``exists``, empty for
+  ``list``, silent skip for ``delete``). This is **graceful
+  degradation** — callers that don't use S3 get a working system
+  rather than a crash at import time.
+* When ``_try_init`` returns ``True`` but the S3 endpoint is
+  misconfigured at call time, the ``RuntimeError`` is not caught
+  and propagates loudly — this is intentional. Silent fallback
+  to in-process state would lose data in production, so we prefer
+  a loud failure.
 """
 
 from __future__ import annotations
@@ -31,9 +51,8 @@ class S3ObjectStore(ObjectStore):
         self.bucket = bucket
         self.region = region or "us-east-1"
         self.prefix = prefix.rstrip("/")
-        self._client = None
+        self._client: Any = None
         self._available = self._try_init()
-        self._fallback = None
 
     def _try_init(self) -> bool:
         try:
@@ -41,7 +60,7 @@ class S3ObjectStore(ObjectStore):
 
             self._client = boto3.client("s3", region_name=self.region)
             return True
-        except Exception:
+        except (ImportError, OSError):
             return False
 
     def _key(self, key: str) -> str:
@@ -53,6 +72,24 @@ class S3ObjectStore(ObjectStore):
         return key
 
     async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
+        """Upload ``data`` to S3 at ``key``.
+
+        Offloads the blocking ``put_object`` call to a worker thread
+        so the event loop is not blocked during large uploads.
+
+        Args:
+            key: The object key. Leading ``"/"`` is stripped; the
+                configured ``prefix`` is prepended.
+            data: The bytes to upload.
+            content_type: Optional MIME type stored on the object.
+
+        Returns:
+            An S3 URI string (``s3://bucket/key``).
+
+        Raises:
+            RuntimeError: If ``boto3`` is not installed or credentials
+                are missing.
+        """
         if not self._available:
             raise RuntimeError("S3ObjectStore requires boto3 + AWS credentials")
         kwargs: dict[str, Any] = {
@@ -67,6 +104,22 @@ class S3ObjectStore(ObjectStore):
         return f"s3://{self.bucket}/{self._key(key)}"
 
     async def get(self, key: str) -> bytes:
+        """Download the bytes stored at ``key``.
+
+        Offloads both the ``get_object`` call and the streaming body
+        read to worker threads.
+
+        Args:
+            key: The object key.
+
+        Returns:
+            The stored bytes.
+
+        Raises:
+            NotFoundError: If the key does not exist.
+            RuntimeError: If ``boto3`` is not installed or credentials
+                are missing.
+        """
         if not self._available:
             raise RuntimeError("S3ObjectStore requires boto3 + AWS credentials")
         try:
@@ -80,6 +133,18 @@ class S3ObjectStore(ObjectStore):
             raise NotFoundError(f"Object not found: {key!r}") from e
 
     async def exists(self, key: str) -> bool:
+        """Check whether ``key`` exists via S3 ``HEAD``.
+
+        Returns ``False`` when the backend is unavailable (graceful
+        degradation) — callers should treat ``False`` as "unknown"
+        rather than "definitely missing" when running without S3.
+
+        Args:
+            key: The object key.
+
+        Returns:
+            True if the object exists in the bucket.
+        """
         if not self._available:
             return False
         try:
@@ -92,13 +157,25 @@ class S3ObjectStore(ObjectStore):
             return False
 
     async def delete(self, key: str) -> None:
+        """Delete ``key`` from S3 (idempotent no-op if backend unavailable)."""
         if not self._available:
             return
-        await asyncio.to_thread(
-            self._client.delete_object, Bucket=self.bucket, Key=self._key(key)
-        )
+        await asyncio.to_thread(self._client.delete_object, Bucket=self.bucket, Key=self._key(key))
 
     async def list(self, prefix: str) -> AsyncIterator[str]:
+        """Yield every key under ``prefix``.
+
+        Uses the ``list_objects_v2`` paginator. For very large
+        buckets, consider switching to a lazy async generator that
+        fetches pages on demand. Yields nothing when the backend is
+        unavailable.
+
+        Args:
+            prefix: Key prefix to filter by.
+
+        Yields:
+            Object key strings (including the ``prefix``).
+        """
         if not self._available:
             return
         # ``list_objects_v2`` returns paginated results; we collect

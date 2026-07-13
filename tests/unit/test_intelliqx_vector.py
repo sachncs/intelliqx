@@ -78,8 +78,7 @@ async def test_recall_against_brute_force():
     k = 10
     idx = InMemoryVectorIndex(dim=dim)
     docs = [
-        VectorDoc(id=f"d{i}", tenant_id="t1", vector=_random_vec(i + 1000, dim))
-        for i in range(n)
+        VectorDoc(id=f"d{i}", tenant_id="t1", vector=_random_vec(i + 1000, dim)) for i in range(n)
     ]
     await idx.upsert(docs)
     query = _random_vec(9999, dim)
@@ -94,9 +93,7 @@ async def test_recall_against_brute_force():
         nb = math.sqrt(sum(x * x for x in b)) + 1e-12
         return dot / (na * nb)
 
-    brute = sorted(
-        ((cos(query, d.vector), d.id) for d in docs), key=lambda x: -x[0]
-    )[:k]
+    brute = sorted(((cos(query, d.vector), d.id) for d in docs), key=lambda x: -x[0])[:k]
     brute_ids = {bid for _, bid in brute}
     idx_ids = {r.id for r in res_idx}
     # recall@10 should be high (≥0.8) for cosine on random vectors

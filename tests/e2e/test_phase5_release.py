@@ -8,10 +8,10 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_core.models import RunStatus, TenantContext
 
 from agents import register_all, register_compute_handlers
-from agents.tier1.orchestrator import OrchestratorAgent
-from agents.tier4.governance_compliance import GovernanceComplianceAgent
-from agents.tier4.release_readiness import ReleaseReadinessAgent
-from agents.tier4.reporting import ReportingAgent
+from agents.coordination.orchestrator import OrchestratorAgent
+from agents.governance.governance_compliance import GovernanceComplianceAgent
+from agents.governance.release_readiness import ReleaseReadinessAgent
+from agents.governance.reporting import ReportingAgent
 
 
 @pytest.mark.e2e
@@ -103,7 +103,9 @@ async def test_v1_governance_approval_workflow():
             agent_name="governance_compliance",
             input={
                 "action": "request_approval",
-                "actor": TenantContext(tenant_id="t1", user_id="admin1", roles=("admin",)).model_dump(),
+                "actor": TenantContext(
+                    tenant_id="t1", user_id="admin1", roles=("admin",)
+                ).model_dump(),
                 "resource": "production-deploy",
             },
             tenant_id="t1",
@@ -117,7 +119,9 @@ async def test_v1_governance_approval_workflow():
             agent_name="governance_compliance",
             input={
                 "action": "grant",
-                "actor": TenantContext(tenant_id="t1", user_id="operator1", roles=("operator",)).model_dump(),
+                "actor": TenantContext(
+                    tenant_id="t1", user_id="operator1", roles=("operator",)
+                ).model_dump(),
                 "resource": "production-deploy",
                 "approval_id": req_out["audit_id"],
             },

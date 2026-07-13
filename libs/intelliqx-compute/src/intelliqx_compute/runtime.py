@@ -16,6 +16,7 @@ Status values:
 
 from __future__ import annotations
 
+import abc
 import asyncio
 import time
 import traceback
@@ -75,13 +76,14 @@ class InvocationResponse(BaseModel):
 AgentCallable = Callable[[InvocationRequest], Awaitable[dict[str, Any]]]
 
 
-class ComputeRuntime:
+class ComputeRuntime(abc.ABC):
     """Abstract compute runtime.
 
     The default implementations of both methods raise
     :class:`NotImplementedError`; subclasses must override.
     """
 
+    @abc.abstractmethod
     async def invoke(self, request: InvocationRequest) -> InvocationResponse:
         """Invoke the agent named in ``request``.
 
@@ -95,6 +97,7 @@ class ComputeRuntime:
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def register(self, agent_name: str, handler: AgentCallable) -> None:
         """Register a handler for an agent.
 
@@ -139,9 +142,7 @@ class InProcessComputeRuntime(ComputeRuntime):
                 )
             start = time.monotonic()
             try:
-                output = await asyncio.wait_for(
-                    handler(request), timeout=request.timeout_seconds
-                )
+                output = await asyncio.wait_for(handler(request), timeout=request.timeout_seconds)
             except TimeoutError:
                 duration_ms = int((time.monotonic() - start) * 1000)
                 span.set_attribute("error", "timeout")

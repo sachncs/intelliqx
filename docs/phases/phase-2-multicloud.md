@@ -1,6 +1,6 @@
-# Phase 2 — Tier 1 Multi-Cloud Parity (GCP + Modal)
+# Phase 2 — Coordination Multi-Cloud Parity (GCP + Modal)
 
-**Goal**: Run the same Tier 1 agents unchanged on GCP and Modal. Prove parity via cross-cloud integration tests.
+**Goal**: Run the same Coordination agents unchanged on GCP and Modal. Prove parity via cross-cloud integration tests.
 
 **Status**: PENDING
 
@@ -16,7 +16,7 @@
 
 ## 2.2 Architecture
 
-- Each Tier 1 agent containerized once via shared `Dockerfile.agent`.
+- Each Coordination agent containerized once via shared `Dockerfile.agent`.
 - `INTELLIQX_CLOUD` env var selects adapter at runtime.
 - Each cloud has its own IaC stack that produces identical logical resources.
 - `infra/cross-cloud/` parent program (Pulumi, optional) orchestrates all three.
@@ -24,7 +24,7 @@
 ## 2.3 Deliverables
 
 - [ ] `infra/gcp/` — cdktf Python project: stacks for API, Events, Compute, Storage, Observability.
-- [ ] `infra/modal/` — Modal app definition with `modal.Stub(app_name="intelliqx-tier1")`.
+- [ ] `infra/modal/` — Modal app definition with `modal.Stub(app_name="intelliqx-coordination")`.
 - [ ] GCP adapters in all libs: `intelliqx-events/gcp.py`, `intelliqx-storage/gcp.py`, `intelliqx-vector/gcp.py`, `intelliqx-state/gcp.py`, `intelliqx-llm/vertex.py`, `intelliqx-compute/gcp.py`.
 - [ ] Modal adapters in all libs.
 - [ ] Cloud Run service for Orchestrator (replaces Step Functions on GCP).

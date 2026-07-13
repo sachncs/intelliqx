@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import re
 
-import ulid
+import ulid  # type: ignore[import-not-found]
 
 # ULIDs are 26 characters of Crockford base32. The character class is
 # intentionally restrictive so the regex can be used as a validator

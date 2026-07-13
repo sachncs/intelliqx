@@ -8,8 +8,8 @@ from intelliqx_storage.store import reset_object_store
 from intelliqx_vector.index import reset_vector_index
 
 from agents import register_all, register_compute_handlers
-from agents.tier1.planner import PlannerAgent
-from agents.tier1.smoke import SmokeAgent
+from agents.coordination.planner import PlannerAgent
+from agents.coordination.smoke import SmokeAgent
 
 
 def _setup_test_world(profile: str):

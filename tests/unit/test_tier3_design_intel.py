@@ -5,7 +5,7 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_kg.graph import get_kg
 
 from agents import register_all, register_compute_handlers
-from agents.tier3.design_intel import DesignIntelAgent, UIElement, _infer_workflow, _parse_dom
+from agents.execution.design_intel import DesignIntelAgent, UIElement, _infer_workflow, _parse_dom
 
 SAMPLE_HTML = """
 <!DOCTYPE html>

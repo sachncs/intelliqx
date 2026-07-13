@@ -17,6 +17,7 @@ as no-ops.
 
 from __future__ import annotations
 
+import abc
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable
@@ -26,7 +27,7 @@ from pydantic import BaseModel
 from intelliqx_events.handler import EventHandler
 
 
-class EventBus:
+class EventBus(abc.ABC):
     """Abstract event bus.
 
     Subclasses must implement ``publish`` and ``subscribe``. The
@@ -35,6 +36,7 @@ class EventBus:
     no-ops.
     """
 
+    @abc.abstractmethod
     async def publish(self, topic: str, event: BaseModel) -> str:
         """Publish an event to a topic.
 
@@ -48,6 +50,7 @@ class EventBus:
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def subscribe(
         self,
         topic: str,
@@ -75,10 +78,10 @@ class EventBus:
         """
         raise NotImplementedError
 
-    async def start(self) -> None:
+    async def start(self) -> None:  # noqa: B027
         """Start background tasks (cloud adapters only)."""
 
-    async def stop(self) -> None:
+    async def stop(self) -> None:  # noqa: B027
         """Stop background tasks and flush pending work."""
 
 
@@ -169,7 +172,7 @@ class InMemoryEventBus(EventBus):
         self._started = False
 
 
-_BUS_SINGLETON: EventBus | None = None
+_SINGLETON: EventBus | None = None
 
 
 def get_event_bus() -> EventBus:
@@ -179,15 +182,15 @@ def get_event_bus() -> EventBus:
     in tests we always use the in-memory bus. Use
     :func:`reset_event_bus` between tests for isolation.
     """
-    global _BUS_SINGLETON
-    if _BUS_SINGLETON is None:
-        _BUS_SINGLETON = InMemoryEventBus()
-    return _BUS_SINGLETON
+    global _SINGLETON
+    if _SINGLETON is None:
+        _SINGLETON = InMemoryEventBus()
+    return _SINGLETON
 
 
 def reset_event_bus() -> None:
     """Clear the singleton event bus (for tests)."""
-    global _BUS_SINGLETON
-    if isinstance(_BUS_SINGLETON, InMemoryEventBus):
-        _BUS_SINGLETON.reset()
-    _BUS_SINGLETON = None
+    global _SINGLETON
+    if isinstance(_SINGLETON, InMemoryEventBus):
+        _SINGLETON.reset()
+    _SINGLETON = None

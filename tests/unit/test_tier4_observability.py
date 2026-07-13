@@ -5,7 +5,7 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_observability.metrics import get_metrics
 
 from agents import register_all, register_compute_handlers
-from agents.tier4.observability import ObservabilityAgent
+from agents.governance.observability import ObservabilityAgent
 
 
 @pytest.mark.unit

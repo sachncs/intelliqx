@@ -124,11 +124,11 @@ INDEX_HTML = """
 """
 
 
-@app.get("/page", response_class=None)
-def page():
+@app.get("/page")
+def page() -> str:
     from fastapi.responses import HTMLResponse
 
-    return HTMLResponse(content=INDEX_HTML)
+    return HTMLResponse(content=INDEX_HTML)  # type: ignore[return-value]
 
 
 def reset_state() -> None:

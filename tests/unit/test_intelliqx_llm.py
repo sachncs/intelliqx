@@ -14,8 +14,12 @@ from intelliqx_llm.client import (
 async def test_fake_completion_deterministic():
     c = FakeLLMClient()
     set_llm_client(c)
-    r1 = await c.complete(CompletionRequest(model="m", messages=[{"role": "user", "content": "hello"}]))
-    r2 = await c.complete(CompletionRequest(model="m", messages=[{"role": "user", "content": "hello"}]))
+    r1 = await c.complete(
+        CompletionRequest(model="m", messages=[{"role": "user", "content": "hello"}])
+    )
+    r2 = await c.complete(
+        CompletionRequest(model="m", messages=[{"role": "user", "content": "hello"}])
+    )
     assert r1.content == r2.content
 
 
@@ -24,7 +28,9 @@ async def test_fake_completion_deterministic():
 async def test_fake_registered_marker():
     c = FakeLLMClient()
     c.register_response("hi", "world")
-    r = await c.complete(CompletionRequest(model="m", messages=[{"role": "user", "content": "say hi"}]))
+    r = await c.complete(
+        CompletionRequest(model="m", messages=[{"role": "user", "content": "say hi"}])
+    )
     assert r.content == "world"
 
 
@@ -33,9 +39,7 @@ async def test_fake_registered_marker():
 async def test_fake_usage_accounted():
     c = FakeLLMClient()
     r = await c.complete(
-        CompletionRequest(
-            model="m", messages=[{"role": "user", "content": "hello world"}]
-        )
+        CompletionRequest(model="m", messages=[{"role": "user", "content": "hello world"}])
     )
     assert r.usage.prompt_tokens >= 1
     assert r.usage.completion_tokens >= 1
