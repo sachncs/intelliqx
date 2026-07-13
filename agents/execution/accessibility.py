@@ -26,6 +26,7 @@ import re
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -57,7 +58,7 @@ class AccessibilityOutput(BaseModel):
 class AccessibilityAgent(AgentBase):
     META = AgentMeta(
         name="accessibility",
-        tier=3,
+        category=AgentCategory.EXECUTION,
         version="0.1.0",
         description="WCAG 2.2 AA / keyboard / ARIA / contrast checks.",
     )

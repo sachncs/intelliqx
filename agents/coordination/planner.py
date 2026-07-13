@@ -19,7 +19,7 @@ from typing import Any, ClassVar
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
-from intelliqx_core.models import PlanNode
+from intelliqx_core.models import AgentCategory, PlanNode
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -83,7 +83,7 @@ class PlannerAgent(AgentBase[PlannerInput, PlannerOutput]):
 
     META = AgentMeta(
         name="planner",
-        tier=1,
+        category=AgentCategory.COORDINATION,
         version="0.1.0",
         description="Decomposes a Goal into an ExecutionPlan (DAG of agent invocations).",
     )

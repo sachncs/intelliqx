@@ -32,6 +32,7 @@ from __future__ import annotations
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
 from intelliqx_core.ids import new_id
+from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -60,7 +61,7 @@ class ReleaseReadinessOutput(BaseModel):
 class ReleaseReadinessAgent(AgentBase):
     META = AgentMeta(
         name="release_readiness",
-        tier=4,
+        category=AgentCategory.GOVERNANCE,
         version="0.1.0",
         description="Produces Go / Conditional Go / No-Go recommendation.",
     )

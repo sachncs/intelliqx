@@ -28,6 +28,7 @@ from typing import Any
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
 from intelliqx_core.ids import new_id
+from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel, ConfigDict, Field
 
 from agents.intelligence.models import TestDesignOutput
@@ -55,7 +56,7 @@ class TestDesignAgent(AgentBase):
     __test__ = False
     META = AgentMeta(
         name="test_design",
-        tier=2,
+        category=AgentCategory.INTELLIGENCE,
         version="0.1.0",
         description="Generates functional, boundary, negative tests from requirements.",
     )

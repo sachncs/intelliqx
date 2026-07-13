@@ -12,6 +12,7 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel, ConfigDict
 
 
@@ -37,7 +38,9 @@ class SmokeAgent(AgentBase):
     """
 
     META = AgentMeta(
-        name="smoke", tier=1, description="Always-succeeding smoke agent for E2E tests."
+        name="smoke",
+        category=AgentCategory.COORDINATION,
+        description="Always-succeeding smoke agent for E2E tests.",
     )
     INPUT_MODEL = SmokeInput
     OUTPUT_MODEL = SmokeOutput

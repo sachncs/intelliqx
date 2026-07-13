@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from intelliqx_observability.metrics import get_metrics
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -54,7 +55,7 @@ class CostOptimizationOutput(BaseModel):
 class CostOptimizationAgent(AgentBase):
     META = AgentMeta(
         name="cost_optimization",
-        tier=3,
+        category=AgentCategory.EXECUTION,
         version="0.1.0",
         description="Recommends compute right-sizing and scheduling.",
     )

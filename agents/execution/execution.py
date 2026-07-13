@@ -31,6 +31,7 @@ from typing import Any, ClassVar
 import httpx
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from intelliqx_storage.store import get_object_store
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -100,7 +101,7 @@ class ExecutionOutput(BaseModel):
 class ExecutionAgent(AgentBase):
     META = AgentMeta(
         name="execution",
-        tier=3,
+        category=AgentCategory.EXECUTION,
         version="0.1.0",
         description="Runs structured test specs against an environment.",
     )

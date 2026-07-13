@@ -4,6 +4,7 @@ import pytest
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
 from intelliqx_agents.registry import get_agent_registry, register_agent, reset_agent_registry
+from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel
 
 
@@ -16,7 +17,7 @@ class _Output(BaseModel):
 
 
 class _DemoAgent(AgentBase[_Input, _Output]):
-    META = AgentMeta(name="demo", tier=1, description="demos")
+    META = AgentMeta(name="demo", category=AgentCategory.COORDINATION, description="demos")
     INPUT_MODEL = _Input
     OUTPUT_MODEL = _Output
 
@@ -72,8 +73,8 @@ def test_agent_capability():
 
 @pytest.mark.unit
 def test_agent_meta_fields():
-    m = AgentMeta(name="a", tier=2, description="d")
-    assert m.tier == 2
+    m = AgentMeta(name="a", category=AgentCategory.INTELLIGENCE, description="d")
+    assert m.category == AgentCategory.INTELLIGENCE
     assert m.version == "0.1.0"
 
 
@@ -81,7 +82,7 @@ def test_agent_meta_fields():
 @pytest.mark.asyncio
 async def test_agent_requires_input_output_models():
     class _BadAgent(AgentBase):
-        META = AgentMeta(name="bad", tier=1)
+        META = AgentMeta(name="bad", category=AgentCategory.COORDINATION)
 
         async def run(self, ctx, input):
             return {}

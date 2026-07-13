@@ -28,6 +28,7 @@ from typing import Any, ClassVar
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel, ConfigDict, Field
 
 from agents.intelligence.models import TestDataOutput
@@ -54,7 +55,7 @@ class TestDataAgent(AgentBase):
     __test__ = False
     META = AgentMeta(
         name="test_data",
-        tier=2,
+        category=AgentCategory.INTELLIGENCE,
         version="0.1.0",
         description="Generates synthetic test data, privacy-safe by default.",
     )

@@ -26,6 +26,7 @@ from typing import Any
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
 from intelliqx_core.ids import new_id
+from intelliqx_core.models import AgentCategory
 from intelliqx_kg.graph import Edge, Node, get_kg
 from pydantic import BaseModel, ConfigDict
 
@@ -50,7 +51,7 @@ class RequirementsIntelOutput(BaseModel):
 class RequirementsIntelAgent(AgentBase):
     META = AgentMeta(
         name="requirements_intel",
-        tier=2,
+        category=AgentCategory.INTELLIGENCE,
         version="0.1.0",
         description="Parses a PRD into structured requirements + traceability matrix.",
     )

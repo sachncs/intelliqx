@@ -26,6 +26,7 @@ from typing import ClassVar
 import httpx
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -63,7 +64,7 @@ class PerformanceOutput(BaseModel):
 class PerformanceAgent(AgentBase):
     META = AgentMeta(
         name="performance",
-        tier=3,
+        category=AgentCategory.EXECUTION,
         version="0.1.0",
         description="Runs load/stress/spike tests with SLO checks.",
     )

@@ -14,6 +14,7 @@ from intelliqx_core.events import BaseEvent, EventEnvelope, EventMetadata
 from intelliqx_core.ids import is_valid_id, new_id, parse_id
 from intelliqx_core.models import (
     AgentCapability,
+    AgentCategory,
     AgentRef,
     CloudProvider,
     Goal,
@@ -101,8 +102,8 @@ def test_agent_capability_defaults():
 
 @pytest.mark.unit
 def test_agent_ref():
-    r = AgentRef(name="planner", tier=1)
-    assert r.tier == 1
+    r = AgentRef(name="planner", category=AgentCategory.COORDINATION)
+    assert r.category == AgentCategory.COORDINATION
 
 
 @pytest.mark.unit

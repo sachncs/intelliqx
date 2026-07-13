@@ -13,6 +13,7 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from intelliqx_tools.manager import ToolManager, get_tool_manager
 from intelliqx_tools.registry import ToolDefinition
 from pydantic import BaseModel, ConfigDict, Field
@@ -180,7 +181,7 @@ class ToolManagerAgent(AgentBase):
 
     META = AgentMeta(
         name="tool_manager",
-        tier=1,
+        category=AgentCategory.COORDINATION,
         version="0.1.0",
         description="Universal tool gateway (MCP-compatible).",
     )

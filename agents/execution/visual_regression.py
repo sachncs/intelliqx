@@ -24,6 +24,7 @@ import hashlib
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from intelliqx_storage.store import get_object_store
 from pydantic import BaseModel, ConfigDict
 
@@ -51,7 +52,7 @@ class VisualRegressionOutput(BaseModel):
 class VisualRegressionAgent(AgentBase):
     META = AgentMeta(
         name="visual_regression",
-        tier=3,
+        category=AgentCategory.EXECUTION,
         version="0.1.0",
         description="Pixel + perceptual diff for visual regression.",
     )

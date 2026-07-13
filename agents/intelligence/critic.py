@@ -28,6 +28,7 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel, ConfigDict, Field
 
 from agents.intelligence.models import CritiqueRecord
@@ -52,7 +53,7 @@ class CriticOutput(BaseModel):
 class CriticAgent(AgentBase):
     META = AgentMeta(
         name="critic",
-        tier=2,
+        category=AgentCategory.INTELLIGENCE,
         version="0.1.0",
         description="Validates agent outputs for correctness, consistency, hallucination.",
     )

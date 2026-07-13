@@ -24,6 +24,7 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel, ConfigDict, Field
 
 from agents.intelligence.models import CoverageReport
@@ -47,7 +48,7 @@ class CoverageOutput(BaseModel):
 class CoverageAnalysisAgent(AgentBase):
     META = AgentMeta(
         name="coverage_analysis",
-        tier=2,
+        category=AgentCategory.INTELLIGENCE,
         version="0.1.0",
         description="Aggregates requirement, test, and code coverage.",
     )

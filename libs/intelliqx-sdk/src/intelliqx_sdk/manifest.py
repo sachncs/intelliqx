@@ -9,7 +9,8 @@ Attributes:
     name: Agent registry key. Must be unique within a tenant.
     version: SemVer. Marketplace agents may pin to a specific
         version.
-    tier: 1-4, same as the first-party agents.
+    category: Functional category (coordination, intelligence,
+        execution, governance); same enum used by first-party agents.
     description: One-line summary; shown in marketplace listings.
     author: Display name for the author / vendor.
     input_schema / output_schema: Optional JSON Schemas.
@@ -28,6 +29,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -43,7 +45,7 @@ class AgentManifest(BaseModel):
 
     name: str
     version: str
-    tier: int
+    category: AgentCategory
     description: str = ""
     author: str = ""
     input_schema: dict[str, Any] = Field(default_factory=dict)

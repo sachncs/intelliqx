@@ -14,6 +14,7 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from intelliqx_observability.metrics import get_metrics
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -38,7 +39,7 @@ class ReportingOutput(BaseModel):
 class ReportingAgent(AgentBase):
     META = AgentMeta(
         name="reporting",
-        tier=4,
+        category=AgentCategory.GOVERNANCE,
         version="0.1.0",
         description="Generates executive + engineering reports.",
     )

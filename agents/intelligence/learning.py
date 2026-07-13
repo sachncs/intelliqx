@@ -29,6 +29,7 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from intelliqx_state.store import get_state_store
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -61,7 +62,7 @@ class LearningOutput(BaseModel):
 class LearningAgent(AgentBase):
     META = AgentMeta(
         name="learning",
-        tier=2,
+        category=AgentCategory.INTELLIGENCE,
         version="0.1.0",
         description="Improves prompts, plans, and healing from history.",
     )

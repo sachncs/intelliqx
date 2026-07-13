@@ -25,6 +25,7 @@ from typing import ClassVar
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from intelliqx_kg.graph import Node, get_kg
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -67,7 +68,7 @@ class DesignIntelOutput(BaseModel):
 class DesignIntelAgent(AgentBase):
     META = AgentMeta(
         name="design_intel",
-        tier=3,
+        category=AgentCategory.EXECUTION,
         version="0.1.0",
         description="Extracts semantic UI graph from DOM snapshots.",
     )

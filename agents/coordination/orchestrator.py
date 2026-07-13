@@ -19,7 +19,7 @@ from typing import Any
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
 from intelliqx_compute.runtime import InvocationRequest, get_compute_runtime
-from intelliqx_core.models import RunStatus
+from intelliqx_core.models import AgentCategory, RunStatus
 from intelliqx_events.bus import get_event_bus
 from intelliqx_state.store import get_state_store
 from pydantic import BaseModel, ConfigDict, Field
@@ -87,7 +87,7 @@ class OrchestratorAgent(AgentBase[OrchestratorInput, OrchestratorOutput]):
 
     META = AgentMeta(
         name="orchestrator",
-        tier=1,
+        category=AgentCategory.COORDINATION,
         version="0.1.0",
         description="Executes a plan DAG, handling retries, parallelism, and audit.",
     )

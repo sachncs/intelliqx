@@ -27,7 +27,7 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
-from intelliqx_core.models import TenantContext
+from intelliqx_core.models import AgentCategory, TenantContext
 from intelliqx_state.store import get_state_store
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -56,7 +56,7 @@ class GovernanceOutput(BaseModel):
 class GovernanceComplianceAgent(AgentBase):
     META = AgentMeta(
         name="governance_compliance",
-        tier=4,
+        category=AgentCategory.GOVERNANCE,
         version="0.1.0",
         description="RBAC, ABAC, audit trail, human approvals.",
     )

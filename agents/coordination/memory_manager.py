@@ -28,6 +28,7 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from intelliqx_state.store import get_state_store
 from intelliqx_storage.store import get_object_store
 from pydantic import BaseModel, ConfigDict, Field
@@ -141,7 +142,7 @@ class MemoryManagerAgent(AgentBase):
 
     META = AgentMeta(
         name="memory_manager",
-        tier=1,
+        category=AgentCategory.COORDINATION,
         version="0.1.0",
         description="Unified memory API: working, episodic, semantic, code memories.",
     )

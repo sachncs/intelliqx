@@ -24,6 +24,7 @@ import re
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from intelliqx_llm.client import CompletionRequest, get_llm_client
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -57,7 +58,7 @@ class SelfHealingOutput(BaseModel):
 class SelfHealingAgent(AgentBase):
     META = AgentMeta(
         name="self_healing",
-        tier=3,
+        category=AgentCategory.EXECUTION,
         version="0.1.0",
         description="Repairs broken selectors by inspecting DOM.",
     )

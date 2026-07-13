@@ -27,6 +27,7 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel, ConfigDict, Field
 
 from agents.intelligence.models import RiskScore
@@ -58,7 +59,7 @@ def _priority_to_weight(p: str) -> float:
 class RiskAssessmentAgent(AgentBase):
     META = AgentMeta(
         name="risk_assessment",
-        tier=2,
+        category=AgentCategory.INTELLIGENCE,
         version="0.1.0",
         description="Computes a release risk score from requirements, code impact, and history.",
     )

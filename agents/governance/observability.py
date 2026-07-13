@@ -22,6 +22,7 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from intelliqx_observability.metrics import get_metrics
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -60,7 +61,7 @@ DEFAULT_SLAS: dict[str, tuple[str, float]] = {
 class ObservabilityAgent(AgentBase):
     META = AgentMeta(
         name="observability",
-        tier=4,
+        category=AgentCategory.GOVERNANCE,
         version="0.1.0",
         description="Aggregates metrics and checks SLA compliance.",
     )

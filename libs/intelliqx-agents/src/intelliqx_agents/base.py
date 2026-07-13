@@ -20,7 +20,7 @@ from collections.abc import Callable
 from typing import Any, ClassVar, Generic, TypeVar
 
 from intelliqx_compute.runtime import InvocationRequest
-from intelliqx_core.models import AgentCapability, TenantContext
+from intelliqx_core.models import AgentCapability, AgentCategory, TenantContext
 from intelliqx_observability.logging import get_logger
 from intelliqx_observability.metrics import get_metrics
 from intelliqx_observability.tracing import get_tracer
@@ -39,8 +39,9 @@ class AgentMeta(BaseModel):
 
     Attributes:
         name: Registry key. Must be unique within a process.
-        tier: 1 (coordination), 2 (domain), 3 (execution), 4
-            (governance).
+        category: Functional category — coordination, intelligence,
+            execution, or governance. Maps 1-to-1 to the agent
+            subdirectory under ``agents/``.
         version: SemVer string. Marketplace agents may pin to a
             specific version.
         description: One-line summary; used in logs and
@@ -52,7 +53,7 @@ class AgentMeta(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str
-    tier: int
+    category: AgentCategory
     version: str = "0.1.0"
     description: str = ""
     capabilities: list[AgentCapability] = Field(default_factory=list)

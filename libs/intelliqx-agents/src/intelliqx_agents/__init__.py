@@ -7,7 +7,7 @@ The agent framework is the spine of the platform. It defines:
   default ``invoke`` adapter (request → context → run), and
   pre-configured logger / metrics / tracer handles.
 * :class:`AgentMeta` — the static metadata every agent declares
-  (name, tier, version, description).
+  (name, category, version, description).
 * :class:`AgentContext` — the runtime context propagated through
   every agent call.
 * :class:`AgentRegistry` — a process-wide directory mapping agent

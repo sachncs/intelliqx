@@ -29,6 +29,7 @@ from typing import Any, ClassVar
 
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
+from intelliqx_core.models import AgentCategory
 from intelliqx_kg.graph import get_kg
 from intelliqx_llm.client import get_llm_client
 from intelliqx_okf.catalog import get_catalog
@@ -100,7 +101,7 @@ class KnowledgeRAGAgent(AgentBase):
 
     META = AgentMeta(
         name="knowledge_rag",
-        tier=1,
+        category=AgentCategory.COORDINATION,
         version="0.3.0",
         description="Hybrid retriever: vector + KG + lexical + OKF catalog (RRF).",
     )
