@@ -46,6 +46,17 @@ class LearningInput(BaseModel):
 
 
 class Recommendation(BaseModel):
+    """A single recommendation emitted by the Learning agent.
+
+    Attributes:
+        target: The thing being recommended on. Currently always
+            ``"prompt:<prompt_id>"``.
+        action: One of ``"deprecate"``, ``"promote_as_default"``.
+        rationale: Human-readable explanation of why the
+            recommendation was emitted, including the observed
+            pass rate and minimum-sample threshold.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     target: str

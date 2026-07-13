@@ -68,8 +68,16 @@ class KnowledgeRAGInput(BaseModel):
 class KnowledgeRAGDocument(BaseModel):
     """A single retrieval hit.
 
-    ``source`` is one of ``"vector"``, ``"kg"``, ``"lexical"``,
-    or ``"okf"``.
+    Attributes:
+        id: Document identifier; used for de-duplication across
+            sources (the highest-scoring entry wins).
+        text: The document body (truncated to a reasonable preview
+            length when emitted from a binary store).
+        score: Combined RRF score after fusion across sources. Higher
+            is better; absolute values depend on the per-source
+            weights but relative orderings are stable.
+        source: Origin of this hit. One of ``"vector"``,
+            ``"kg"``, ``"lexical"``, ``"okf"``.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -81,6 +89,14 @@ class KnowledgeRAGDocument(BaseModel):
 
 
 class KnowledgeRAGOutput(BaseModel):
+    """Output payload for the RAG agent.
+
+    Attributes:
+        query: Echo of the input query.
+        documents: Fused, de-duplicated, top-k result set ordered by
+            descending RRF score.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     query: str

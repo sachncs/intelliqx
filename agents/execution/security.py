@@ -40,6 +40,18 @@ class SecurityInput(BaseModel):
 
 
 class Finding(BaseModel):
+    """A single security finding.
+
+    Attributes:
+        type: One of ``"secret"``, ``"sast"``, ``"dependency"``,
+            ``"dast"``.
+        severity: One of ``"low"``, ``"medium"``, ``"high"``,
+            ``"critical"``.
+        location: Human-readable location. For static findings this
+            is ``"<path>:<line>"``; for DAST it's the target URL.
+        message: Short description of the finding.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     type: str  # sast | dast | dependency | secret
@@ -49,6 +61,14 @@ class Finding(BaseModel):
 
 
 class SecurityOutput(BaseModel):
+    """Output payload for the Security agent.
+
+    Attributes:
+        findings: Every finding discovered across the four checks.
+        critical: Count of findings with ``severity == "critical"``.
+        high: Count of findings with ``severity == "high"``.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     findings: list[Finding] = Field(default_factory=list)

@@ -29,6 +29,16 @@ class ReportingInput(BaseModel):
 
 
 class ReportingOutput(BaseModel):
+    """Output payload for the Reporting agent.
+
+    Attributes:
+        markdown: PR-comment-friendly Markdown rendering of the run.
+        json_payload: Machine-readable mirror of the Markdown
+            content, suitable for downstream consumers (Slack bot,
+            GitHub bot, release dashboard).
+        summary: Echo of the input summary, for convenient access.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     markdown: str
@@ -74,6 +84,17 @@ def _render_markdown(input: ReportingInput, metrics: dict, *, max_chars: int) ->
     * Tenant + generation timestamp.
     * Executive summary table (total / passed / failed).
     * Metrics snapshot (counters / gauges / histograms) if any.
+
+    Args:
+        input: The reporting input payload.
+        metrics: Pre-computed metrics snapshot (``{}`` to omit the
+            section).
+        max_chars: Per-section character cap for the metrics
+            snapshot. JSON dumps beyond this length are truncated
+            so a noisy registry doesn't blow up the PR comment.
+
+    Returns:
+        The fully-rendered Markdown string.
     """
     summary = input.summary
     lines: list[str] = []

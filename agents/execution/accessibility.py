@@ -39,6 +39,20 @@ class AccessibilityInput(BaseModel):
 
 
 class AccessibilityIssue(BaseModel):
+    """A single accessibility issue.
+
+    Attributes:
+        rule: Stable identifier of the rule that flagged the issue
+            (e.g. ``"image-alt"``).
+        severity: One of ``"minor"``, ``"moderate"``, ``"serious"``,
+            ``"critical"``. Follows axe-core conventions.
+        element: Snippet of the offending HTML element (truncated to
+            80 chars for log hygiene).
+        message: Human-readable description of the issue.
+        remediation: Suggested fix, suitable for inclusion in a PR
+            comment.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     rule: str
@@ -49,6 +63,15 @@ class AccessibilityIssue(BaseModel):
 
 
 class AccessibilityOutput(BaseModel):
+    """Output payload for the Accessibility agent.
+
+    Attributes:
+        issues: Every accessibility issue found in the snapshot.
+            Empty list means the page passed every rule.
+        passed: Convenience boolean — ``True`` iff ``issues`` is
+            empty.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     issues: list[AccessibilityIssue] = Field(default_factory=list)

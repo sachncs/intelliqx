@@ -45,6 +45,20 @@ class GovernanceInput(BaseModel):
 
 
 class GovernanceOutput(BaseModel):
+    """Output payload for the Governance & Compliance agent.
+
+    Attributes:
+        allowed: ``True`` when the check passed or the approval was
+            granted.
+        reason: Human-readable explanation (``"ok"`` on success,
+            ``"; "``-joined failure reasons otherwise).
+        audit_id: Audit/approval identifier (set by ``record_audit``
+            and ``request_approval``/``grant``).
+        approval_state: ``"pending"`` / ``"approved"`` / ``"rejected"``
+            / ``"granted"`` for the approval actions; ``None`` for
+            others.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     allowed: bool = False

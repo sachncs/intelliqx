@@ -34,6 +34,10 @@ class OKFValidationError(IntelliqxError):
 
     Carries the structured :class:`ValidationResult` so callers can
     inspect individual issues programmatically.
+
+    Args:
+        result: The structured validation result being raised.
+            Becomes the exception's ``result`` attribute.
     """
 
     def __init__(self, result: ValidationResult) -> None:
@@ -44,7 +48,15 @@ class OKFValidationError(IntelliqxError):
 
 @dataclass
 class ValidationIssue:
-    """A single validation issue."""
+    """A single validation issue.
+
+    Attributes:
+        level: ``"error"`` (must fix) or ``"warning"`` (advisory).
+        path: Stable identifier of the affected concept or file —
+            typically ``concept_id`` for concept issues, the file
+            path for bundle-level issues.
+        message: Human-readable description.
+    """
 
     level: str  # "error" | "warning"
     path: str  # concept_id or file path
@@ -53,20 +65,27 @@ class ValidationIssue:
 
 @dataclass
 class ValidationResult:
-    """Structured validation result for a concept or bundle."""
+    """Structured validation result for a concept or bundle.
+
+    Attributes:
+        issues: Every issue discovered, in discovery order.
+    """
 
     issues: list[ValidationIssue] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
+        """``True`` iff no issue has ``level == "error"``."""
         return not any(i.level == "error" for i in self.issues)
 
     @property
     def errors(self) -> list[ValidationIssue]:
+        """Just the errors."""
         return [i for i in self.issues if i.level == "error"]
 
     @property
     def warnings(self) -> list[ValidationIssue]:
+        """Just the warnings."""
         return [i for i in self.issues if i.level == "warning"]
 
 
@@ -78,6 +97,14 @@ def validate_concept(concept: OKFConcept) -> ValidationResult:
     - Concept body is non-empty.
     - Title or description is present (recommended by OKF spec).
     - No duplicate section headings.
+
+    Args:
+        concept: The parsed concept to validate.
+
+    Returns:
+        A :class:`ValidationResult` containing every issue
+        discovered. Empty issues list means the concept passed
+        every check.
     """
     issues: list[ValidationIssue] = []
     cid = concept.concept_id
@@ -109,6 +136,13 @@ def validate_bundle(bundle: OKFBundle) -> ValidationResult:
     - All link targets resolve (informational warning for broken links).
     - ``index.md`` is present at the bundle root.
     - Concepts have required ``type`` values.
+
+    Args:
+        bundle: The parsed bundle to validate.
+
+    Returns:
+        A :class:`ValidationResult` aggregating per-concept
+        issues plus bundle-wide checks.
     """
     issues: list[ValidationIssue] = []
     seen_headings: dict[str, set[str]] = {}

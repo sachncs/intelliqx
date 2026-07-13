@@ -49,6 +49,20 @@ class PromptVersion(BaseModel):
 
 
 class PromptMgmtInput(BaseModel):
+    """Input payload for the Prompt Management agent.
+
+    Attributes:
+        action: One of ``"list"``, ``"register"``, ``"ab_record"``,
+            ``"select"``. Different fields are required for each.
+        tenant_id: Owning tenant.
+        prompt_id: Required for ``"register"`` and ``"select"``;
+            optional otherwise.
+        version: Required for ``"register"``.
+        text: Required for ``"register"`` — the prompt body.
+        outcome: Required for ``"ab_record"`` — ``"passed"`` or
+            ``"failed"``.
+    """
+
     model_config = ConfigDict(extra="ignore")
 
     action: str  # list | register | ab_record | select
@@ -60,6 +74,16 @@ class PromptMgmtInput(BaseModel):
 
 
 class PromptMgmtOutput(BaseModel):
+    """Output payload for the Prompt Management agent.
+
+    Attributes:
+        prompts: The list of registered prompt versions. Populated
+            for ``"list"`` and ``"register"``.
+        selected: The chosen prompt version. Populated for
+            ``"select"`` (Thompson-sampled) and ``None`` when no
+            versions exist.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     prompts: list[PromptVersion] = Field(default_factory=list)

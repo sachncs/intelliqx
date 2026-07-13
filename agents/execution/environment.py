@@ -42,6 +42,19 @@ class EnvironmentInput(BaseModel):
 
 
 class EnvironmentOutput(BaseModel):
+    """Output payload for the Environment agent.
+
+    Attributes:
+        base_url: The ``http://host:port`` of the live server.
+        health: Echo of the input health path.
+        ready: Always ``True`` on success — the agent raises
+            :class:`RuntimeError` if the server failed to become
+            healthy.
+        handle: Internal handles (port, uvicorn server, thread).
+            Excluded from ``model_dump`` because the live objects
+            aren't JSON-serialisable.
+    """
+
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
     base_url: str

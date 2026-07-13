@@ -40,6 +40,18 @@ class VisualRegressionInput(BaseModel):
 
 
 class VisualRegressionOutput(BaseModel):
+    """Output payload for the Visual Regression agent.
+
+    Attributes:
+        name: Echo of the input name.
+        diff_pct: Fractional difference between baseline and
+            current image (0..1).
+        is_regression: ``True`` iff ``diff_pct > pixel_threshold``.
+        baseline_hash: SHA-256 of the baseline bytes (empty when no
+            baseline existed yet).
+        current_hash: SHA-256 of the current image bytes.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     name: str

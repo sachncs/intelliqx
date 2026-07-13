@@ -46,7 +46,13 @@ class MemoryManagerInput(BaseModel):
 
 
 class MemoryGet(BaseModel):
-    """Read the value at ``key`` in ``memory_type``."""
+    """Read the value at ``key`` in ``memory_type``.
+
+    Attributes:
+        key: Logical key within the memory namespace.
+        memory_type: One of ``"working"``, ``"episodic"``, ``"semantic"``,
+            ``"code"``. Determines the backing store.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -55,7 +61,17 @@ class MemoryGet(BaseModel):
 
 
 class MemorySearch(BaseModel):
-    """Keyword search over the values stored in ``memory_type``."""
+    """Keyword search over the values stored in ``memory_type``.
+
+    Attributes:
+        query: Free-form search string. Whitespace-split into
+            case-insensitive terms; a document matches if **any** term
+            appears in its body.
+        memory_type: Memory namespace to search. Defaults to
+            ``"semantic"`` (the most common use case).
+        top_k: Maximum number of results to return. Sorted by term
+            frequency, descending.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -65,7 +81,13 @@ class MemorySearch(BaseModel):
 
 
 class MemorySummarize(BaseModel):
-    """Compress a list of episodic entries into a single semantic entry."""
+    """Compress a list of episodic entries into a single semantic entry.
+
+    Attributes:
+        keys: Episodic-memory keys to fold into the summary.
+        target_key: Destination key in semantic memory where the
+            summary is written.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -74,7 +96,14 @@ class MemorySummarize(BaseModel):
 
 
 class MemoryForget(BaseModel):
-    """Remove ``key`` from ``memory_type``."""
+    """Remove ``key`` from ``memory_type``.
+
+    Idempotent: forgetting a missing key is a no-op.
+
+    Attributes:
+        key: Logical key within the memory namespace.
+        memory_type: Memory namespace to forget from.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -120,8 +149,18 @@ class MemoryOutput(BaseModel):
     """The result of any memory operation.
 
     The shape varies by operation; the union of all possible fields
-    is exposed here for simplicity. ``value`` is set for Get/Put,
-    ``results`` for Search, ``error`` for failures.
+    is exposed here for simplicity.
+
+    Attributes:
+        operation: Which operation produced this result
+            (``"put"``, ``"get"``, ``"search"``, ``"summarize"``,
+            ``"forget"``, ``"unknown"``).
+        success: ``False`` only for unrecoverable failures.
+        value: Set for Get / Put / Summarize (the stored or computed
+            payload).
+        results: Set for Search — each entry has ``key``, ``score``,
+            and ``preview``.
+        error: Error message on failure; ``None`` on success.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -155,7 +194,26 @@ class MemoryManagerAgent(AgentBase):
     OUTPUT_MODEL = MemoryOutput
 
     async def invoke(self, request):
-        """Polymorphic dispatch: pick the right input model from the operation."""
+        """Polymorphic dispatch: pick the right input model from the operation.
+
+        The compute runtime calls this with a generic request envelope;
+        we inspect ``request.input`` to determine which of the five
+        operation models to validate against, then delegate to
+        :meth:`run`. This is intentionally not a static dispatch — the
+        same agent registry key (``"memory_manager"``) handles every
+        memory operation so callers don't need to know which
+        sub-agent to invoke.
+
+        Args:
+            request: The invocation request envelope. ``request.input``
+                must be a JSON-serialisable dict carrying the
+                operation's fields. The optional ``operation`` key
+                pins the operation explicitly; otherwise the
+                operation is inferred from the payload shape.
+
+        Returns:
+            The serialised :class:`MemoryOutput`.
+        """
         from intelliqx_agents.base import AgentContext
         from intelliqx_core.models import TenantContext
 

@@ -34,6 +34,19 @@ from agents.intelligence.models import RequirementsGraph
 
 
 class RequirementsInput(BaseModel):
+    """Input payload for the Requirements Intel agent.
+
+    Attributes:
+        text: Raw PRD / spec text to parse. The agent is
+            regex-based; see the module docstring for the supported
+            shapes.
+        tenant_id: Owning tenant; used to scope the KG nodes /
+            edges the agent writes.
+        source: Free-form tag describing where the requirements
+            came from (e.g. ``"prd"``, ``"jira-export"``). Preserved
+            on the emitted KG nodes via the document context.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     text: str
@@ -42,6 +55,14 @@ class RequirementsInput(BaseModel):
 
 
 class RequirementsIntelOutput(BaseModel):
+    """Output payload for the Requirements Intel agent.
+
+    Attributes:
+        graph: The requirements graph + traceability matrix. See
+            :class:`~agents.intelligence.models.RequirementsGraph`.
+        requirement_count: Number of requirements extracted.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     graph: RequirementsGraph

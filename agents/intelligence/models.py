@@ -16,10 +16,13 @@ from pydantic import BaseModel, ConfigDict, Field
 class RequirementsGraph(BaseModel):
     """Output of the Requirements Intel Agent.
 
-    ``requirements`` is a list of dicts (one per requirement) with
-    at minimum ``id``, ``title``, ``priority``, ``acceptance_criteria``.
-    ``traceability`` lists edges between requirements that share
-    significant vocabulary.
+    Attributes:
+        requirements: One dict per requirement. At minimum each
+            entry has ``id``, ``title``, ``priority``, and
+            ``acceptance_criteria`` keys.
+        traceability: Edges between requirements that share
+            significant vocabulary. Each entry is
+            ``{"from": req_id, "to": req_id, "shared_keywords": [...]}``.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -31,9 +34,13 @@ class RequirementsGraph(BaseModel):
 class CodeImpactGraph(BaseModel):
     """Output of the Code Intel Agent.
 
-    ``affected_files`` are the files that should be re-tested given
-    the current changes. ``dependencies`` are ``{from, to, symbol}``
-    edges. ``impact_summary`` is a one-line human description.
+    Attributes:
+        affected_files: Logical paths that should be re-tested given
+            the current changes (including transitive dependents).
+        dependencies: ``{"from": node_id, "to": node_id, "symbol": str}``
+            edges describing the import graph.
+        impact_summary: One-line human description of the analysis
+            result; rendered into the Reporting agent's Markdown.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -46,9 +53,16 @@ class CodeImpactGraph(BaseModel):
 class RiskScore(BaseModel):
     """Output of the Risk Assessment Agent.
 
-    Severity levels: ``"low"`` (<0.25), ``"medium"`` (<0.5),
-    ``"high"`` (<0.75), ``"critical"`` (>=0.75). ``factors`` lists
-    the per-component inputs that produced the score.
+    Attributes:
+        score: Aggregate risk score in ``[0.0, 1.0]``.
+        priority: Severity bucket. One of ``"low"`` (< 0.25),
+            ``"medium"`` (< 0.5), ``"high"`` (< 0.75),
+            ``"critical"`` (>= 0.75).
+        business_impact: Human-readable description of the
+            recommended action for this priority band.
+        factors: Per-component inputs that produced the score.
+            Each entry is a ``"name=value"`` string suitable for
+            inclusion in a release-decision audit log.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -62,10 +76,14 @@ class RiskScore(BaseModel):
 class TestDesignOutput(BaseModel):
     """Output of the Test Design Agent.
 
-    ``tests`` is a list of dicts (one per test) with at minimum
-    ``id``, ``type``, ``requirement_id``, ``title``, ``steps``,
-    ``priority``. ``coverage_estimate`` is the predicted ratio of
-    requirement coverage achieved by the generated tests.
+    Attributes:
+        tests: One dict per generated test. At minimum each entry
+            has ``id``, ``type`` (``"functional"`` /
+            ``"boundary"`` / ``"negative"`` / ``"exploratory"``),
+            ``requirement_id``, ``title``, ``steps`` (list of step
+            strings), and ``priority``.
+        coverage_estimate: Predicted ratio of requirement coverage
+            achieved by the generated tests, in ``[0.0, 1.0]``.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -77,9 +95,15 @@ class TestDesignOutput(BaseModel):
 class TestDataOutput(BaseModel):
     """Output of the Test Data Agent.
 
-    ``items`` is a list of generated records; ``privacy_safe`` is
-    ``True`` when the agent verified that no real-looking PII
-    slipped through the generator.
+    Attributes:
+        items: The generated records. Each entry conforms to the
+            caller's schema (see
+            :class:`~agents.intelligence.test_data.TestDataInput`).
+        privacy_safe: ``True`` iff the post-generation validator
+            confirmed that no real-looking PII (email, SSN, phone)
+            is present. The validator is heuristic; production
+            deployments should layer Presidio on top for stronger
+            guarantees.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -91,9 +115,17 @@ class TestDataOutput(BaseModel):
 class CoverageReport(BaseModel):
     """Output of the Coverage Analysis Agent.
 
-    ``code_coverage_pct`` is the latest reported code coverage
-    percentage (0..100). ``gaps`` lists missing-coverage reasons
-    (untested requirements, unexecuted tests, etc.).
+    Attributes:
+        requirements_covered: Number of requirements with at least
+            one referencing test.
+        requirements_total: Total number of requirements analysed.
+        tests_total: Total number of tests in scope.
+        code_coverage_pct: Authoritative code-coverage percentage
+            (``0..100``), typically produced by coverage.py /
+            Istanbul / JaCoCo.
+        gaps: Human-readable enumeration of missing-coverage
+            reasons — suitable for inclusion in the Reporting
+            agent's Markdown output.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -108,9 +140,12 @@ class CoverageReport(BaseModel):
 class CritiqueRecord(BaseModel):
     """Output of the Critic Agent.
 
-    ``passed`` is ``True`` when no issues were found. ``issues``
-    and ``suggestions`` are machine- and human-readable lists
-    respectively.
+    Attributes:
+        target: Identifier of the agent whose output was critiqued.
+        passed: ``True`` iff no issues were found.
+        issues: Machine-readable list of problems discovered. Each
+            entry is a short description.
+        suggestions: Human-readable remediation hints.
     """
 
     model_config = ConfigDict(extra="forbid")

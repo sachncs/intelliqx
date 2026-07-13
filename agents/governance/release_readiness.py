@@ -50,6 +50,21 @@ class ReleaseReadinessInput(BaseModel):
 
 
 class ReleaseReadinessOutput(BaseModel):
+    """Output payload for the Release Readiness agent.
+
+    Attributes:
+        recommendation: One of ``"go"``, ``"conditional_go"``,
+            ``"no_go"``.
+        confidence: Calibrated confidence in the recommendation, in
+            ``[0.0, 1.0]``. Starts at 0.7 and rises to 0.95 with
+            strong historical evidence.
+        explanation: One human-readable sentence per scoring
+            component, in the order they were applied. Suitable for
+            inclusion in a release-decision audit log.
+        decision_id: Freshly-minted ULID for this decision. Stable
+            identifier for downstream audit and correlation.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     recommendation: str  # go | conditional_go | no_go

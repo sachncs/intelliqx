@@ -51,6 +51,16 @@ class TestStep(BaseModel):
 
 
 class TestSpec(BaseModel):
+    """A named test comprising an ordered list of :class:`TestStep`.
+
+    Attributes:
+        name: Human-readable test name. Used as the artifact
+            filename in the object store.
+        steps: Ordered list of steps to execute. Step failures do
+            not abort the spec — every step is attempted so a single
+            broken step doesn't hide later ones.
+    """
+
     # ``pytest`` interprets any class named ``Test*`` as a test class
     # by default. Disable collection so the Pydantic data model is
     # never mistaken for a test case.
@@ -62,6 +72,21 @@ class TestSpec(BaseModel):
 
 
 class ExecutionInput(BaseModel):
+    """Input payload for the Execution agent.
+
+    Attributes:
+        base_url: Root URL of the system under test (e.g.
+            ``"http://localhost:8000"``).
+        tests: Specs to execute. The agent reuses one ``httpx``
+            client across all tests in the list for connection-
+            pool efficiency.
+        tenant_id: Owning tenant; used as the artifact prefix in
+            the object store.
+        upload_artifacts: When ``True`` (default), per-test result
+            JSON is uploaded to the object store at
+            ``{tenant}/runs/{test_name}.json``.
+    """
+
     model_config = ConfigDict(extra="ignore")
 
     base_url: str
@@ -71,6 +96,19 @@ class ExecutionInput(BaseModel):
 
 
 class StepResult(BaseModel):
+    """Result of a single :class:`TestStep` execution.
+
+    Attributes:
+        action: Echo of the step's action.
+        status: ``"passed"``, ``"failed"``, or ``"error"``.
+            ``"error"`` is reserved for exceptions raised by the
+            HTTP client; ``"failed"`` is for assertion mismatches.
+        duration_ms: Wall-clock duration of the step.
+        response: Captured ``{"status_code": int, "body": Any}`` on
+            success; ``None`` on failure.
+        error: Error message on failure; ``None`` on success.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     action: str
@@ -81,6 +119,16 @@ class StepResult(BaseModel):
 
 
 class TestResult(BaseModel):
+    """Result of a single :class:`TestSpec` execution.
+
+    Attributes:
+        name: Echo of the spec name.
+        status: ``"passed"`` iff every step passed; ``"failed"``
+            otherwise.
+        duration_ms: Wall-clock duration of the entire spec.
+        steps: Per-step results, in execution order.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     name: str
@@ -90,6 +138,16 @@ class TestResult(BaseModel):
 
 
 class ExecutionOutput(BaseModel):
+    """Output payload for the Execution agent.
+
+    Attributes:
+        results: Per-test results in execution order.
+        passed: Count of tests with status ``"passed"``.
+        failed: Count of tests with status ``"failed"``.
+        artifact_keys: Object-store keys for every per-test
+            artifact uploaded.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     results: list[TestResult] = Field(default_factory=list)
@@ -253,7 +311,16 @@ async def _run_test(client: httpx.AsyncClient, spec: TestSpec) -> TestResult:
 
 
 def _safe_json(r: httpx.Response) -> dict[str, Any] | None:
-    """Parse a response as JSON, returning ``None`` on failure."""
+    """Parse an ``httpx.Response`` body as JSON.
+
+    Args:
+        r: The response to parse.
+
+    Returns:
+        The parsed JSON document, or ``None`` if the body is empty
+        or not valid JSON. Used so non-JSON responses don't abort
+        the whole spec — they just record a non-JSON body.
+    """
     try:
         return r.json()
     except Exception:

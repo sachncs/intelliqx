@@ -41,9 +41,20 @@ class DesignIntelInput(BaseModel):
 class UIElement(BaseModel):
     """A single parsed UI element.
 
-    ``selector`` is the preferred Playwright/CSS selector for
-    the element — ``"#{id}"`` when an id is present, otherwise
-    the bare tag name.
+    Attributes:
+        id: The HTML ``id`` attribute (or ``None`` if the tag has
+            no id).
+        tag: Lowercase HTML tag name.
+        label: Value of the ``aria-label`` attribute (or ``None``).
+        role: Lowercase tag name, used as a coarse ARIA role
+            fallback.
+        text: Visible text content (inner HTML stripped of tags,
+            truncated to 80 chars) for tags that wrap text.
+        selector: Preferred CSS selector for the element —
+            ``"#{id}"`` when an id is present, otherwise the bare
+            tag name.
+        children: Reserved for future parent/child relationships;
+            always empty in v1.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -58,6 +69,16 @@ class UIElement(BaseModel):
 
 
 class DesignIntelOutput(BaseModel):
+    """Output payload for the Design Intelligence agent.
+
+    Attributes:
+        elements: Every parsed UI element on the page.
+        workflow_steps: High-level workflow inferred from the
+            elements (see :func:`_infer_workflow`).
+        semantic_graph_id: Reserved for future KG graph-id
+            population; always ``None`` in v1.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     elements: list[UIElement] = Field(default_factory=list)

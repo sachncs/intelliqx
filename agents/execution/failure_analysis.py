@@ -41,6 +41,20 @@ class FailureInput(BaseModel):
 
 
 class FailureOutput(BaseModel):
+    """Output payload for the Failure Analysis agent.
+
+    Attributes:
+        classification: One of ``"infra"``, ``"product"``,
+            ``"flake"``, ``"unknown"``.
+        confidence: Calibrated confidence in the classification, in
+            ``[0.0, 1.0]``. ``0.9`` for classified buckets, ``0.5``
+            for ``"unknown"``.
+        root_cause: Human-readable explanation of why the bucket was
+            chosen.
+        suggested_action: Recommended next step. Suitable for
+            inclusion in a CI notification.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     classification: str  # infra | product | flake | unknown

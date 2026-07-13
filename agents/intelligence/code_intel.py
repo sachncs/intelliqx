@@ -37,6 +37,21 @@ from agents.intelligence.models import CodeImpactGraph
 
 
 class CodeIntelInput(BaseModel):
+    """Input payload for the Code Intelligence agent.
+
+    Attributes:
+        files: Source files to analyze. Each entry must have a
+            ``path`` key (logical path within the repo) and a
+            ``content`` key with the file body.
+        tenant_id: Owning tenant; used to scope the KG nodes /
+            edges written by the agent.
+        changed_paths: Optional list of logical paths that
+            *changed* in this analysis run. The agent computes the
+            transitive impact set against the dependency graph;
+            when empty, every file in ``files`` is treated as
+            changed (useful for baseline runs).
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     files: list[dict[str, Any]]  # [{"path": ..., "content": ...}, ...]
@@ -45,6 +60,14 @@ class CodeIntelInput(BaseModel):
 
 
 class CodeIntelOutput(BaseModel):
+    """Output payload for the Code Intelligence agent.
+
+    Attributes:
+        graph: The aggregated impact graph. See
+            :class:`~agents.intelligence.models.CodeImpactGraph`.
+        files_indexed: Number of files ingested into the KG.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     graph: CodeImpactGraph

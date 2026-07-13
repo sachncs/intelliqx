@@ -39,6 +39,15 @@ class SelfHealingInput(BaseModel):
 
 
 class SelfHealingCandidate(BaseModel):
+    """A candidate replacement selector.
+
+    Attributes:
+        selector: CSS selector string.
+        confidence: Heuristic confidence in ``[0.0, 1.0]``.
+        rationale: Free-form reason the candidate was generated
+            (e.g. ``"id match"``).
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     selector: str
@@ -47,6 +56,17 @@ class SelfHealingCandidate(BaseModel):
 
 
 class SelfHealingOutput(BaseModel):
+    """Output payload for the Self-Healing agent.
+
+    Attributes:
+        original_selector: Echo of the input selector.
+        candidates: All candidates produced, ordered by descending
+            confidence.
+        healed: ``True`` iff a candidate was applied.
+        applied_selector: The candidate that was applied; ``None``
+            when ``healed`` is ``False``.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     original_selector: str

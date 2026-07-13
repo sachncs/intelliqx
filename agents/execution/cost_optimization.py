@@ -37,6 +37,21 @@ class CostOptimizationInput(BaseModel):
 
 
 class CostRecommendation(BaseModel):
+    """A single cost-saving recommendation.
+
+    Attributes:
+        target: The system or resource the recommendation applies
+            to (``"scheduler"``, ``"ci"``, ``"histogram:<name>"``).
+        action: Concrete action to take
+            (``"batch_small_invocations"``, ``"use_spot_for_long_tail"``,
+            ``"quarantine_flaky"``).
+        estimated_savings_usd: Rough savings estimate (USD per
+            window). These are **heuristics**, not bills — treat
+            them as relative orderings.
+        rationale: Human-readable explanation of why the
+            recommendation was emitted.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     target: str
@@ -46,6 +61,15 @@ class CostRecommendation(BaseModel):
 
 
 class CostOptimizationOutput(BaseModel):
+    """Output payload for the Cost Optimization agent.
+
+    Attributes:
+        recommendations: Zero or more recommendations ordered by
+            descending ``estimated_savings_usd``.
+        estimated_total_savings_usd: Sum of per-recommendation
+            estimates. Again, heuristic.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     recommendations: list[CostRecommendation] = Field(default_factory=list)

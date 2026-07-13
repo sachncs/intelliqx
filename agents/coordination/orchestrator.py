@@ -38,6 +38,19 @@ class OrchestratorInput(BaseModel):
 
 
 class NodeResult(BaseModel):
+    """Result of a single plan-node invocation.
+
+    Attributes:
+        node_id: Identifier of the plan node.
+        agent: Agent name that was invoked.
+        status: One of ``"ok"``, ``"error"``, ``"not_found"`` (see
+            :class:`~intelliqx_compute.runtime.InvocationResponse.status`).
+        duration_ms: Wall-clock duration of the (last) invocation.
+        output: Serialised agent output. ``{}`` on failure.
+        error: Error message if ``status != "ok"``; ``None`` on success.
+        attempts: Total invocation attempts (initial + retries).
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     node_id: str
@@ -50,6 +63,18 @@ class NodeResult(BaseModel):
 
 
 class OrchestratorOutput(BaseModel):
+    """Output payload for the Orchestrator.
+
+    Attributes:
+        run_id: Echoed from the input.
+        plan_id: Echoed from the input.
+        status: Overall run status — :attr:`RunStatus.SUCCEEDED` if
+            every node returned ``"ok"``, otherwise :attr:`RunStatus.FAILED`.
+        node_results: One :class:`NodeResult` per node, in the order
+            the nodes completed.
+        duration_ms: Total wall-clock duration of the run.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     run_id: str

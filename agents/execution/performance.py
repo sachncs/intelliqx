@@ -43,6 +43,19 @@ class PerformanceInput(BaseModel):
 
 
 class PerformanceResult(BaseModel):
+    """Aggregated performance-run summary.
+
+    Attributes:
+        requests: Total requests issued (including errors).
+        errors: Requests that failed (HTTP 5xx, network error,
+            or client exception).
+        p50_ms: Median request latency in milliseconds.
+        p95_ms: 95th-percentile request latency.
+        p99_ms: 99th-percentile request latency.
+        slo_pass: ``True`` iff both the p95 and error-rate SLOs
+            were met.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     requests: int = 0
@@ -54,6 +67,15 @@ class PerformanceResult(BaseModel):
 
 
 class PerformanceOutput(BaseModel):
+    """Output payload for the Performance agent.
+
+    Attributes:
+        profile: Echo of the input profile.
+        result: Aggregated run summary.
+        slo_breaches: Human-readable list of every SLO that was
+            violated (empty when ``slo_pass`` is ``True``).
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     profile: str

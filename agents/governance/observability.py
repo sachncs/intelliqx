@@ -43,6 +43,14 @@ class SLARecord(BaseModel):
 
 
 class ObservabilityOutput(BaseModel):
+    """Output payload for the Observability agent.
+
+    Attributes:
+        snapshot: The full in-process metrics snapshot (counters,
+            gauges, histograms).
+        slas: One :class:`SLARecord` per configured default SLA.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     snapshot: dict[str, Any]

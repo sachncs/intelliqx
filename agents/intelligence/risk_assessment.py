@@ -42,6 +42,13 @@ class RiskAssessmentInput(BaseModel):
 
 
 class RiskAssessmentOutput(BaseModel):
+    """Output payload for the Risk Assessment agent.
+
+    Attributes:
+        score: The aggregated risk score. See
+            :class:`~agents.intelligence.models.RiskScore`.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     score: RiskScore

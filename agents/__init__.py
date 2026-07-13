@@ -35,7 +35,7 @@ from intelliqx_agents.registry import get_agent_registry
 
 
 def register_all() -> None:
-    """Register every Tier 1-4 agent with the AgentRegistry."""
+    """Register every agent with the AgentRegistry."""
     from agents.coordination.knowledge_rag import KnowledgeRAGAgent
     from agents.coordination.memory_manager import MemoryManagerAgent
     from agents.coordination.orchestrator import OrchestratorAgent
