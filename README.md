@@ -4,7 +4,7 @@
   <p align="center">
     <a href="#installation"><img src="https://img.shields.io/badge/python-3.12-blue" alt="Python"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-green" alt="License"></a>
-    <a href="https://github.com/sachncs/intelliqx/actions"><img src="https://img.shields.io/github/actions/workflow/status/sachncs/intelliqx/ci.yaml?branch=master" alt="CI"></a>
+    <a href="https://github.com/sachncs/intelliqx/actions"><img src="https://img.shields.io/github/actions/workflow/status/sachncs/intelliqx/ci.yml?branch=master" alt="CI"></a>
     <a href="https://github.com/sachncs/intelliqx/stargazers"><img src="https://img.shields.io/github/stars/sachncs/intelliqx" alt="Stars"></a>
   </p>
 </p>
