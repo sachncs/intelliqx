@@ -1,5 +1,5 @@
 {
-  "Comment": "IntelliqX Orchestrator workflow (Phase 1). Mirrors the in-process orchestrator in agents/tier1/orchestrator.py.",
+  "Comment": "IntelliqX Orchestrator workflow (Phase 1). Mirrors the in-process orchestrator in agents/coordination/orchestrator.py.",
   "StartAt": "Planner",
   "States": {
     "Planner": {

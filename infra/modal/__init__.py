@@ -8,7 +8,7 @@ defines Coordination agents as modal.Functions and mounts the agent container im
 #
 # import modal
 #
-# app = modal.App("intelliqx-tier1")
+# app = modal.App("intelliqx-coordination")
 #
 # image = (
 #     modal.Image.debian_slim(python_version="3.12")

@@ -93,10 +93,10 @@ class AgentCapability(BaseModel):
 class AgentRef(BaseModel):
     """Reference to a registered agent.
 
-    Used in marketplace manifests and in tier-2/3 agent outputs that need
-    to cite another agent by name without binding to a specific class
-    import. The ``version`` field enables side-by-side deployments during
-    agent rollouts.
+    Used in marketplace manifests and in intelligence/execution agent
+    outputs that need to cite another agent by name without binding
+    to a specific class import. The ``version`` field enables
+    side-by-side deployments during agent rollouts.
     """
 
     name: str
@@ -131,7 +131,7 @@ class Goal(BaseModel):
     Goals are the platform's primary unit of work. The Planner agent
     consumes a :class:`Goal` and produces an :class:`ExecutionPlan` from
     it. The ``kind`` field drives plan-template selection (see
-    ``agents/tier1/templates.py``); ``inputs`` and ``constraints`` are
+    ``agents/coordination/templates.py``); ``inputs`` and ``constraints`` are
     forwarded to the plan and the individual nodes.
     """
 
