@@ -76,14 +76,13 @@ class ObjectStore(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def list(self, prefix: str) -> AsyncIterator[str]:
+    def list(self, prefix: str) -> AsyncIterator[str]:
         """Yield every key with the given prefix.
 
         Yields:
             String keys. Order is implementation-defined.
         """
         raise NotImplementedError
-        yield ""  # pragma: no cover  # noqa: VUE106 — needed to mark method as async generator
 
     async def size(self, key: str) -> int:
         """Return the size in bytes of ``key``.

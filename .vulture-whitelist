@@ -1,3 +1,3 @@
-intelliqx_kg.graph.neighbors  # noqa - depth parameter reserved for future multi-hop traversal
-intelliqx_state.store.StateStore.keys  # noqa - yield "" needed to mark method as async generator
-intelliqx_storage.store.ObjectStore.list  # noqa - yield "" needed to mark method as async generator
+depth  # noqa - reserved for future multi-hop traversal in intelliqx_kg.graph.neighbors
+keys  # noqa - mark intelliqx_state.store.StateStore.keys as async generator via AsyncIterator return type
+list  # noqa - mark intelliqx_storage.store.ObjectStore.list as async generator via AsyncIterator return type

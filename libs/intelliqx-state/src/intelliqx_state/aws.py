@@ -59,7 +59,7 @@ class ElastiCacheStateStore(StateStore):
     def _try_init(self) -> bool:
         """Try to create an async Redis client."""
         try:
-            import redis.asyncio as aioredis
+            import redis.asyncio as aioredis  # type: ignore[import-not-found]
 
             self.__client = aioredis.Redis(host=self.host, port=self.port, db=self.db)
             return True

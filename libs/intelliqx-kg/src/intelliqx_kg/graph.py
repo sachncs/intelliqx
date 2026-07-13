@@ -21,9 +21,9 @@ import json
 from collections.abc import Iterable
 from typing import Any
 
-import duckdb  # type: ignore[import-not-found]
-import pyarrow as pa  # type: ignore[import-not-found]
-import pyarrow.parquet as pq  # type: ignore[import-not-found]
+import duckdb
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
 from intelliqx_storage.store import ObjectStore, get_object_store
 from pydantic import BaseModel, ConfigDict, Field
 

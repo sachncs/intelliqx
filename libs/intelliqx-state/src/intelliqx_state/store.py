@@ -76,14 +76,13 @@ class StateStore(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def keys(self, prefix: str) -> AsyncIterator[str]:
+    def keys(self, prefix: str) -> AsyncIterator[str]:
         """Yield every non-expired key with the given prefix.
 
         Note: this is **O(n)** over the entire keyspace; use sparingly
         (e.g. agent startup) and prefer explicit indexes for hot paths.
         """
         raise NotImplementedError
-        yield ""  # pragma: no cover  # noqa: VUE106 — needed to mark method as async generator
 
     @abc.abstractmethod
     async def hset(self, key: str, field: str, value: str) -> None:
