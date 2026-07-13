@@ -1,0 +1,101 @@
+"""Tests for the intelliqx-llm-smoke CLI entry point."""
+
+from __future__ import annotations
+
+import pytest
+from intelliqx_llm import client as client_mod
+from intelliqx_llm._smoke import _parse_args, main
+from intelliqx_llm.client import FakeLLMClient, set_llm_client
+
+
+@pytest.fixture(autouse=True)
+def _reset_singleton():
+    """Each test starts with no cached client so the backend env var wins."""
+    client_mod._SINGLETON = None
+    yield
+    client_mod._SINGLETON = None
+
+
+def test_parse_args_defaults():
+    args = _parse_args([])
+    assert args.prompt.startswith("In one sentence")
+    assert args.max_tokens == 256
+    assert args.embed is False
+    assert args.show_env is False
+    assert args.model is None
+
+
+def test_parse_args_embed():
+    args = _parse_args(["--embed", "--max-tokens", "64"])
+    assert args.embed is True
+    assert args.max_tokens == 64
+
+
+def test_parse_args_prompt_override():
+    args = _parse_args(["--prompt", "Hi", "--model", "minimax/MiniMax-M2-lightning"])
+    assert args.prompt == "Hi"
+    assert args.model == "minimax/MiniMax-M2-lightning"
+
+
+def test_main_complete_smoke(monkeypatch: pytest.MonkeyPatch, capsys):
+    monkeypatch.setenv("INTELLIQX_LLM_BACKEND", "fake")
+
+    # The fake client returns a hash-derived placeholder, not the
+    # input echo, so we register a marker on the global fake so the
+    # smoke CLI emits a deterministic, assertable response.
+    fake = FakeLLMClient()
+    fake.register_response("smoke-test", "smoke-ok")
+    set_llm_client(fake)
+
+    rc = main(["--prompt", "smoke-test"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "smoke-ok" in out
+    assert "--- response ---" in out
+    assert "--- meta ---" in out
+    assert "duration_ms=" in out
+
+
+def test_main_embed_smoke(monkeypatch: pytest.MonkeyPatch, capsys):
+    monkeypatch.setenv("INTELLIQX_LLM_BACKEND", "fake")
+    set_llm_client(FakeLLMClient(dim=8))
+    rc = main(["--embed", "--prompt", "embed-me"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "--- embed ---" in out
+    assert "count=1" in out
+    assert "dim=8" in out
+
+
+def test_main_unknown_backend_raises(monkeypatch: pytest.MonkeyPatch, capsys):
+    """An unknown backend name is reported on stderr with a non-zero exit."""
+    monkeypatch.setenv("INTELLIQX_LLM_BACKEND", "definitely-not-a-backend")
+    rc = main([])
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert "definitely-not-a-backend" in err
+
+
+def test_main_exception_in_complete_is_caught(monkeypatch: pytest.MonkeyPatch, capsys):
+    """If complete() raises, the CLI must exit 1 with a useful message."""
+    monkeypatch.setenv("INTELLIQX_LLM_BACKEND", "fake")
+
+    class _BoomClient(FakeLLMClient):
+        async def complete(self, request):
+            raise RuntimeError("kaboom")
+
+    set_llm_client(_BoomClient())
+    rc = main(["--prompt", "Hi"])
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert "kaboom" in err
+
+
+def test_main_show_env(monkeypatch: pytest.MonkeyPatch, capsys):
+    monkeypatch.setenv("INTELLIQX_LLM_BACKEND", "fake")
+    set_llm_client(FakeLLMClient(dim=128))
+    rc = main(["--show-env", "--prompt", "env-test"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "backend=fake" in out
+    assert "dim=128" in out

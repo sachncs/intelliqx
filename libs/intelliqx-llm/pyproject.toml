@@ -11,6 +11,9 @@ dependencies = [
     "intelliqx-observability",
 ]
 
+[project.scripts]
+intelliqx-llm-smoke = "intelliqx_llm._smoke:main"
+
 [tool.uv.sources]
 intelliqx-core = { workspace = true }
 intelliqx-portability = { workspace = true }

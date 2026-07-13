@@ -12,6 +12,11 @@ model_list:
     litellm_params:
       model: bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0
       aws_region_name: us-east-1
+  - model_name: minimax/MiniMax-M2.1
+    litellm_params:
+      model: minimax/MiniMax-M2.1
+      api_key: ${MINIMAX_API_KEY}
+      api_base: ${MINIMAX_API_BASE:-https://api.minimax.io/v1}
 
 litellm_settings:
   drop_params: true
