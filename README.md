@@ -1,41 +1,308 @@
-# IntelliqX — Autonomous QA Intelligence Platform
+<p align="center">
+  <h1 align="center">intelliqx</h1>
+  <p align="center">Autonomous QA Intelligence Platform — multi-cloud, agent-native test automation.</p>
+  <p align="center">
+    <a href="#installation"><img src="https://img.shields.io/badge/python-3.12-blue" alt="Python"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-green" alt="License"></a>
+    <a href="https://github.com/sachncs/intelliqx/actions"><img src="https://img.shields.io/github/actions/workflow/status/sachncs/intelliqx/ci.yaml?branch=master" alt="CI"></a>
+    <a href="https://github.com/sachncs/intelliqx/stargazers"><img src="https://img.shields.io/github/stars/sachncs/intelliqx" alt="Stars"></a>
+  </p>
+</p>
 
-Multi-cloud, agent-native QA platform with 29 agents across 15 independent libraries. See `docs/phases/README.md` for the phased implementation plan and [`docs/adr/`](docs/adr/) for Architecture Decision Records.
-
-## Quick start
+**intelliqx** is a Python platform that runs 29 specialised agents
+across AWS, GCP, and Modal to plan, generate, execute, and govern
+software tests. The same agent code runs on any cloud — cloud-specific
+SDK access lives behind a thin portability layer.
 
 ```bash
-# Install workspace dependencies
-uv sync --all-extras
+# Install everything (15 libraries + 29 agents + dev tools)
+uv sync --all-packages
 
-# Run unit + integration tests
-uv run pytest tests/unit tests/integration -q
+# Run the full local test pipeline
+uv run pytest tests/unit tests/contract tests/integration -q
 
-# Lint + typecheck
+# Lint + typecheck + dead-code
 uv run ruff check .
-uv run mypy libs
+uv run black --check .
+uv run mypy libs agents
+uv run vulture libs agents tests .vulture-whitelist
 
-# Start local infra
-docker compose up -d   # requires Docker
+# Start the local infrastructure (Redis, Postgres) for adapters
+docker compose up -d
 ```
 
-## Layout
+---
+
+## Features
+
+- **29 Agents Across 4 Categories** — Coordination (Planner,
+  Orchestrator, Memory, RAG, Tool Manager), Intelligence
+  (Requirements, Code, Risk, Test Design, Test Data, Coverage,
+  Critic, Learning, Prompt Mgmt), Execution (Environment, Execution,
+  Self-Healing, Failure Analysis, Design Intel, Visual, A11y, Perf,
+  Security, Cost Opt), Governance (Observability, Reporting,
+  Compliance, Release Readiness).
+- **Multi-Cloud Portability** — Same agent code runs on AWS, GCP,
+  and Modal via 15 independent libraries
+  (`intelliqx-core`, `intelliqx-events`, `intelliqx-storage`,
+  `intelliqx-state`, `intelliqx-vector`, `intelliqx-kg`,
+  `intelliqx-llm`, `intelliqx-compute`, `intelliqx-observability`,
+  `intelliqx-tools`, `intelliqx-portability`, `intelliqx-tenant`,
+  `intelliqx-sdk`, `intelliqx-agents`, `intelliqx-okf`). Each adapter
+  implements the same async interface.
+- **Knowledge Graph on Parquet + DuckDB** — File-based, no managed
+  graph DB needed; every node and edge is queryable through SQL.
+- **Vector Search via zvec** — Embedded vector store persisted to
+  object storage, runs anywhere.
+- **OKF Catalog with Hybrid Retrieval** — SQLite + FTS5 + sqlite-vec
+  for tenant-scoped full-text + vector search of structured
+  documentation.
+- **Polymorphic Memory Manager** — One agent entry-point handles
+  working, episodic, semantic, and code memories backed by Redis or
+  S3.
+- **Cross-Cloud Contract Tests** — Asserts every adapter produces
+  identical structured output across AWS / GCP / Modal / local
+  profiles.
+- **RBAC + ABAC + Audit Trail** — Tenant-scoped permissions with
+  dead-letter queues, human approval workflows, and tamper-evident
+  audit records.
+- **Zero-Cost Local Dev** — In-memory adapters for events, storage,
+  state, vectors, and the LLM client make the entire pipeline
+  runnable on a laptop with no cloud credentials.
+
+---
+
+## Quick Start
+
+### Local development (no cloud credentials)
+
+```bash
+# 1. Install
+git clone https://github.com/sachncs/intelliqx.git
+cd intelliqx
+uv sync --all-packages
+
+# 2. Run the suite (no Docker, no cloud keys required)
+uv run pytest tests/unit -q
+
+# 3. Try a single agent in-process
+uv run python -c "
+import asyncio
+from agents import register_all
+from intelliqx_compute.runtime import InvocationRequest
+
+register_all()
+from intelliqx_compute.runtime import get_compute_runtime
+req = InvocationRequest(agent_name='smoke', input={'marker': 'hello'}, tenant_id='t1')
+print(asyncio.run(get_compute_runtime().invoke(req)))
+"
+```
+
+### Running on AWS
+
+```bash
+export INTELLIQX_CLOUD=aws
+export AWS_REGION=us-east-1
+export AWS_ACCESS_KEY_ID=...
+export AWS_SECRET_ACCESS_KEY=...
+uv run pytest tests/cross_cloud -q
+```
+
+### Running on GCP
+
+```bash
+export INTELLIQX_CLOUD=gcp
+export INTELLIQX_REGION=us-central1
+export GOOGLE_CLOUD_PROJECT=my-project
+uv run pytest tests/cross_cloud -q
+```
+
+### Running on Modal
+
+```bash
+export INTELLIQX_CLOUD=modal
+export INTELLIQX_VLLM_URL=https://vllm.modal.run
+export MODAL_TOKEN_ID=...
+export MODAL_TOKEN_SECRET=...
+uv run pytest tests/cross_cloud -q
+```
+
+---
+
+## Configuration
+
+### Cloud profile
+
+The active cloud is selected via `INTELLIQX_CLOUD`. Each profile
+activates the matching adapter at startup.
+
+| Profile   | Backends                                                |
+|-----------|---------------------------------------------------------|
+| `local`   | In-memory events, storage, state, vectors, LLM         |
+| `aws`     | EventBridge, S3, ElastiCache (Redis), Bedrock          |
+| `gcp`     | Pub/Sub, GCS, Memorystore (Redis), Vertex AI            |
+| `modal`   | Modal Queues, Modal Volume, vLLM on Modal GPU           |
+
+### LLM backend
+
+| `INTELLIQX_LLM_BACKEND` | Behaviour                                                |
+|------------------------|----------------------------------------------------------|
+| `fake` (default)        | Deterministic hash-based responses (no network)         |
+| `bedrock`              | AWS Bedrock (Anthropic Claude, Titan embeddings)         |
+| `vertex`               | GCP Vertex AI (Gemini, text-embedding-005)               |
+| `vllm`                 | OpenAI-compatible endpoint at `INTELLIQX_VLLM_URL`       |
+
+### Other environment variables
+
+| Variable                       | Default       | Purpose                                  |
+|--------------------------------|---------------|------------------------------------------|
+| `INTELLIQX_ENV`                | `dev`         | Tag for log routing and metrics         |
+| `INTELLIQX_OBJECT_STORE`       | `memory`      | `memory`, or `fs:/path/to/dir`          |
+| `INTELLIQX_VECTOR_BACKEND`     | `memory`      | `memory`, `sqlite_vec`, or `zvec`        |
+| `INTELLIQX_VECTOR_DIM`         | `768`         | Embedding dimension                     |
+| `INTELLIQX_OTEL`               | `0`           | Set to `1` to enable OTel tracing       |
+| `INTELLIQX_LOGS_JSON`          | `0`           | Set to `1` for JSON log output          |
+
+See [`.env.example`](.env.example) for a full template.
+
+---
+
+## Project Structure
 
 ```
-libs/          15 shared libraries (intelliqx-core, intelliqx-events, intelliqx-vector, intelliqx-okf, ...)
-agents/        29 agent implementations, grouped by category
-  coordination/  Planner, Orchestrator, Memory, Knowledge/RAG, Tool Manager, Smoke
-  intelligence/  Requirements Intel, Code Intel, Risk, Test Design, Test Data, Coverage, Critic, Learning, Prompt Mgmt
-  execution/     Environment, Design Intel, Execution, Self-Healing, Failure Analysis, Visual Regression, A11y, Perf, Security, Cost Opt
-  governance/    Observability, Reporting, Governance & Compliance, Release Readiness
-schemas/       Event JSON Schemas, KG schema
-dashboards/    Dashboard definitions
-prompts/       Prompt templates
-scripts/       Utility scripts
-services/      HTTP/WebSocket entrypoints
-workflows/     Step Functions / LangGraph definitions
-infra/         IaC (AWS CDK, GCP cdktf, Modal SDK)
-tests/         unit, integration, contract, e2e
-docs/          ADRs, architecture, per-phase plans
-config/        Per-cloud config, tenant config
+intelliqx/
+├── libs/                15 independent libraries (intelliqx-core, intelliqx-events, ...)
+├── agents/              29 agent implementations, grouped by category
+│   ├── coordination/    Planner, Orchestrator, Memory, Knowledge/RAG, Tool Manager, Smoke
+│   ├── intelligence/    Requirements Intel, Code Intel, Risk, Test Design, Test Data, Coverage, Critic, Learning, Prompt Mgmt
+│   ├── execution/       Environment, Design Intel, Execution, Self-Healing, Failure Analysis, Visual Regression, A11y, Perf, Security, Cost Opt
+│   └── governance/      Observability, Reporting, Governance & Compliance, Release Readiness
+├── schemas/             Event JSON Schemas, KG schema
+├── dashboards/          Dashboard definitions
+├── prompts/             Prompt templates
+├── services/            HTTP / WebSocket entrypoints
+├── workflows/           Step Functions / LangGraph definitions
+├── infra/               IaC (AWS CDK, GCP cdktf, Modal SDK)
+├── tests/               unit, integration, contract, e2e, cross_cloud
+├── docs/                ADRs, architecture, per-phase plans
+└── .github/             CI, templates
 ```
+
+See [`docs/architecture/agent-catalog.md`](docs/architecture/agent-catalog.md)
+for the canonical list of every agent, its module path, and its
+capabilities. See [`docs/phases/`](docs/phases/) for the phased
+implementation plan and [`docs/adr/`](docs/adr/) for Architecture
+Decision Records.
+
+---
+
+## Development
+
+```bash
+# Install with dev dependencies (ruff, mypy, black, vulture, pytest)
+uv sync --all-packages
+
+# Run tests
+uv run pytest -q                                       # All suites
+uv run pytest tests/unit -q                            # Unit only
+uv run pytest tests/contract -q                        # Contract tests
+uv run pytest tests/integration -q                     # Integration
+uv run pytest tests/cross_cloud -q                     # Cross-cloud parity
+uv run pytest -m e2e -q                                 # End-to-end
+
+# Lint, format, type-check
+uv run ruff check .
+uv run black .
+uv run mypy libs agents
+
+# Dead-code detection
+uv run vulture libs agents tests .vulture-whitelist
+```
+
+All four tools are wired into CI as separate jobs so a failure in one
+no longer masks the others.
+
+### Make targets
+
+```bash
+make help               # List all targets
+make install            # uv sync --all-packages
+make sync               # same
+make lint               # ruff check .
+make format             # black .
+make typecheck          # mypy libs agents
+make vulture            # vulture libs agents tests .vulture-whitelist
+make test               # pytest
+make test-unit          # pytest tests/unit -q
+make test-contract      # pytest tests/contract -q
+make test-integration   # pytest tests/integration -q
+make test-e2e           # pytest tests/e2e -q -m e2e
+make run-agent AGENT=execution/execution
+make docker-up          # docker compose up -d
+make docker-down        # docker compose down
+make clean              # rm -rf .venv build dist **/__pycache__ ...
+```
+
+### Code style
+
+- **Line length:** 100
+- **Formatter:** `black` (enforced in CI)
+- **Linter:** `ruff` (selected rules: `E`, `F`, `I`, `B`, `UP`, `SIM`, `RUF`)
+- **Type checker:** `mypy` (strict-optional, warn-unused-ignores, no-implicit-optional)
+- **Naming:** Pydantic models are `PascalCase`; modules and functions are `snake_case`; private members use Python name-mangling (`__name`).
+- **Async first:** every public I/O method is `async def`. Blocking SDK calls are offloaded via `asyncio.to_thread`.
+
+### Commit conventions
+
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add vector indexer abstraction
+fix: handle missing OTel SDK in test env
+docs: add cross-cloud matrix doc
+refactor: extract plan templates to a dedicated module
+test: add parity test for AWS and GCP adapters
+chore: update ruff config
+```
+
+Breaking changes use the `!` suffix (`feat!:`) and are documented in
+[`CHANGELOG.md`](CHANGELOG.md).
+
+---
+
+## Tech Stack
+
+| Category       | Technology                                              |
+|----------------|---------------------------------------------------------|
+| Language       | Python 3.12                                             |
+| Workspace      | [uv](https://docs.astral.sh/uv/) (workspace + lockfile) |
+| Models         | [Pydantic v2](https://docs.pydantic.dev/) (strict, frozen) |
+| Vector store   | [zvec](https://github.com/alibaba/zvec) (Zilliz embedded) |
+| Local vector   | [sqlite-vec](https://github.com/asg017/sqlite-vec)        |
+| Graph store    | DuckDB + Parquet on object storage                       |
+| State          | Redis-compatible (ElastiCache / Memorystore / Modal Dict) |
+| Events         | EventBridge / Pub/Sub / Modal Queue                      |
+| Storage        | S3 / GCS / Modal Volume                                  |
+| LLM            | [litellm](https://litellm.ai) (Bedrock, Vertex, vLLM)    |
+| Lint           | [ruff](https://docs.astral.sh/ruff/)                    |
+| Format         | [black](https://black.readthedocs.io/)                  |
+| Type Check     | [mypy](https://mypy-lang.org/) (strict)                 |
+| Dead code      | [vulture](https://github.com/jendrikseipp/vulture)      |
+| Testing        | [pytest](https://docs.pytest.org/) + pytest-asyncio + pytest-cov |
+
+---
+
+## Contributing
+
+We welcome contributions! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for
+development setup, the pull request process, coding standards, and test
+expectations.
+
+## Security
+
+Report vulnerabilities to **sachncs@gmail.com** — please do not file
+public issues for security-sensitive bugs.
+
+## License
+
+[Apache-2.0](LICENSE) © 2026 Sachin
