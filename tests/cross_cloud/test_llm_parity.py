@@ -4,6 +4,7 @@ import pytest
 from intelliqx_llm.aws import BedrockLLMClient
 from intelliqx_llm.client import CompletionRequest
 from intelliqx_llm.gcp import VertexLLMClient
+from intelliqx_llm.minimax import MiniMaxLLMClient
 from intelliqx_llm.modal import VLLMModalLLMClient
 
 
@@ -48,6 +49,28 @@ async def test_vllm_fallback_deterministic():
 
 @pytest.mark.cross_cloud
 @pytest.mark.asyncio
+async def test_minimax_fallback_deterministic():
+    """Without MINIMAX_API_KEY, MiniMax client falls back to deterministic mock."""
+    import os
+
+    saved = os.environ.pop("MINIMAX_API_KEY", None)
+    try:
+        client = MiniMaxLLMClient(api_key="")
+        r1 = await client.complete(
+            CompletionRequest(model="m", messages=[{"role": "user", "content": "hello"}])
+        )
+        r2 = await client.complete(
+            CompletionRequest(model="m", messages=[{"role": "user", "content": "hello"}])
+        )
+        assert r1.content == r2.content
+        assert r1.content.startswith("[minimax-fallback:")
+    finally:
+        if saved is not None:
+            os.environ["MINIMAX_API_KEY"] = saved
+
+
+@pytest.mark.cross_cloud
+@pytest.mark.asyncio
 async def test_bedrock_embed_dim():
     client = BedrockLLMClient()
     vecs = await client.embed(["hello"], model="m")
@@ -74,9 +97,27 @@ async def test_vllm_embed_dim():
 
 
 @pytest.mark.cross_cloud
+@pytest.mark.asyncio
+async def test_minimax_embed_dim():
+    import os
+
+    saved = os.environ.pop("MINIMAX_API_KEY", None)
+    try:
+        client = MiniMaxLLMClient(api_key="", embed_dim=256)
+        vecs = await client.embed(["hello"], model="m")
+        assert len(vecs) == 1
+        assert len(vecs[0]) == 256
+    finally:
+        if saved is not None:
+            os.environ["MINIMAX_API_KEY"] = saved
+
+
+@pytest.mark.cross_cloud
 def test_cross_cloud_different_fallback_prefixes():
     """Each cloud has a distinct fallback prefix — proves adapter identity."""
     a = BedrockLLMClient()
     g = VertexLLMClient()
     m = VLLMModalLLMClient()
-    assert a.DEFAULT_MODEL != g.DEFAULT_MODEL != m.model
+    x = MiniMaxLLMClient(api_key="sk-test")
+    assert a.DEFAULT_MODEL != g.DEFAULT_MODEL != m.model != x.model
+    assert x.DEFAULT_MODEL.startswith("minimax/")

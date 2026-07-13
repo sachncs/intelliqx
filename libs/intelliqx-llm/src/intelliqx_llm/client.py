@@ -232,16 +232,38 @@ def get_llm_client() -> LLMClient:
 
     Resolution:
         * ``INTELLIQX_LLM_BACKEND=fake`` (default) → :class:`FakeLLMClient`.
-        * Other values are accepted by name but require the
-          corresponding cloud SDK + credentials at runtime. In dev
-          we raise a clear :class:`RuntimeError` so the failure is
-          obvious.
+        * ``bedrock`` → :class:`intelliqx_llm.aws.BedrockLLMClient`.
+        * ``vertex`` → :class:`intelliqx_llm.gcp.VertexLLMClient`.
+        * ``vllm`` → :class:`intelliqx_llm.modal.VLLMModalLLMClient`.
+        * ``minimax`` → :class:`intelliqx_llm.minimax.MiniMaxLLMClient`.
+        * Anything else raises a clear :class:`RuntimeError`.
+
+    Each cloud adapter implements the same graceful-degradation
+    pattern: if the SDK is missing or credentials are unavailable,
+    the adapter returns a deterministic fallback so the rest of
+    the platform keeps working.
     """
     global _SINGLETON
     if _SINGLETON is None:
         backend = os.environ.get("INTELLIQX_LLM_BACKEND", "fake")
         if backend == "fake":
             _SINGLETON = FakeLLMClient()
+        elif backend == "bedrock":
+            from intelliqx_llm.aws import BedrockLLMClient
+
+            _SINGLETON = BedrockLLMClient()
+        elif backend == "vertex":
+            from intelliqx_llm.gcp import VertexLLMClient
+
+            _SINGLETON = VertexLLMClient()
+        elif backend == "vllm":
+            from intelliqx_llm.modal import VLLMModalLLMClient
+
+            _SINGLETON = VLLMModalLLMClient()
+        elif backend == "minimax":
+            from intelliqx_llm.minimax import MiniMaxLLMClient
+
+            _SINGLETON = MiniMaxLLMClient()
         else:
             raise RuntimeError(
                 f"LLM backend {backend!r} not available in this runtime. "
@@ -254,7 +276,7 @@ def set_llm_client(client: LLMClient) -> None:
     """Replace the singleton LLM client.
 
     Used by application bootstrap to install a configured cloud
-    adapter (Bedrock, Vertex, vLLM) before the first
+    adapter (Bedrock, Vertex, vLLM, or MiniMax) before the first
     :func:`get_llm_client` call.
     """
     global _SINGLETON

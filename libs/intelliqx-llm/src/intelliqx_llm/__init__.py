@@ -15,10 +15,13 @@ Cloud adapters live next to this package:
   by default).
 * :class:`intelliqx_llm.modal.VLLMModalLLMClient` — vLLM on Modal
   (Qwen 2.5 default, OpenAI-compatible HTTP).
+* :class:`intelliqx_llm.minimax.MiniMaxLLMClient` — MiniMax via
+  `litellm <https://docs.litellm.ai/docs/providers/minimax>`__
+  (MiniMax-M2.1 default chat, text-embedding-01 default embed).
 
-Selection happens via the ``INTELLIQX_LLM_BACKEND`` env var (``"fake"``
-default; the cloud values are recognised but require credentials at
-runtime).
+Selection happens via the ``INTELLIQX_LLM_BACKEND`` env var
+(``"fake"`` default; cloud values are recognised but require
+credentials at runtime).
 """
 
 from intelliqx_llm.client import (
