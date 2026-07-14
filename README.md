@@ -468,7 +468,7 @@ expectations.
 ## Code of Conduct
 
 Contributors are expected to follow the
-[Contributor Covenant v2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
+[Contributor Covenant v2.1](CODE_OF_CONDUCT.md).
 
 ## Security
 
