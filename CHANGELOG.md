@@ -182,5 +182,5 @@ First tagged release. Phases 0–1 are complete and verified; Phases 2–7 are p
 require POSIX `setrlimit`; macOS does not allow raising CPU/memory
 limits, so the tests are skipped on that platform by design.
 
-[Unreleased]: https://github.com/intelliqx/intelliqx/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/intelliqx/intelliqx/releases/tag/v0.1.0
+[Unreleased]: https://github.com/sachncs/intelliqx/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/sachncs/intelliqx/releases/tag/v0.1.0
