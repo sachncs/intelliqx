@@ -105,17 +105,17 @@ class VerificationAgent:
         after: SoftwareGraph,
         entry_points: list[str],
     ) -> None:
-        self._before = before
-        self._after = after
-        self._entry_points = entry_points
-        self._before_index = GraphIndex(before)
-        self._after_index = GraphIndex(after)
+        self.before = before
+        self.after = after
+        self.entry_points = entry_points
+        self.before_index = GraphIndex(before)
+        self.after_index = GraphIndex(after)
 
     def verify(self) -> VerificationReport:
-        before_nodes = node_ids(self._before)
-        after_nodes = node_ids(self._after)
-        before_edges = edge_keys(self._before)
-        after_edges = edge_keys(self._after)
+        before_nodes = node_ids(self.before)
+        after_nodes = node_ids(self.after)
+        before_edges = edge_keys(self.before)
+        after_edges = edge_keys(self.after)
 
         nodes_added = len(after_nodes - before_nodes)
         nodes_removed = len(before_nodes - after_nodes)
@@ -126,10 +126,10 @@ class VerificationAgent:
         behavior_preserved = True
 
         traces_before = build_trace_set(
-            self._before, self._before_index, self._entry_points,
+            self.before, self.before_index, self.entry_points,
         )
         traces_after = build_trace_set(
-            self._after, self._after_index, self._entry_points,
+            self.after, self.after_index, self.entry_points,
         )
 
         lost_traces = traces_before - traces_after
@@ -140,8 +140,8 @@ class VerificationAgent:
             )
 
         reachable_before = set()
-        for ep in self._entry_points:
-            reachable_before.update(self._before_index.reachable_from(ep))
+        for ep in self.entry_points:
+            reachable_before.update(self.before_index.reachable_from(ep))
             if ep in before_nodes:
                 reachable_before.add(ep)
 
@@ -154,7 +154,7 @@ class VerificationAgent:
                 f"{sorted(improperly_removed)[:5]}"
             )
 
-        risk = self._assess_risk(
+        risk = self.assess_risk(
             nodes_added, nodes_removed, edges_added, edges_removed,
             behavior_preserved, improperly_removed,
         )
@@ -178,7 +178,7 @@ class VerificationAgent:
             findings=findings,
         )
 
-    def _assess_risk(
+    def assess_risk(
         self,
         nodes_added: int,
         nodes_removed: int,

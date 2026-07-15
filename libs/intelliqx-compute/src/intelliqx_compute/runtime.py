@@ -118,11 +118,11 @@ class InProcessComputeRuntime(ComputeRuntime):
     """
 
     def __init__(self) -> None:
-        self.__handlers: dict[str, AgentCallable] = {}
+        self.handlers: dict[str, AgentCallable] = {}
 
     def register(self, agent_name: str, handler: AgentCallable) -> None:
         """Register ``handler`` as the implementation of ``agent_name``."""
-        self.__handlers[agent_name] = handler
+        self.handlers[agent_name] = handler
 
     async def invoke(self, request: InvocationRequest) -> InvocationResponse:
         # Wrap the whole call in a tracer span so every agent
@@ -131,7 +131,7 @@ class InProcessComputeRuntime(ComputeRuntime):
         with tracer.span(f"agent.{request.agent_name}.invoke") as span:
             span.set_attribute("tenant_id", request.tenant_id)
             span.set_attribute("agent_name", request.agent_name)
-            handler = self.__handlers.get(request.agent_name)
+            handler = self.handlers.get(request.agent_name)
             if handler is None:
                 return InvocationResponse(
                     agent_name=request.agent_name,
@@ -170,7 +170,7 @@ class InProcessComputeRuntime(ComputeRuntime):
             )
 
 
-_SINGLETON: ComputeRuntime | None = None
+SINGLETON: ComputeRuntime | None = None
 
 
 def get_compute_runtime() -> ComputeRuntime:
@@ -180,10 +180,10 @@ def get_compute_runtime() -> ComputeRuntime:
     deployments should construct a cloud adapter once at startup
     and call :func:`set_compute_runtime` to install it.
     """
-    global _SINGLETON
-    if _SINGLETON is None:
-        _SINGLETON = InProcessComputeRuntime()
-    return _SINGLETON
+    global SINGLETON
+    if SINGLETON is None:
+        SINGLETON = InProcessComputeRuntime()
+    return SINGLETON
 
 
 def set_compute_runtime(runtime: ComputeRuntime) -> None:
@@ -192,11 +192,11 @@ def set_compute_runtime(runtime: ComputeRuntime) -> None:
     Used by application bootstrap to install a configured cloud
     adapter before the first :func:`get_compute_runtime` call.
     """
-    global _SINGLETON
-    _SINGLETON = runtime
+    global SINGLETON
+    SINGLETON = runtime
 
 
 def reset_compute_runtime() -> None:
     """Clear the singleton compute runtime (for tests)."""
-    global _SINGLETON
-    _SINGLETON = None
+    global SINGLETON
+    SINGLETON = None

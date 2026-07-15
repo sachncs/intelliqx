@@ -55,27 +55,27 @@ class FlowAnalysisReport(BaseModel):
 
 class FlowAnalysisAgent:
     def __init__(self, graph_index: GraphIndex) -> None:
-        self._index = graph_index
+        self.index = graph_index
 
     def analyze(self) -> FlowAnalysisReport:
-        call_graph = self._index.get_graph(GraphLayer.CALL)
+        call_graph = self.index.get_graph(GraphLayer.CALL)
         if call_graph is None:
             return FlowAnalysisReport()
 
-        entry_points = self._find_entry_points(call_graph)
-        execution_paths = self._find_execution_paths(call_graph, entry_points)
-        dead_code = self._find_dead_code(entry_points)
-        bottlenecks = self._find_bottlenecks(call_graph)
-        unreachable = self._index.find_dead_nodes(entry_points, layer=GraphLayer.CALL)
+        entry_points = self.find_entry_points(call_graph)
+        execution_paths = self.find_execution_paths(call_graph, entry_points)
+        dead_code = self.find_dead_code(entry_points)
+        bottlenecks = self.find_bottlenecks(call_graph)
+        unreachable = self.index.find_dead_nodes(entry_points, layer=GraphLayer.CALL)
 
         reachable: set[str] = set()
         for ep in entry_points:
             if ep in call_graph:
-                reachable.update(self._index.reachable_from(ep, layer=GraphLayer.CALL))
+                reachable.update(self.index.reachable_from(ep, layer=GraphLayer.CALL))
                 reachable.add(ep)
 
         longest = max((len(p.path) for p in execution_paths), default=0)
-        stats = self._index.stats()
+        stats = self.index.stats()
         call_stats = stats["layers"].get("call", {})
 
         return FlowAnalysisReport(
@@ -91,7 +91,7 @@ class FlowAnalysisAgent:
             strongly_connected_components=call_stats.get("num_strongly_connected", 0),
         )
 
-    def _find_entry_points(self, call_graph: nx.DiGraph) -> list[str]:
+    def find_entry_points(self, call_graph: nx.DiGraph) -> list[str]:
         entry_points = [n for n in call_graph.nodes if call_graph.in_degree(n) == 0]
         if not entry_points:
             sccs = list(nx.strongly_connected_components(call_graph))
@@ -100,7 +100,7 @@ class FlowAnalysisAgent:
                 entry_points = list(largest_scc)[:5]
         return entry_points
 
-    def _find_execution_paths(
+    def find_execution_paths(
         self, call_graph: nx.DiGraph, entry_points: list[str]
     ) -> list[ExecutionPath]:
         paths: list[ExecutionPath] = []
@@ -125,10 +125,10 @@ class FlowAnalysisAgent:
         paths.sort(key=lambda p: p.total_weight, reverse=True)
         return paths[:100]
 
-    def _find_dead_code(self, entry_points: list[str]) -> list[DeadCodeNode]:
-        unreachable_ids = self._index.find_dead_nodes(entry_points, layer=GraphLayer.CALL)
+    def find_dead_code(self, entry_points: list[str]) -> list[DeadCodeNode]:
+        unreachable_ids = self.index.find_dead_nodes(entry_points, layer=GraphLayer.CALL)
         dead_nodes: list[DeadCodeNode] = []
-        sg = self._index.software_graph
+        sg = self.index.software_graph
         for node_id in unreachable_ids:
             node = sg.find_node(node_id)
             if node is not None:
@@ -148,7 +148,7 @@ class FlowAnalysisAgent:
                 ))
         return dead_nodes
 
-    def _find_bottlenecks(self, call_graph: nx.DiGraph) -> list[BottleneckNode]:
+    def find_bottlenecks(self, call_graph: nx.DiGraph) -> list[BottleneckNode]:
         bottlenecks: list[BottleneckNode] = []
         for node_id in call_graph.nodes:
             fi = call_graph.in_degree(node_id)

@@ -159,7 +159,7 @@ class MiniMaxLLMClient(LLMClient):
             when the API is unreachable.
         """
         if not self.available:
-            return self._fallback_complete(request)
+            return self.fallback_complete(request)
 
         try:
             # The OpenAI-compatible path is the most stable for
@@ -178,7 +178,7 @@ class MiniMaxLLMClient(LLMClient):
                 api_base=self.api_base,
             )
         except Exception:
-            return self._fallback_complete(request)
+            return self.fallback_complete(request)
 
         choice = response.choices[0]
         text = getattr(choice.message, "content", "") or ""
@@ -191,7 +191,7 @@ class MiniMaxLLMClient(LLMClient):
             usage=LLMUsage(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens),
         )
 
-    def _fallback_complete(self, request: CompletionRequest) -> CompletionResponse:
+    def fallback_complete(self, request: CompletionRequest) -> CompletionResponse:
         """Return a deterministic ``[minimax-fallback:...]`` response.
 
         Used when the API key is missing or a live call raises. The

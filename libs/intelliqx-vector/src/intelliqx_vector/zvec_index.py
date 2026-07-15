@@ -67,37 +67,32 @@ class ZvecIndex:
         # path isn't used.
         import zvec  # local import to avoid hard dep at import time
 
-        self.__zvec = zvec
-        self.__dim = dim
-        self.__storage = storage or get_object_store()
-        self.__collection_name = collection_name
-        self.__local_root = (
+        self.zvec = zvec
+        self.dim = dim
+        self.storage = storage or get_object_store()
+        self.collection_name = collection_name
+        self.local_root = (
             Path(local_root or tempfile.gettempdir()) / f"intelliqx_zvec_{collection_name}"
         )
-        self.__local_root.mkdir(parents=True, exist_ok=True)
-        self.__index_type = index_type
-        self.__coll = self._open_or_create()
-        self.__tenant_counts: dict[str, int] = {}
+        self.local_root.mkdir(parents=True, exist_ok=True)
+        self.index_type = index_type
+        self.coll = self.open_or_create()
+        self.tenant_counts: dict[str, int] = {}
         # Always write an initial manifest synchronously so cold
         # starts can discover the index even if the first async
         # ``upsert`` is hours away.
-        self._sync_persist_fallback()
+        self.sync_persist_fallback()
 
-    @property
-    def dim(self) -> int:
-        """Embedding dimension this index accepts."""
-        return self.__dim
-
-    def _schema(self) -> Any:
+    def schema(self) -> Any:
         """Build the zvec collection schema.
 
         Scalar fields carry the document metadata; the single
         vector field carries the embedding. Adding fields is
         allowed; changing their types is not.
         """
-        zvec = self.__zvec
+        zvec = self.zvec
         return zvec.CollectionSchema(
-            name=self.__collection_name,
+            name=self.collection_name,
             fields=[
                 zvec.FieldSchema("id", zvec.DataType.STRING),
                 zvec.FieldSchema("tenant_id", zvec.DataType.STRING),
@@ -108,25 +103,25 @@ class ZvecIndex:
                 zvec.VectorSchema(
                     name=self.VECTOR_FIELD,
                     data_type=zvec.DataType.VECTOR_FP32,
-                    dimension=self.__dim,
+                    dimension=self.dim,
                     index_param=zvec.HnswIndexParam(),
                 )
             ],
         )
 
-    def _open_or_create(self) -> Any:
+    def open_or_create(self) -> Any:
         """Open the existing collection or create a new one.
 
         zvec's ``open`` is fast (no I/O); ``create_and_open``
         provisions the files on disk. We cache the collection handle
-        in ``self.__coll`` so every subsequent call avoids the
+        in ``self.coll`` so every subsequent call avoids the
         path check.
         """
-        zvec = self.__zvec
-        path = self.__local_root / self.__collection_name
+        zvec = self.zvec
+        path = self.local_root / self.collection_name
         if path.exists():
             return zvec.open(str(path))
-        return zvec.create_and_open(str(path), self._schema())
+        return zvec.create_and_open(str(path), self.schema())
 
     async def upsert(self, docs: Sequence[VectorDoc]) -> int:
         """Insert or update ``docs`` in the collection.
@@ -138,11 +133,11 @@ class ZvecIndex:
         Returns:
             The number of documents actually written.
         """
-        zvec = self.__zvec
+        zvec = self.zvec
         added = 0
         for d in docs:
-            if len(d.vector) != self.__dim:
-                raise ValueError(f"Vector dim mismatch: expected {self.__dim}, got {len(d.vector)}")
+            if len(d.vector) != self.dim:
+                raise ValueError(f"Vector dim mismatch: expected {self.dim}, got {len(d.vector)}")
             doc = zvec.Doc(
                 id=d.id,
                 fields={
@@ -153,10 +148,10 @@ class ZvecIndex:
                 },
                 vectors={self.VECTOR_FIELD: np.array(d.vector, dtype=np.float32).tolist()},
             )
-            self.__coll.upsert(doc)
-            self.__tenant_counts[d.tenant_id] = self.__tenant_counts.get(d.tenant_id, 0) + 1
+            self.coll.upsert(doc)
+            self.tenant_counts[d.tenant_id] = self.tenant_counts.get(d.tenant_id, 0) + 1
             added += 1
-        await self._persist()
+        await self.persist()
         return added
 
     async def delete(self, ids: Sequence[str]) -> int:
@@ -169,7 +164,7 @@ class ZvecIndex:
         removed = 0
         for i in ids:
             try:
-                self.__coll.delete(id=i)
+                self.coll.delete(id=i)
                 removed += 1
             except Exception:
                 # Silent pass is intentional: zvec may raise if the id
@@ -180,7 +175,7 @@ class ZvecIndex:
                 # count successful deletions and let the caller inspect
                 # the returned count.
                 pass
-        await self._persist()
+        await self.persist()
         return removed
 
     async def search(
@@ -198,9 +193,9 @@ class ZvecIndex:
         query (the caller still receives per-tenant results because
         we re-filter post-query if needed).
         """
-        zvec = self.__zvec
-        if len(vector) != self.__dim:
-            raise ValueError(f"Vector dim mismatch: expected {self.__dim}, got {len(vector)}")
+        zvec = self.zvec
+        if len(vector) != self.dim:
+            raise ValueError(f"Vector dim mismatch: expected {self.dim}, got {len(vector)}")
         expr_parts: list[str] = []
         if tenant_id is not None:
             expr_parts.append(f'tenant_id == "{tenant_id}"')
@@ -213,10 +208,10 @@ class ZvecIndex:
         flt = " AND ".join(expr_parts) if expr_parts else None
         q = zvec.Query(field_name=self.VECTOR_FIELD, vector=vector)
         try:
-            doc_list = self.__coll.query(queries=q, topk=top_k, filter=flt)
+            doc_list = self.coll.query(queries=q, topk=top_k, filter=flt)
         except Exception:
             # Fallback without filter if the expression isn't supported.
-            doc_list = self.__coll.query(queries=q, topk=top_k)
+            doc_list = self.coll.query(queries=q, topk=top_k)
         out: list[SearchResult] = []
         # DocList is iterable of Doc
         try:
@@ -247,25 +242,25 @@ class ZvecIndex:
         the same counts so a cold start can recover them.
         """
         if tenant_id is None:
-            return sum(self.__tenant_counts.values())
-        return self.__tenant_counts.get(tenant_id, 0)
+            return sum(self.tenant_counts.values())
+        return self.tenant_counts.get(tenant_id, 0)
 
-    async def _persist(self) -> None:
+    async def persist(self) -> None:
         """Write the manifest to the object store (async path)."""
         manifest = {
-            "collection": self.__collection_name,
-            "dim": self.__dim,
-            "index_type": self.__index_type,
-            "tenant_counts": self.__tenant_counts,
-            "local_path": str(self.__local_root / self.__collection_name),
+            "collection": self.collection_name,
+            "dim": self.dim,
+            "index_type": self.index_type,
+            "tenant_counts": self.tenant_counts,
+            "local_path": str(self.local_root / self.collection_name),
         }
-        await self.__storage.put(
-            f"{self.__collection_name}/{self.MANIFEST_KEY}",
+        await self.storage.put(
+            f"{self.collection_name}/{self.MANIFEST_KEY}",
             json.dumps(manifest).encode("utf-8"),
             content_type="application/json",
         )
 
-    def _sync_persist_fallback(self) -> None:
+    def sync_persist_fallback(self) -> None:
         """Sync manifest write for the constructor (no event loop yet).
 
         Called eagerly in ``__init__`` so a cold start that re-opens
@@ -273,16 +268,16 @@ class ZvecIndex:
         the first async ``upsert`` is hours away.
         """
         manifest = {
-            "collection": self.__collection_name,
-            "dim": self.__dim,
-            "index_type": self.__index_type,
-            "tenant_counts": self.__tenant_counts,
-            "local_path": str(self.__local_root / self.__collection_name),
+            "collection": self.collection_name,
+            "dim": self.dim,
+            "index_type": self.index_type,
+            "tenant_counts": self.tenant_counts,
+            "local_path": str(self.local_root / self.collection_name),
         }
-        put = getattr(self.__storage, "put_sync", None)
+        put = getattr(self.storage, "put_sync", None)
         if put is not None:
             put(
-                f"{self.__collection_name}/{self.MANIFEST_KEY}",
+                f"{self.collection_name}/{self.MANIFEST_KEY}",
                 json.dumps(manifest).encode("utf-8"),
                 content_type="application/json",
             )

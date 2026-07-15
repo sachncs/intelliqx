@@ -10,17 +10,17 @@ Modal persists across invocations. Important caveats:
 * **Cross-function visibility.** All Modal functions in the same app
   can read and write the same dict.
 
-Error handling pattern (``_try_init`` / ``_available``):
+Error handling pattern (``try_init`` / ``available``):
 
-* ``_try_init`` catches ``Exception`` broadly (rather than just
+* ``try_init`` catches ``Exception`` broadly (rather than just
   ``(ImportError, OSError)``) because ``modal.Dict.from_name`` can
   raise modal-specific exceptions beyond standard import/os errors,
   such as authentication failures or API rate limits.
-* When ``_try_init`` returns ``False``, the ``_require`` guard
+* When ``try_init`` returns ``False``, the ``require`` guard
   raises ``RuntimeError`` on every data-access method. There is no
   silent fallback because Modal Dict is ephemeral and an in-memory
   substitute would not replicate across Modal functions.
-* When ``_try_init`` returns ``True`` but the Modal API is
+* When ``try_init`` returns ``True`` but the Modal API is
   unreachable at call time, errors propagate loudly so the caller
   can fail fast rather than silently dropping state.
 """
@@ -42,24 +42,24 @@ class ModalDictStateStore(StateStore):
 
     def __init__(self, name: str = "intelliqx-state") -> None:
         self.name = name
-        self._dict: Any = None
-        self._available = self._try_init()
+        self.store: Any = None
+        self.available = self.try_init()
 
-    def _try_init(self) -> bool:
+    def try_init(self) -> bool:
         """Try to look up (or implicitly create) the Modal Dict."""
         try:
             import modal  # type: ignore[import-not-found]
 
             # ``from_name`` returns a handle; the dict is provisioned
             # on first read/write.
-            self._dict = modal.Dict.from_name(self.name, create_if_missing=True)
+            self.store = modal.Dict.from_name(self.name, create_if_missing=True)
             return True
         except Exception:
             return False
 
-    def _require(self) -> None:
+    def require(self) -> None:
         """Raise a clear error when the adapter cannot reach Modal."""
-        if not self._available:
+        if not self.available:
             raise RuntimeError("ModalDict requires modal SDK + token")
 
     async def get(self, key: str):
@@ -75,8 +75,8 @@ class ModalDictStateStore(StateStore):
             RuntimeError: If the Modal SDK is not installed or the
                 token is missing.
         """
-        self._require()
-        return self._dict.get(key)
+        self.require()
+        return self.store.get(key)
 
     async def set(self, key: str, value, *, ttl_seconds: int | None = None) -> None:
         """Store ``value`` at ``key`` in the Modal Dict.
@@ -94,8 +94,8 @@ class ModalDictStateStore(StateStore):
             RuntimeError: If the Modal SDK is not installed or the
                 token is missing.
         """
-        self._require()
-        self._dict[key] = value
+        self.require()
+        self.store[key] = value
 
     async def delete(self, key: str) -> None:
         """Remove ``key`` from the Modal Dict.
@@ -109,9 +109,9 @@ class ModalDictStateStore(StateStore):
             RuntimeError: If the Modal SDK is not installed or the
                 token is missing.
         """
-        self._require()
+        self.require()
         with suppress(KeyError):
-            del self._dict[key]
+            del self.store[key]
 
     async def incr(self, key: str, amount: int = 1) -> int:
         """Atomically increment an integer counter at ``key``.
@@ -131,10 +131,10 @@ class ModalDictStateStore(StateStore):
             RuntimeError: If the Modal SDK is not installed or the
                 token is missing.
         """
-        self._require()
-        cur = int(self._dict.get(key, 0))
+        self.require()
+        cur = int(self.store.get(key, 0))
         cur += amount
-        self._dict[key] = cur
+        self.store[key] = cur
         return cur
 
     async def expire(self, key: str, ttl_seconds: int) -> None:
@@ -157,8 +157,8 @@ class ModalDictStateStore(StateStore):
         Yields:
             Matching key strings.
         """
-        self._require()
-        for k in list(self._dict.keys()):
+        self.require()
+        for k in list(self.store.keys()):
             if k.startswith(prefix):
                 yield k
 
@@ -174,10 +174,10 @@ class ModalDictStateStore(StateStore):
             field: The field name within the hash.
             value: The string value to store.
         """
-        self._require()
-        h = self._dict.get(key, {})
+        self.require()
+        h = self.store.get(key, {})
         h[field] = value
-        self._dict[key] = h
+        self.store[key] = h
 
     async def hgetall(self, key: str) -> dict:
         """Return all hash fields and values under ``key``.
@@ -185,8 +185,8 @@ class ModalDictStateStore(StateStore):
         Returns:
             A ``dict[str, str]``; empty if the key has no hash fields.
         """
-        self._require()
-        return dict(self._dict.get(key, {}))
+        self.require()
+        return dict(self.store.get(key, {}))
 
     async def lpush(self, key: str, value: str) -> int:
         """Push ``value`` to the head of the list at ``key``.
@@ -194,10 +194,10 @@ class ModalDictStateStore(StateStore):
         Returns:
             The new list length.
         """
-        self._require()
-        lst = list(self._dict.get(key, []))
+        self.require()
+        lst = list(self.store.get(key, []))
         lst.insert(0, value)
-        self._dict[key] = lst
+        self.store[key] = lst
         return len(lst)
 
     async def rpop(self, key: str):
@@ -206,10 +206,10 @@ class ModalDictStateStore(StateStore):
         Returns:
             The popped value, or ``None`` if the list is empty.
         """
-        self._require()
-        lst = list(self._dict.get(key, []))
+        self.require()
+        lst = list(self.store.get(key, []))
         if not lst:
             return None
         v = lst.pop()
-        self._dict[key] = lst
+        self.store[key] = lst
         return v

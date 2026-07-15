@@ -86,33 +86,33 @@ class PythonParser(BaseParser):
         file_str = str(file_path)
 
         for node in ast.iter_child_nodes(tree):
-            entities.extend(self._parse_node(node, file_str, parent=None))
+            entities.extend(self.parse_node(node, file_str, parent=None))
 
         return entities
 
-    def _parse_node(
+    def parse_node(
         self, node: ast.AST, file_str: str, parent: str | None
     ) -> list[ParsedEntity]:
         """Recursively parse an AST node."""
         entities: list[ParsedEntity] = []
 
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-            entities.append(self._parse_function(node, file_str, parent))
+            entities.append(self.parse_function(node, file_str, parent))
 
         elif isinstance(node, ast.ClassDef):
-            class_entity = self._parse_class(node, file_str, parent)
+            class_entity = self.parse_class(node, file_str, parent)
             entities.append(class_entity)
             # Parse methods inside the class
             for child in ast.iter_child_nodes(node):
-                child_entities = self._parse_node(child, file_str, parent=node.name)
+                child_entities = self.parse_node(child, file_str, parent=node.name)
                 entities.extend(child_entities)
 
         elif isinstance(node, ast.Import | ast.ImportFrom):
-            entities.append(self._parse_import(node, file_str))
+            entities.append(self.parse_import(node, file_str))
 
         return entities
 
-    def _parse_function(
+    def parse_function(
         self, node: ast.FunctionDef | ast.AsyncFunctionDef, file_str: str, parent: str | None
     ) -> ParsedEntity:
         """Parse a function or method definition."""
@@ -140,7 +140,7 @@ class PythonParser(BaseParser):
             complexity=estimate_complexity(node),
         )
 
-    def _parse_class(self, node: ast.ClassDef, file_str: str, parent: str | None) -> ParsedEntity:
+    def parse_class(self, node: ast.ClassDef, file_str: str, parent: str | None) -> ParsedEntity:
         """Parse a class definition."""
         bases: list[str] = []
         for base in node.bases:
@@ -162,7 +162,7 @@ class PythonParser(BaseParser):
             docstring=ast.get_docstring(node),
         )
 
-    def _parse_import(self, node: ast.Import | ast.ImportFrom, file_str: str) -> ParsedEntity:
+    def parse_import(self, node: ast.Import | ast.ImportFrom, file_str: str) -> ParsedEntity:
         """Parse an import statement."""
         if isinstance(node, ast.ImportFrom):
             import_names = [alias.name for alias in node.names]

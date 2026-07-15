@@ -69,7 +69,7 @@ class Tracer:
     """
 
     def __init__(self) -> None:
-        self._tracer = trace.get_tracer("intelliqx")
+        self.tracer = trace.get_tracer("intelliqx")
 
     @contextmanager
     def span(self, name: str, **attrs: Any):
@@ -85,7 +85,7 @@ class Tracer:
             A :class:`SpanProxy` for setting additional attributes
             and adding events.
         """
-        span = self._tracer.start_span(name, attributes=to_otel_attrs(attrs))
+        span = self.tracer.start_span(name, attributes=to_otel_attrs(attrs))
         start = time.monotonic()
         try:
             yield SpanProxy(span)
@@ -109,7 +109,7 @@ class SpanProxy:
     """
 
     def __init__(self, span: Any) -> None:
-        self._span = span
+        self.span = span
 
     def set_attribute(self, key: str, value: Any) -> None:
         """Attach a typed attribute to the span.
@@ -118,7 +118,7 @@ class SpanProxy:
             key: Attribute name (e.g. ``"tenant_id"``).
             value: Value; non-trivial types are stringified.
         """
-        self._span.set_attribute(key, to_otel_value(value))
+        self.span.set_attribute(key, to_otel_value(value))
 
     def add_event(self, name: str, **attrs: Any) -> None:
         """Add a timestamped event to the span.
@@ -127,7 +127,7 @@ class SpanProxy:
             name: Event name (e.g. ``"node_failed"``).
             **attrs: Event attributes.
         """
-        self._span.add_event(name, attributes=to_otel_attrs(attrs))
+        self.span.add_event(name, attributes=to_otel_attrs(attrs))
 
 
 def to_otel_attrs(attrs: dict[str, Any]) -> dict[str, Any]:
@@ -144,7 +144,7 @@ def to_otel_value(v: Any) -> Any:
     return str(v)
 
 
-_SINGLETON: Tracer | None = None
+SINGLETON: Tracer | None = None
 
 
 def get_tracer() -> Tracer:
@@ -154,15 +154,15 @@ def get_tracer() -> Tracer:
     configured on first call. Otherwise the tracer is a thin no-op
     wrapper that still records ``duration_ms`` on every span.
     """
-    global _SINGLETON
-    if _SINGLETON is None:
+    global SINGLETON
+    if SINGLETON is None:
         if os.environ.get("INTELLIQX_OTEL") == "1":
             configure_tracing()
-        _SINGLETON = Tracer()
-    return _SINGLETON
+        SINGLETON = Tracer()
+    return SINGLETON
 
 
 def reset_tracer() -> None:
     """Clear the singleton tracer (for tests)."""
-    global _SINGLETON
-    _SINGLETON = None
+    global SINGLETON
+    SINGLETON = None

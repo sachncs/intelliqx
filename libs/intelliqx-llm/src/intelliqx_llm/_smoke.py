@@ -82,7 +82,7 @@ def print_env(client: Any, args: argparse.Namespace) -> None:
     )
 
 
-async def _build_client(args: argparse.Namespace) -> tuple[Any, int]:
+async def build_client(args: argparse.Namespace) -> tuple[Any, int]:
     """Resolve the configured LLM client.
 
     Returns ``(client, exit_code)`` so callers can forward the
@@ -96,8 +96,8 @@ async def _build_client(args: argparse.Namespace) -> tuple[Any, int]:
         return None, 1
 
 
-async def _run_complete(args: argparse.Namespace) -> int:
-    client, rc = await _build_client(args)
+async def run_complete(args: argparse.Namespace) -> int:
+    client, rc = await build_client(args)
     if rc != 0:
         return rc
     if args.show_env:
@@ -127,8 +127,8 @@ async def _run_complete(args: argparse.Namespace) -> int:
     return 0
 
 
-async def _run_embed(args: argparse.Namespace) -> int:
-    client, rc = await _build_client(args)
+async def run_embed(args: argparse.Namespace) -> int:
+    client, rc = await build_client(args)
     if rc != 0:
         return rc
     if args.show_env:
@@ -149,7 +149,7 @@ async def _run_embed(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    runner = _run_embed if args.embed else _run_complete
+    runner = run_embed if args.embed else run_complete
     return asyncio.run(runner(args))
 
 

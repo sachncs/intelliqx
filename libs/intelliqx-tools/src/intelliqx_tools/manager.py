@@ -59,8 +59,8 @@ class ToolManager:
     def __init__(self, registry: ToolRegistry | None = None) -> None:
         self.registry = registry or ToolRegistry()
         # tool name -> handler callable
-        self._handlers: dict[str, ToolHandler] = {}
-        self._rate_limiter = RateLimiter()
+        self.handlers: dict[str, ToolHandler] = {}
+        self.rate_limiter = RateLimiter()
 
     def register_tool(self, definition: ToolDefinition, handler: ToolHandler) -> None:
         """Register a tool definition and its handler.
@@ -71,7 +71,7 @@ class ToolManager:
                 Signature: ``(payload: dict) -> Any``.
         """
         self.registry.register(definition)
-        self._handlers[definition.name] = handler
+        self.handlers[definition.name] = handler
 
     async def invoke(
         self, name: str, *, payload: dict[str, Any] | None = None
@@ -89,22 +89,22 @@ class ToolManager:
             the agent's main flow is never interrupted by a tool
             crash.
         """
-        if name not in self._handlers:
+        if name not in self.handlers:
             return ToolInvocationResult(
                 tool=name, status="not_found", error=f"No handler for {name!r}"
             )
         definition = self.registry.get(name)
         # The rate limiter blocks cooperatively until a token is
         # available; this is the only place the call may pause.
-        await self._rate_limiter.acquire(name, definition.rate_limit_per_minute)
+        await self.rate_limiter.acquire(name, definition.rate_limit_per_minute)
         try:
-            output = await self._handlers[name](payload or {})
+            output = await self.handlers[name](payload or {})
             return ToolInvocationResult(tool=name, status="ok", output=output)
         except Exception as e:
             return ToolInvocationResult(tool=name, status="error", error=f"{type(e).__name__}: {e}")
 
 
-_SINGLETON: ToolManager | None = None
+SINGLETON: ToolManager | None = None
 
 
 def get_tool_manager() -> ToolManager:
@@ -112,19 +112,19 @@ def get_tool_manager() -> ToolManager:
 
     Use :func:`reset_tool_manager` between tests for isolation.
     """
-    global _SINGLETON
-    if _SINGLETON is None:
-        _SINGLETON = ToolManager()
-    return _SINGLETON
+    global SINGLETON
+    if SINGLETON is None:
+        SINGLETON = ToolManager()
+    return SINGLETON
 
 
 def set_tool_manager(mgr: ToolManager) -> None:
     """Replace the singleton tool manager."""
-    global _SINGLETON
-    _SINGLETON = mgr
+    global SINGLETON
+    SINGLETON = mgr
 
 
 def reset_tool_manager() -> None:
     """Clear the singleton tool manager (for tests)."""
-    global _SINGLETON
-    _SINGLETON = None
+    global SINGLETON
+    SINGLETON = None

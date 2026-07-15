@@ -94,33 +94,29 @@ class SqliteVecIndex:
 
         import sqlite_vec
 
-        self.__dim = dim
-        self.__db_path = db_path or ":memory:"
-        self.__sqlite_vec = sqlite_vec
-        self.__conn = sqlite3.connect(self.__db_path, check_same_thread=False)
-        self.__conn.execute("PRAGMA journal_mode=WAL")
-        self.__conn.execute("PRAGMA synchronous=NORMAL")
-        self.__conn.enable_load_extension(True)
+        self.dim = dim
+        self.db_path = db_path or ":memory:"
+        self.sqlite_vec = sqlite_vec
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        self.conn.execute("PRAGMA journal_mode=WAL")
+        self.conn.execute("PRAGMA synchronous=NORMAL")
+        self.conn.enable_load_extension(True)
         for candidate in (
-            self.__sqlite_vec.loadable_path(),
-            self.__sqlite_vec.loadable_path() + ".dylib",
-            self.__sqlite_vec.loadable_path() + ".so",
+            self.sqlite_vec.loadable_path(),
+            self.sqlite_vec.loadable_path() + ".dylib",
+            self.sqlite_vec.loadable_path() + ".so",
         ):
             if os.path.exists(candidate):
-                self.__conn.load_extension(candidate)
+                self.conn.load_extension(candidate)
                 break
         else:
             raise RuntimeError(
-                f"sqlite-vec extension not found at {self.__sqlite_vec.loadable_path()}"
+                f"sqlite-vec extension not found at {self.sqlite_vec.loadable_path()}"
             )
-        self._write_lock = threading.Lock()
-        self._ensure_schema()
+        self.write_lock = threading.Lock()
+        self.ensure_schema()
 
-    @property
-    def dim(self) -> int:
-        return self.__dim
-
-    def _ensure_schema(self) -> None:
+    def ensure_schema(self) -> None:
         """Create tables if they don't exist.
 
         ``vec0`` is a virtual table; ``documents`` is a regular
@@ -128,8 +124,8 @@ class SqliteVecIndex:
         metadata updates don't require deleting+re-inserting the
         vector row.
         """
-        with self._write_lock:
-            self.__conn.execute("""
+        with self.write_lock:
+            self.conn.execute("""
                 CREATE TABLE IF NOT EXISTS documents (
                     id TEXT PRIMARY KEY,
                     tenant_id TEXT NOT NULL,
@@ -138,21 +134,21 @@ class SqliteVecIndex:
                     vector BLOB NOT NULL
                 )
                 """)
-            self.__conn.execute(f"""
+            self.conn.execute(f"""
                 CREATE VIRTUAL TABLE IF NOT EXISTS doc_index USING vec0(
                     embedding float[{self.dim}]
                 )
                 """)
-            self.__conn.execute(
+            self.conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_documents_tenant ON documents(tenant_id)"
             )
-            self.__conn.execute("""
+            self.conn.execute("""
                 CREATE TABLE IF NOT EXISTS _meta (
                     key TEXT PRIMARY KEY,
                     value TEXT NOT NULL
                 )
                 """)
-            cur = self.__conn.cursor()
+            cur = self.conn.cursor()
             existing_dim_row = cur.execute("SELECT value FROM _meta WHERE key = 'dim'").fetchone()
             if existing_dim_row and existing_dim_row[0] != str(self.dim):
                 raise ValueError(
@@ -162,7 +158,7 @@ class SqliteVecIndex:
             cur.execute(
                 "INSERT OR REPLACE INTO _meta (key, value) VALUES ('dim', ?)", (str(self.dim),)
             )
-            self.__conn.commit()
+            self.conn.commit()
 
     async def upsert(self, docs: Sequence[VectorDoc]) -> int:
         """Insert or update ``docs`` in the index.
@@ -172,8 +168,8 @@ class SqliteVecIndex:
         """
         if not docs:
             return 0
-        with self._write_lock:
-            cur = self.__conn.cursor()
+        with self.write_lock:
+            cur = self.conn.cursor()
             added = 0
             for d in docs:
                 if len(d.vector) != self.dim:
@@ -203,7 +199,7 @@ class SqliteVecIndex:
                     "INSERT INTO doc_index (rowid, embedding) VALUES (?, ?)", (rowid, packed)
                 )
                 added += 1
-            self.__conn.commit()
+            self.conn.commit()
         return added
 
     async def delete(self, ids: Sequence[str]) -> int:
@@ -214,8 +210,8 @@ class SqliteVecIndex:
         """
         if not ids:
             return 0
-        with self._write_lock:
-            cur = self.__conn.cursor()
+        with self.write_lock:
+            cur = self.conn.cursor()
             removed = 0
             for i in ids:
                 cur.execute(
@@ -224,7 +220,7 @@ class SqliteVecIndex:
                 )
                 cur.execute("DELETE FROM documents WHERE id = ?", (i,))
                 removed += cur.rowcount
-            self.__conn.commit()
+            self.conn.commit()
         return removed
 
     async def search(
@@ -252,7 +248,7 @@ class SqliteVecIndex:
         """
         if len(vector) != self.dim:
             raise ValueError(f"Vector dim mismatch: expected {self.dim}, got {len(vector)}")
-        cur = self.__conn.cursor()
+        cur = self.conn.cursor()
 
         # Step 1: Pre-filter — collect eligible rowids.
         eligible_sql = "SELECT rowid, id, tenant_id, metadata_json FROM documents"
@@ -314,7 +310,7 @@ class SqliteVecIndex:
 
     async def count(self, tenant_id: str | None = None) -> int:
         """Return the number of indexed documents (optionally per-tenant)."""
-        cur = self.__conn.cursor()
+        cur = self.conn.cursor()
         if tenant_id is None:
             cur.execute("SELECT COUNT(*) FROM documents")
         else:
@@ -323,7 +319,7 @@ class SqliteVecIndex:
 
     def close(self) -> None:
         """Close the underlying SQLite connection."""
-        self.__conn.close()
+        self.conn.close()
 
     def __del__(self) -> None:
         """Best-effort cleanup if the index is garbage-collected."""

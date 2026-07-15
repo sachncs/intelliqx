@@ -7,16 +7,16 @@ identical. The adapter does not abstract the IAM layer; the caller
 is responsible for the GCP service account attached to the
 deployment.
 
-Error handling pattern (``_try_init`` / ``_available``):
+Error handling pattern (``try_init`` / ``available``):
 
-* ``_try_init`` catches ``(ImportError, OSError)``. ``ImportError``
+* ``try_init`` catches ``(ImportError, OSError)``. ``ImportError``
   covers the absence of the ``redis`` package. ``OSError`` covers
   network-level failures during client construction (e.g. an
   unreachable Memorystore endpoint or DNS failure).
-* When ``_try_init`` returns ``False``, every public method raises
+* When ``try_init`` returns ``False``, every public method raises
   ``RuntimeError`` — no silent fallback to in-process state, which
   would lose state between processes in production.
-* When ``_try_init`` returns ``True`` but the endpoint is
+* When ``try_init`` returns ``True`` but the endpoint is
   unreachable at call time, the Redis ``ConnectionError`` propagates
   as-is so the orchestration layer can handle retries.
 """
@@ -41,10 +41,10 @@ class MemorystoreStateStore(StateStore):
         self.host = host
         self.port = port
         self.db = db
-        self._client: Any = None
-        self._available = self._try_init()
+        self.sdk: Any = None
+        self.available = self.try_init()
 
-    def _try_init(self) -> bool:
+    def try_init(self) -> bool:
         """Try to create an async Redis client connected to Memorystore.
 
         Returns:
@@ -55,7 +55,7 @@ class MemorystoreStateStore(StateStore):
         try:
             import redis.asyncio as aioredis  # type: ignore[import-not-found]
 
-            self._client = aioredis.Redis(host=self.host, port=self.port, db=self.db)
+            self.sdk = aioredis.Redis(host=self.host, port=self.port, db=self.db)
             return True
         except (ImportError, OSError):
             return False
@@ -73,9 +73,9 @@ class MemorystoreStateStore(StateStore):
             RuntimeError: If the Redis SDK is not installed or the
                 endpoint is unreachable.
         """
-        if not self._available:
+        if not self.available:
             raise RuntimeError("Memorystore requires redis SDK + endpoint")
-        return await self._client.get(key)
+        return await self.sdk.get(key)
 
     async def set(self, key: str, value, *, ttl_seconds: int | None = None) -> None:
         """Store ``value`` at ``key`` with optional TTL.
@@ -90,12 +90,12 @@ class MemorystoreStateStore(StateStore):
             RuntimeError: If the Redis SDK is not installed or the
                 endpoint is unreachable.
         """
-        if not self._available:
+        if not self.available:
             raise RuntimeError("Memorystore requires redis SDK + endpoint")
         if ttl_seconds is not None:
-            await self._client.set(key, value, ex=ttl_seconds)
+            await self.sdk.set(key, value, ex=ttl_seconds)
         else:
-            await self._client.set(key, value)
+            await self.sdk.set(key, value)
 
     async def delete(self, key: str) -> None:
         """Remove ``key`` from Memorystore.
@@ -106,9 +106,9 @@ class MemorystoreStateStore(StateStore):
         Args:
             key: Storage key to remove.
         """
-        if not self._available:
+        if not self.available:
             return
-        await self._client.delete(key)
+        await self.sdk.delete(key)
 
     async def incr(self, key: str, amount: int = 1) -> int:
         """Atomically increment an integer counter at ``key``.
@@ -127,9 +127,9 @@ class MemorystoreStateStore(StateStore):
             RuntimeError: If the Redis SDK is not installed or the
                 endpoint is unreachable.
         """
-        if not self._available:
+        if not self.available:
             raise RuntimeError("Memorystore requires redis SDK + endpoint")
-        return int(await self._client.incrby(key, amount))
+        return int(await self.sdk.incrby(key, amount))
 
     async def expire(self, key: str, ttl_seconds: int) -> None:
         """Set a TTL on an existing key.
@@ -142,9 +142,9 @@ class MemorystoreStateStore(StateStore):
             RuntimeError: If the Redis SDK is not installed or the
                 endpoint is unreachable.
         """
-        if not self._available:
+        if not self.available:
             raise RuntimeError("Memorystore requires redis SDK + endpoint")
-        await self._client.expire(key, ttl_seconds)
+        await self.sdk.expire(key, ttl_seconds)
 
     async def keys(self, prefix: str):
         """Yield every key that starts with ``prefix``.
@@ -163,9 +163,9 @@ class MemorystoreStateStore(StateStore):
             RuntimeError: If the Redis SDK is not installed or the
                 endpoint is unreachable.
         """
-        if not self._available:
+        if not self.available:
             raise RuntimeError("Memorystore requires redis SDK + endpoint")
-        async for k in self._client.scan_iter(match=f"{prefix}*"):
+        async for k in self.sdk.scan_iter(match=f"{prefix}*"):
             yield k
 
     async def hset(self, key: str, field: str, value: str) -> None:
@@ -180,9 +180,9 @@ class MemorystoreStateStore(StateStore):
             RuntimeError: If the Redis SDK is not installed or the
                 endpoint is unreachable.
         """
-        if not self._available:
+        if not self.available:
             raise RuntimeError("Memorystore requires redis SDK + endpoint")
-        await self._client.hset(key, field, value)
+        await self.sdk.hset(key, field, value)
 
     async def hgetall(self, key: str) -> dict:
         """Return all hash fields and values under ``key``.
@@ -198,9 +198,9 @@ class MemorystoreStateStore(StateStore):
             RuntimeError: If the Redis SDK is not installed or the
                 endpoint is unreachable.
         """
-        if not self._available:
+        if not self.available:
             raise RuntimeError("Memorystore requires redis SDK + endpoint")
-        return await self._client.hgetall(key)
+        return await self.sdk.hgetall(key)
 
     async def lpush(self, key: str, value: str) -> int:
         """Push ``value`` to the head of the list at ``key``.
@@ -216,9 +216,9 @@ class MemorystoreStateStore(StateStore):
             RuntimeError: If the Redis SDK is not installed or the
                 endpoint is unreachable.
         """
-        if not self._available:
+        if not self.available:
             raise RuntimeError("Memorystore requires redis SDK + endpoint")
-        return int(await self._client.lpush(key, value))
+        return int(await self.sdk.lpush(key, value))
 
     async def rpop(self, key: str):
         """Pop and return the tail element of the list at ``key``.
@@ -234,6 +234,6 @@ class MemorystoreStateStore(StateStore):
             RuntimeError: If the Redis SDK is not installed or the
                 endpoint is unreachable.
         """
-        if not self._available:
+        if not self.available:
             raise RuntimeError("Memorystore requires redis SDK + endpoint")
-        return await self._client.rpop(key)
+        return await self.sdk.rpop(key)

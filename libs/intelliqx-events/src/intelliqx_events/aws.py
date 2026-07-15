@@ -17,18 +17,18 @@ The adapter is intentionally minimal: no batching, no partial
 batches, no native consumer. The compute runtime is responsible for
 draining SQS in production.
 
-Error handling pattern (``_try_init_aws`` / ``_aws_available``):
+Error handling pattern (``try_init_aws`` / ``aws_available``):
 
-* ``_try_init_aws`` catches ``(ImportError, OSError)``.
+* ``try_init_aws`` catches ``(ImportError, OSError)``.
   ``ImportError`` covers the absence of ``boto3``. ``OSError``
   covers credential resolution failures at client-creation time
   (missing AWS credentials, invalid region, or network errors).
-* When ``_aws_available`` is ``False``, ``publish`` falls through
-  to an in-process fan-out using the ``_subscriptions`` table (or
+* When ``aws_available`` is ``False``, ``publish`` falls through
+  to an in-process fan-out using the ``subscriptions`` table (or
   an explicit ``fallback`` bus if one was provided). This is
   **graceful degradation** — local dev and CI keep working without
   AWS credentials.
-* The ``uses_aws`` property combines ``_aws_available`` with the
+* The ``uses_aws`` property combines ``aws_available`` with the
   absence of an explicit ``fallback``. When a fallback is provided,
   the adapter delegates to it even if AWS is available, giving
   callers full control over the routing.
@@ -70,12 +70,12 @@ class AWSEventBridgeBus(EventBus):
     ) -> None:
         self.bus_name = bus_name
         self.region = region or os.environ.get("AWS_REGION", "us-east-1")
-        self.__client: Any = None
-        self.__subscriptions: dict[str, list[EventHandler]] = {}
-        self.__fallback = fallback
-        self.__aws_available = self._try_init_aws()
+        self.client: Any = None
+        self.subscriptions: dict[str, list[EventHandler]] = {}
+        self.fallback = fallback
+        self.aws_available = self.try_init_aws()
 
-    def _try_init_aws(self) -> bool:
+    def try_init_aws(self) -> bool:
         """Try to instantiate the boto3 EventBridge client.
 
         Returns:
@@ -85,7 +85,7 @@ class AWSEventBridgeBus(EventBus):
         try:
             import boto3  # type: ignore
 
-            self.__client = boto3.client("events", region_name=self.region)
+            self.client = boto3.client("events", region_name=self.region)
             return True
         except (ImportError, OSError):
             return False
@@ -97,7 +97,7 @@ class AWSEventBridgeBus(EventBus):
         The bus is considered "using AWS" only when the SDK is
         available *and* no explicit fallback was provided.
         """
-        return self.__aws_available and self.__fallback is None
+        return self.aws_available and self.fallback is None
 
     async def publish(self, topic: str, event: BaseModel) -> str:
         """Publish ``event`` to ``topic`` via EventBridge.
@@ -107,12 +107,12 @@ class AWSEventBridgeBus(EventBus):
         credentials.
         """
         if not self.uses_aws:
-            if self.__fallback is not None:
-                return await self.__fallback.publish(topic, event)
+            if self.fallback is not None:
+                return await self.fallback.publish(topic, event)
             # Local: in-process fan-out using the in-memory handler
             # list. Useful for running the bus adapter without an
             # explicit fallback configured.
-            for handler in list(self.__subscriptions.get(topic, [])):
+            for handler in list(self.subscriptions.get(topic, [])):
                 try:
                     res = handler.handle(event)
                     if asyncio.iscoroutine(res):
@@ -137,7 +137,7 @@ class AWSEventBridgeBus(EventBus):
         # The boto3 ``put_events`` call is blocking and can take a
         # few hundred ms; offload to a thread to keep the event
         # loop responsive.
-        await asyncio.to_thread(self.__client.put_events, Entries=[entry])
+        await asyncio.to_thread(self.client.put_events, Entries=[entry])
         # Return a slice of the serialised detail as a synthetic id
         # when the event id isn't recoverable (e.g. non-IntelliqX event).
         return entry["Detail"][:36]
@@ -147,7 +147,7 @@ class AWSEventBridgeBus(EventBus):
     ) -> str:
         """Register a handler.
 
-        In AWS mode the in-process ``_subscriptions`` table is **not**
+        In AWS mode the in-process ``subscriptions`` table is **not**
         consulted for delivery (EventBridge is the source of truth),
         but it is still maintained so that ``get_dlq``-style
         introspection works in dev.
@@ -156,8 +156,8 @@ class AWSEventBridgeBus(EventBus):
             handler = EventHandler(name=handler.__name__, callback=handler, dlq=dlq)
         else:
             handler = handler.model_copy(update={"dlq": dlq or handler.dlq})
-        self.__subscriptions.setdefault(topic, []).append(handler)
-        return f"aws-{topic}-{len(self.__subscriptions[topic])}"
+        self.subscriptions.setdefault(topic, []).append(handler)
+        return f"aws-{topic}-{len(self.subscriptions[topic])}"
 
     async def start(self) -> None:
         """No-op: AWS delivery is push-based via EventBridge."""

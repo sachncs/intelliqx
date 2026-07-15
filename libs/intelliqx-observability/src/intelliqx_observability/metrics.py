@@ -36,8 +36,8 @@ class Counter:
         self.name = name
         self.description = description
         # label tuple -> running total
-        self._values: dict[tuple[tuple[str, str], ...], float] = defaultdict(float)
-        self._lock = threading.Lock()
+        self.values: dict[tuple[tuple[str, str], ...], float] = defaultdict(float)
+        self.lock = threading.Lock()
 
     def inc(self, amount: float = 1.0, **labels: Any) -> None:
         """Add ``amount`` (default 1.0) to the counter.
@@ -50,8 +50,8 @@ class Counter:
         # insertion order, so ``inc(tenant="t1")`` and
         # ``inc(tenant="t1", other="x")`` produce stable keys.
         key = tuple(sorted(labels.items()))
-        with self._lock:
-            self._values[key] += amount
+        with self.lock:
+            self.values[key] += amount
 
     def value(self, **labels: Any) -> float:
         """Return the current counter value for the given label set.
@@ -64,7 +64,7 @@ class Counter:
             recorded for that label set.
         """
         key = tuple(sorted(labels.items()))
-        return self._values.get(key, 0.0)
+        return self.values.get(key, 0.0)
 
     def snapshot(self) -> dict[str, float]:
         """Return a flat ``{label_key: value}`` dict.
@@ -72,10 +72,10 @@ class Counter:
         Each entry's key is a Prometheus-style exposition line
         (``"agent_invocations_total{tenant=t1}"``).
         """
-        with self._lock:
+        with self.lock:
             return {
                 f"{self.name}{{{','.join(f'{k}={v}' for k, v in k)}}}": v
-                for k, v in self._values.items()
+                for k, v in self.values.items()
             }
 
 
@@ -90,8 +90,8 @@ class Gauge:
     def __init__(self, name: str, description: str = "") -> None:
         self.name = name
         self.description = description
-        self._values: dict[tuple[tuple[str, str], ...], float] = {}
-        self._lock = threading.Lock()
+        self.values: dict[tuple[tuple[str, str], ...], float] = {}
+        self.lock = threading.Lock()
 
     def set(self, value: float, **labels: Any) -> None:
         """Set the gauge to ``value`` for the given label set.
@@ -101,8 +101,8 @@ class Gauge:
             **labels: Optional label dimensions.
         """
         key = tuple(sorted(labels.items()))
-        with self._lock:
-            self._values[key] = value
+        with self.lock:
+            self.values[key] = value
 
     def value(self, **labels: Any) -> float:
         """Return the current gauge value for the given label set.
@@ -110,14 +110,14 @@ class Gauge:
         Returns 0.0 if the gauge has not been set.
         """
         key = tuple(sorted(labels.items()))
-        return self._values.get(key, 0.0)
+        return self.values.get(key, 0.0)
 
     def snapshot(self) -> dict[str, float]:
         """Return a flat ``{label_key: value}`` dict (Prometheus-style)."""
-        with self._lock:
+        with self.lock:
             return {
                 f"{self.name}{{{','.join(f'{k}={v}' for k, v in k)}}}": v
-                for k, v in self._values.items()
+                for k, v in self.values.items()
             }
 
 
@@ -138,8 +138,8 @@ class Histogram:
     def __init__(self, name: str, description: str = "") -> None:
         self.name = name
         self.description = description
-        self._samples: dict[tuple[tuple[str, str], ...], list[float]] = defaultdict(list)
-        self._lock = threading.Lock()
+        self.samples: dict[tuple[tuple[str, str], ...], list[float]] = defaultdict(list)
+        self.lock = threading.Lock()
 
     def observe(self, value: float, **labels: Any) -> None:
         """Record a single observation.
@@ -149,8 +149,8 @@ class Histogram:
             **labels: Optional label dimensions.
         """
         key = tuple(sorted(labels.items()))
-        with self._lock:
-            self._samples[key].append(value)
+        with self.lock:
+            self.samples[key].append(value)
 
     @contextmanager
     def time(self, **labels: Any):
@@ -172,8 +172,8 @@ class Histogram:
         computation is the standard nearest-rank method.
         """
         out: dict[str, dict[str, float]] = {}
-        with self._lock:
-            for k, samples in self._samples.items():
+        with self.lock:
+            for k, samples in self.samples.items():
                 if not samples:
                     continue
                 sorted_s = sorted(samples)
@@ -211,10 +211,10 @@ class MetricsRegistry:
     """
 
     def __init__(self) -> None:
-        self._counters: dict[str, Counter] = {}
-        self._gauges: dict[str, Gauge] = {}
-        self._histograms: dict[str, Histogram] = {}
-        self._lock = threading.Lock()
+        self.counters: dict[str, Counter] = {}
+        self.gauges: dict[str, Gauge] = {}
+        self.histograms: dict[str, Histogram] = {}
+        self.lock = threading.Lock()
 
     def counter(self, name: str, description: str = "") -> Counter:
         """Get or create a counter by name.
@@ -223,24 +223,24 @@ class MetricsRegistry:
             name: Counter name.
             description: Optional human-readable description.
         """
-        with self._lock:
-            if name not in self._counters:
-                self._counters[name] = Counter(name, description)
-            return self._counters[name]
+        with self.lock:
+            if name not in self.counters:
+                self.counters[name] = Counter(name, description)
+            return self.counters[name]
 
     def gauge(self, name: str, description: str = "") -> Gauge:
         """Get or create a gauge by name."""
-        with self._lock:
-            if name not in self._gauges:
-                self._gauges[name] = Gauge(name, description)
-            return self._gauges[name]
+        with self.lock:
+            if name not in self.gauges:
+                self.gauges[name] = Gauge(name, description)
+            return self.gauges[name]
 
     def histogram(self, name: str, description: str = "") -> Histogram:
         """Get or create a histogram by name."""
-        with self._lock:
-            if name not in self._histograms:
-                self._histograms[name] = Histogram(name, description)
-            return self._histograms[name]
+        with self.lock:
+            if name not in self.histograms:
+                self.histograms[name] = Histogram(name, description)
+            return self.histograms[name]
 
     def snapshot(self) -> dict[str, Any]:
         """Return the full registry snapshot.
@@ -251,9 +251,9 @@ class MetricsRegistry:
             per-label-set dict.
         """
         return {
-            "counters": {n: c.snapshot() for n, c in self._counters.items()},
-            "gauges": {n: g.snapshot() for n, g in self._gauges.items()},
-            "histograms": {n: h.snapshot() for n, h in self._histograms.items()},
+            "counters": {n: c.snapshot() for n, c in self.counters.items()},
+            "gauges": {n: g.snapshot() for n, g in self.gauges.items()},
+            "histograms": {n: h.snapshot() for n, h in self.histograms.items()},
         }
 
     def reset(self) -> None:
@@ -262,26 +262,26 @@ class MetricsRegistry:
         Tests call this between cases to keep the global registry
         clean. Production code should not call it.
         """
-        with self._lock:
-            self._counters.clear()
-            self._gauges.clear()
-            self._histograms.clear()
+        with self.lock:
+            self.counters.clear()
+            self.gauges.clear()
+            self.histograms.clear()
 
 
-_SINGLETON: MetricsRegistry | None = None
+SINGLETON: MetricsRegistry | None = None
 
 
 def get_metrics() -> MetricsRegistry:
     """Return the process-wide :class:`MetricsRegistry`."""
-    global _SINGLETON
-    if _SINGLETON is None:
-        _SINGLETON = MetricsRegistry()
-    return _SINGLETON
+    global SINGLETON
+    if SINGLETON is None:
+        SINGLETON = MetricsRegistry()
+    return SINGLETON
 
 
 def reset_metrics() -> None:
     """Clear the singleton registry (for tests)."""
-    global _SINGLETON
-    if _SINGLETON is not None:
-        _SINGLETON.reset()
-    _SINGLETON = None
+    global SINGLETON
+    if SINGLETON is not None:
+        SINGLETON.reset()
+    SINGLETON = None

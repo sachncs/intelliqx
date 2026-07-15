@@ -5,18 +5,18 @@ HTTP-style call) or ``.spawn()`` (fire-and-forget). The runtime
 expects each agent to be deployed as a Modal function in the same
 app, named after the agent's registry key.
 
-Error handling pattern (``_try_init`` / ``_available``):
+Error handling pattern (``try_init`` / ``available``):
 
-* ``_try_init`` catches ``(ImportError, OSError)``. ``ImportError``
+* ``try_init`` catches ``(ImportError, OSError)``. ``ImportError``
   covers the absence of the ``modal`` SDK. ``OSError`` covers
   failures when constructing the ``modal.App`` handle (e.g. an
   invalid ``MODAL_TOKEN_ID`` or a network error reaching the Modal
   API).
-* When ``_try_init`` returns ``False``, ``invoke`` returns an
+* When ``try_init`` returns ``False``, ``invoke`` returns an
   ``InvocationResponse`` with ``status="not_found"`` and a
   descriptive error. This is **graceful degradation** — Modal-less
   CI and local dev keep working for the rest of the platform.
-* When ``_try_init`` returns ``True`` but a specific agent function
+* When ``try_init`` returns ``True`` but a specific agent function
   is not registered, ``invoke`` also returns ``status="not_found"``.
   When the Modal remote call itself fails, the exception is caught
   and returned as ``status="error"`` so the orchestration loop
@@ -41,16 +41,16 @@ class ModalComputeRuntime(ComputeRuntime):
 
     def __init__(self, app_name: str = "intelliqx") -> None:
         self.app_name = app_name
-        self.__modal_app: Any = None
+        self.modal_app: Any = None
         # agent_name -> modal.Function handle
-        self.__functions: dict[str, Any] = {}
-        self.__available = self._try_init()
+        self.functions: dict[str, Any] = {}
+        self.available = self.try_init()
 
-    def _try_init(self) -> bool:
+    def try_init(self) -> bool:
         try:
             import modal  # type: ignore
 
-            self.__modal_app = modal.App(self.app_name)
+            self.modal_app = modal.App(self.app_name)
             return True
         except (ImportError, OSError):
             return False
@@ -67,7 +67,7 @@ class ModalComputeRuntime(ComputeRuntime):
             InvocationResponse with status ``"ok"``, ``"error"``,
             or ``"not_found"``.
         """
-        if not self.__available or request.agent_name not in self.__functions:
+        if not self.available or request.agent_name not in self.functions:
             return InvocationResponse(
                 agent_name=request.agent_name,
                 output={},
@@ -75,7 +75,7 @@ class ModalComputeRuntime(ComputeRuntime):
                 status="not_found",
                 error=f"No modal function registered for {request.agent_name}",
             )
-        fn = self.__functions[request.agent_name]
+        fn = self.functions[request.agent_name]
         start = time.monotonic()
         try:
             # ``.remote`` is blocking; offload to a thread.
@@ -101,7 +101,7 @@ class ModalComputeRuntime(ComputeRuntime):
         must already be deployed (``modal deploy``); this method
         does not provision it.
         """
-        if not self.__available:
+        if not self.available:
             return
         import modal
 
@@ -109,4 +109,4 @@ class ModalComputeRuntime(ComputeRuntime):
         # (app, function-name). ``create_if_missing`` is a
         # no-op for functions that already exist.
         fn = modal.Function.from_name(self.app_name, agent_name, create_if_missing=True)
-        self.__functions[agent_name] = fn
+        self.functions[agent_name] = fn

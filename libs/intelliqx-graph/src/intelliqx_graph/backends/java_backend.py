@@ -17,7 +17,7 @@ class JavaBackend(CodeBackend):
 
     def generate(self, graph: SoftwareGraph) -> dict[str, str]:
         files: dict[str, str] = {}
-        nodes_by_type = self._classify_nodes(graph)
+        nodes_by_type = self.classify_nodes(graph)
 
         package_nodes = nodes_by_type.get(NodeType.PACKAGE, [])
         module_nodes = nodes_by_type.get(NodeType.MODULE, [])
@@ -27,62 +27,62 @@ class JavaBackend(CodeBackend):
         datamodel_nodes = nodes_by_type.get(NodeType.DATAMODEL, [])
 
         if not package_nodes and not module_nodes:
-            pkg = self._to_java_package(graph.repository.name)
-            file_path = f"src/main/java/{pkg.replace('.', '/')}/{self._to_pascal_case(graph.repository.name)}.java"
-            files[file_path] = self._generate_single_file(
+            pkg = self.to_java_package(graph.repository.name)
+            file_path = f"src/main/java/{pkg.replace('.', '/')}/{self.to_pascal_case(graph.repository.name)}.java"
+            files[file_path] = self.generate_single_file(
                 graph, pkg, class_nodes, function_nodes, method_nodes, datamodel_nodes
             )
             return files
 
         for pkg_node in package_nodes:
-            pkg = self._to_java_package(pkg_node.name)
-            pkg_classes = [c for c in class_nodes if self._is_child_of(c, pkg_node, graph)]
-            pkg_functions = [f for f in function_nodes if self._is_child_of(f, pkg_node, graph)]
-            pkg_methods = [m for m in method_nodes if self._is_child_of(m, pkg_node, graph)]
-            pkg_datamodels = [d for d in datamodel_nodes if self._is_child_of(d, pkg_node, graph)]
+            pkg = self.to_java_package(pkg_node.name)
+            pkg_classes = [c for c in class_nodes if self.is_child_of(c, pkg_node, graph)]
+            pkg_functions = [f for f in function_nodes if self.is_child_of(f, pkg_node, graph)]
+            pkg_methods = [m for m in method_nodes if self.is_child_of(m, pkg_node, graph)]
+            pkg_datamodels = [d for d in datamodel_nodes if self.is_child_of(d, pkg_node, graph)]
 
             for cls in pkg_classes:
-                file_path = f"src/main/java/{pkg.replace('.', '/')}/{self._to_pascal_case(cls.name)}.java"
-                cls_methods = [m for m in pkg_methods if self._is_child_of(m, cls, graph)]
-                files[file_path] = self._generate_class_file(
+                file_path = f"src/main/java/{pkg.replace('.', '/')}/{self.to_pascal_case(cls.name)}.java"
+                cls_methods = [m for m in pkg_methods if self.is_child_of(m, cls, graph)]
+                files[file_path] = self.generate_class_file(
                     graph, pkg, cls, cls_methods
                 )
 
             for dm in pkg_datamodels:
-                file_path = f"src/main/java/{pkg.replace('.', '/')}/{self._to_pascal_case(dm.name)}.java"
-                files[file_path] = self._generate_record_file(graph, pkg, dm)
+                file_path = f"src/main/java/{pkg.replace('.', '/')}/{self.to_pascal_case(dm.name)}.java"
+                files[file_path] = self.generate_record_file(graph, pkg, dm)
 
             if pkg_functions and not pkg_classes:
-                file_path = f"src/main/java/{pkg.replace('.', '/')}/{self._to_pascal_case(graph.repository.name)}App.java"
-                files[file_path] = self._generate_utility_class(
+                file_path = f"src/main/java/{pkg.replace('.', '/')}/{self.to_pascal_case(graph.repository.name)}App.java"
+                files[file_path] = self.generate_utility_class(
                     graph, pkg, pkg_functions
                 )
 
         orphans_cls = [
             c for c in class_nodes
-            if not any(self._is_child_of(c, p, graph) for p in package_nodes)
+            if not any(self.is_child_of(c, p, graph) for p in package_nodes)
         ]
         for cls in orphans_cls:
-            pkg = self._to_java_package(graph.repository.name)
-            file_path = f"src/main/java/{pkg.replace('.', '/')}/{self._to_pascal_case(cls.name)}.java"
+            pkg = self.to_java_package(graph.repository.name)
+            file_path = f"src/main/java/{pkg.replace('.', '/')}/{self.to_pascal_case(cls.name)}.java"
             if file_path not in files:
                 orphans_methods = [
-                    m for m in method_nodes if self._is_child_of(m, cls, graph)
+                    m for m in method_nodes if self.is_child_of(m, cls, graph)
                 ]
-                files[file_path] = self._generate_class_file(
+                files[file_path] = self.generate_class_file(
                     graph, pkg, cls, orphans_methods
                 )
 
         return files
 
-    def _classify_nodes(self, graph: SoftwareGraph) -> dict[NodeType, list[SGIRNode]]:
+    def classify_nodes(self, graph: SoftwareGraph) -> dict[NodeType, list[SGIRNode]]:
         classified: dict[NodeType, list[SGIRNode]] = {}
         for layer_graph in graph.layers.values():
             for node in layer_graph.nodes:
                 classified.setdefault(node.node_type, []).append(node)
         return classified
 
-    def _is_child_of(self, child: SGIRNode, parent: SGIRNode, graph: SoftwareGraph) -> bool:
+    def is_child_of(self, child: SGIRNode, parent: SGIRNode, graph: SoftwareGraph) -> bool:
         for layer_graph in graph.layers.values():
             for edge in layer_graph.edges:
                 if edge.source == parent.id and edge.target == child.id:
@@ -95,20 +95,20 @@ class JavaBackend(CodeBackend):
             )
         return False
 
-    def _to_java_package(self, name: str) -> str:
+    def to_java_package(self, name: str) -> str:
         return name.replace("-", "").replace("_", "").replace(" ", "").replace(".", "").lower()
 
-    def _to_pascal_case(self, name: str) -> str:
+    def to_pascal_case(self, name: str) -> str:
         parts = name.replace("-", " ").replace("_", " ").split()
         return "".join(p.capitalize() for p in parts)
 
-    def _to_camel_case(self, name: str) -> str:
-        pascal = self._to_pascal_case(name)
+    def to_camel_case(self, name: str) -> str:
+        pascal = self.to_pascal_case(name)
         if not pascal:
             return pascal
         return pascal[0].lower() + pascal[1:]
 
-    def _generate_single_file(
+    def generate_single_file(
         self,
         graph: SoftwareGraph,
         pkg: str,
@@ -118,20 +118,20 @@ class JavaBackend(CodeBackend):
         datamodels: list[SGIRNode],
     ) -> str:
         sections: list[str] = [f"package {pkg};"]
-        imports = self._collect_imports(graph)
+        imports = self.collect_imports(graph)
         if imports:
             sections.append("\n".join(imports))
         for dm in datamodels:
-            sections.append(self._generate_record(graph, pkg, dm))
+            sections.append(self.generate_record(graph, pkg, dm))
         for cls in classes:
-            cls_methods = [m for m in methods if self._is_child_of(m, cls, graph)]
-            sections.append(self._generate_class(graph, pkg, cls, cls_methods))
+            cls_methods = [m for m in methods if self.is_child_of(m, cls, graph)]
+            sections.append(self.generate_class(graph, pkg, cls, cls_methods))
         if functions:
-            class_name = self._to_pascal_case(graph.repository.name) + "App"
-            sections.append(self._generate_utility_class_body(pkg, class_name, functions))
+            class_name = self.to_pascal_case(graph.repository.name) + "App"
+            sections.append(self.generate_utility_class_body(pkg, class_name, functions))
         return self.format_code("\n\n".join(sections))
 
-    def _generate_class_file(
+    def generate_class_file(
         self,
         graph: SoftwareGraph,
         pkg: str,
@@ -139,45 +139,45 @@ class JavaBackend(CodeBackend):
         methods: list[SGIRNode],
     ) -> str:
         sections: list[str] = [f"package {pkg};"]
-        imports = self._collect_imports(graph)
+        imports = self.collect_imports(graph)
         if imports:
             sections.append("\n".join(imports))
-        sections.append(self._generate_class(graph, pkg, cls, methods))
+        sections.append(self.generate_class(graph, pkg, cls, methods))
         return self.format_code("\n\n".join(sections))
 
-    def _generate_record_file(
+    def generate_record_file(
         self,
         graph: SoftwareGraph,
         pkg: str,
         dm: SGIRNode,
     ) -> str:
         sections: list[str] = [f"package {pkg};"]
-        imports = self._collect_imports(graph)
+        imports = self.collect_imports(graph)
         if imports:
             sections.append("\n".join(imports))
-        sections.append(self._generate_record(graph, pkg, dm))
+        sections.append(self.generate_record(graph, pkg, dm))
         return self.format_code("\n\n".join(sections))
 
-    def _generate_class(
+    def generate_class(
         self,
         graph: SoftwareGraph,
         pkg: str,
         cls: SGIRNode,
         methods: list[SGIRNode],
     ) -> str:
-        class_name = self._to_pascal_case(cls.name)
+        class_name = self.to_pascal_case(cls.name)
         parts = [f"public class {class_name} {{"]
         if cls.purpose:
             parts.append(f"    /** {cls.purpose} */")
         for inp in cls.inputs:
-            field = self._to_java_field(inp)
+            field = self.to_java_field(inp)
             if field:
                 parts.append(f"    private {field};")
         if cls.inputs:
             parts.append("")
-            params = ", ".join(self._to_java_constructor_param(f) for f in cls.inputs)
+            params = ", ".join(self.to_java_constructor_param(f) for f in cls.inputs)
             assignments = "\n".join(
-                f"        this.{self._to_camel_case(f.split(':')[0].strip())} = {self._to_camel_case(f.split(':')[0].strip())};"
+                f"        this.{self.to_camel_case(f.split(':')[0].strip())} = {self.to_camel_case(f.split(':')[0].strip())};"
                 for f in cls.inputs
             )
             parts.append(f"    public {class_name}({params}) {{")
@@ -185,31 +185,31 @@ class JavaBackend(CodeBackend):
             parts.append("    }")
         for method in methods:
             parts.append("")
-            parts.append(self._generate_method(method))
+            parts.append(self.generate_method(method))
         parts.append("}")
         return "\n".join(parts)
 
-    def _generate_record(
+    def generate_record(
         self,
         graph: SoftwareGraph,
         pkg: str,
         dm: SGIRNode,
     ) -> str:
-        record_name = self._to_pascal_case(dm.name)
-        params = ", ".join(self._to_java_record_param(f) for f in dm.inputs)
+        record_name = self.to_pascal_case(dm.name)
+        params = ", ".join(self.to_java_record_param(f) for f in dm.inputs)
         parts = [f"public record {record_name}({params}) {{}}"]
         return "\n".join(parts)
 
-    def _generate_utility_class(
+    def generate_utility_class(
         self,
         graph: SoftwareGraph,
         pkg: str,
         functions: list[SGIRNode],
     ) -> str:
-        class_name = self._to_pascal_case(graph.repository.name) + "App"
-        return self._generate_utility_class_body(pkg, class_name, functions)
+        class_name = self.to_pascal_case(graph.repository.name) + "App"
+        return self.generate_utility_class_body(pkg, class_name, functions)
 
-    def _generate_utility_class_body(
+    def generate_utility_class_body(
         self,
         pkg: str,
         class_name: str,
@@ -219,60 +219,60 @@ class JavaBackend(CodeBackend):
         parts.append(f"    private {class_name}() {{}}")
         for func in functions:
             parts.append("")
-            parts.append(self._generate_static_method(func))
+            parts.append(self.generate_static_method(func))
         parts.append("}")
         return "\n".join(parts)
 
-    def _generate_method(self, method: SGIRNode) -> str:
-        method_name = self._to_camel_case(method.name)
-        params = self._to_java_params(method)
-        returns = self._to_java_return_type(method)
+    def generate_method(self, method: SGIRNode) -> str:
+        method_name = self.to_camel_case(method.name)
+        params = self.to_java_params(method)
+        returns = self.to_java_return_type(method)
         sig = f"    public {returns} {method_name}({params}) {{"
-        body = indent(self._generate_body_java(method), "        ")
+        body = indent(self.generate_body_java(method), "        ")
         return f"{sig}\n{body}\n    }}"
 
-    def _generate_static_method(self, func: SGIRNode) -> str:
-        func_name = self._to_camel_case(func.name)
-        params = self._to_java_params(func)
-        returns = self._to_java_return_type(func)
+    def generate_static_method(self, func: SGIRNode) -> str:
+        func_name = self.to_camel_case(func.name)
+        params = self.to_java_params(func)
+        returns = self.to_java_return_type(func)
         sig = f"    public static {returns} {func_name}({params}) {{"
-        body = indent(self._generate_body_java(func), "        ")
+        body = indent(self.generate_body_java(func), "        ")
         return f"{sig}\n{body}\n    }}"
 
-    def _to_java_params(self, node: SGIRNode) -> str:
+    def to_java_params(self, node: SGIRNode) -> str:
         params = []
         for inp in node.inputs:
             parts = inp.split(":")
-            name = self._to_camel_case(parts[0].strip())
+            name = self.to_camel_case(parts[0].strip())
             if len(parts) > 1:
-                java_type = self._map_java_type(parts[1].strip())
+                java_type = self.map_java_type(parts[1].strip())
                 params.append(f"{java_type} {name}")
             else:
                 params.append(f"Object {name}")
         return ", ".join(params)
 
-    def _to_java_return_type(self, node: SGIRNode) -> str:
+    def to_java_return_type(self, node: SGIRNode) -> str:
         if not node.outputs:
             return "void"
         if len(node.outputs) == 1:
-            return self._map_java_type(node.outputs[0].strip())
+            return self.map_java_type(node.outputs[0].strip())
         return "Object"
 
-    def _to_java_field(self, inp: str) -> str:
+    def to_java_field(self, inp: str) -> str:
         parts = inp.split(":")
-        name = self._to_camel_case(parts[0].strip())
+        name = self.to_camel_case(parts[0].strip())
         if len(parts) > 1:
-            java_type = self._map_java_type(parts[1].strip())
+            java_type = self.map_java_type(parts[1].strip())
             return f"{java_type} {name}"
         return f"Object {name}"
 
-    def _to_java_constructor_param(self, inp: str) -> str:
-        return self._to_java_field(inp)
+    def to_java_constructor_param(self, inp: str) -> str:
+        return self.to_java_field(inp)
 
-    def _to_java_record_param(self, inp: str) -> str:
-        return self._to_java_field(inp)
+    def to_java_record_param(self, inp: str) -> str:
+        return self.to_java_field(inp)
 
-    def _map_java_type(self, type_hint: str) -> str:
+    def map_java_type(self, type_hint: str) -> str:
         mapping = {
             "str": "String",
             "string": "String",
@@ -288,9 +288,9 @@ class JavaBackend(CodeBackend):
             "None": "void",
             "void": "void",
         }
-        return mapping.get(type_hint, self._to_pascal_case(type_hint))
+        return mapping.get(type_hint, self.to_pascal_case(type_hint))
 
-    def _collect_imports(self, graph: SoftwareGraph) -> list[str]:
+    def collect_imports(self, graph: SoftwareGraph) -> list[str]:
         seen: set[str] = set()
         imports: list[str] = []
         for layer_graph in graph.layers.values():
@@ -302,5 +302,5 @@ class JavaBackend(CodeBackend):
                         imports.append(f"import {source_node.name};")
         return imports
 
-    def _generate_body_java(self, node: SGIRNode) -> str:
+    def generate_body_java(self, node: SGIRNode) -> str:
         return "throw new UnsupportedOperationException();"

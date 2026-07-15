@@ -79,28 +79,28 @@ class SecurityAgent:
     SEVERITY_VALUES: ClassVar[dict[str, float]] = {"high": 10.0, "medium": 5.0, "low": 1.0}
 
     def __init__(self, graph_index: GraphIndex) -> None:
-        self._index = graph_index
+        self.index = graph_index
 
     def analyze(self) -> SecurityReport:
-        security_graph = self._index.get_graph(GraphLayer.SECURITY)
-        data_flow_graph = self._index.get_graph(GraphLayer.DATA_FLOW)
-        call_graph = self._index.get_graph(GraphLayer.CALL)
+        security_graph = self.index.get_graph(GraphLayer.SECURITY)
+        data_flow_graph = self.index.get_graph(GraphLayer.DATA_FLOW)
+        call_graph = self.index.get_graph(GraphLayer.CALL)
 
         if security_graph is None and data_flow_graph is None:
             return SecurityReport()
 
-        sg = self._index.software_graph
-        boundary_map = self._build_boundary_map(sg)
-        nodes_by_boundary = self._count_by_boundary(boundary_map)
+        sg = self.index.software_graph
+        boundary_map = self.build_boundary_map(sg)
+        nodes_by_boundary = self.count_by_boundary(boundary_map)
 
-        sensitive_flows = self._trace_sensitive_data_flows(
+        sensitive_flows = self.trace_sensitive_data_flows(
             data_flow_graph or security_graph, boundary_map
         )
-        crossings = self._detect_trust_boundary_crossings(security_graph, boundary_map)
-        vulns = self._detect_vulnerabilities(call_graph, data_flow_graph, boundary_map)
+        crossings = self.detect_trust_boundary_crossings(security_graph, boundary_map)
+        vulns = self.detect_vulnerabilities(call_graph, data_flow_graph, boundary_map)
 
         boundary_crossings = len(crossings)
-        risk_score = self._compute_risk_score(vulns, boundary_crossings)
+        risk_score = self.compute_risk_score(vulns, boundary_crossings)
 
         total_nodes = 0
         if security_graph:
@@ -118,7 +118,7 @@ class SecurityAgent:
             risk_score=risk_score,
         )
 
-    def _build_boundary_map(self, sg: object) -> dict[str, SecurityBoundary]:
+    def build_boundary_map(self, sg: object) -> dict[str, SecurityBoundary]:
         boundary_map: dict[str, SecurityBoundary] = {}
         for layer_graph in sg.layers.values():  # type: ignore[union-attr]
             for node in layer_graph.nodes:
@@ -126,14 +126,14 @@ class SecurityAgent:
                     boundary_map[node.id] = node.security_boundary
         return boundary_map
 
-    def _count_by_boundary(self, boundary_map: dict[str, SecurityBoundary]) -> dict[str, int]:
+    def count_by_boundary(self, boundary_map: dict[str, SecurityBoundary]) -> dict[str, int]:
         counts: dict[str, int] = {}
         for boundary in boundary_map.values():
             key = boundary.value
             counts[key] = counts.get(key, 0) + 1
         return counts
 
-    def _trace_sensitive_data_flows(
+    def trace_sensitive_data_flows(
         self,
         data_flow: nx.DiGraph | None,
         boundary_map: dict[str, SecurityBoundary],
@@ -142,7 +142,7 @@ class SecurityAgent:
         if data_flow is None:
             return flows
 
-        sg = self._index.software_graph
+        sg = self.index.software_graph
         source_nodes = [
             n for n in data_flow.nodes
             if data_flow.in_degree(n) == 0
@@ -191,7 +191,7 @@ class SecurityAgent:
 
         return flows[:50]
 
-    def _detect_trust_boundary_crossings(
+    def detect_trust_boundary_crossings(
         self,
         security_graph: nx.DiGraph | None,
         boundary_map: dict[str, SecurityBoundary],
@@ -212,7 +212,7 @@ class SecurityAgent:
             edge_data = security_graph[source][target]
             edge_type = edge_data.get("edge_type", "unknown")
 
-            risk_level = self._crossing_risk(src_boundary, tgt_boundary)
+            risk_level = self.crossing_risk(src_boundary, tgt_boundary)
 
             crossings.append(TrustBoundaryCrossing(
                 source_id=source,
@@ -227,7 +227,7 @@ class SecurityAgent:
         crossings.sort(key=lambda c: self.RISK_SCORES.get(c.risk_level, 0), reverse=True)
         return crossings
 
-    def _crossing_risk(self, source: SecurityBoundary, target: SecurityBoundary) -> str:
+    def crossing_risk(self, source: SecurityBoundary, target: SecurityBoundary) -> str:
         if (
             (source == SecurityBoundary.NONE or source == SecurityBoundary.EXTERNAL)
             and target in {SecurityBoundary.AUTHENTICATED, SecurityBoundary.AUTHORIZED, SecurityBoundary.ADMIN}
@@ -239,14 +239,14 @@ class SecurityAgent:
             return "medium"
         return "low"
 
-    def _detect_vulnerabilities(
+    def detect_vulnerabilities(
         self,
         call_graph: nx.DiGraph | None,
         data_flow: nx.DiGraph | None,
         boundary_map: dict[str, SecurityBoundary],
     ) -> list[Vulnerability]:
         vulns: list[Vulnerability] = []
-        sg = self._index.software_graph
+        sg = self.index.software_graph
 
         for node_id in (call_graph.nodes if call_graph else []):
             node = sg.find_node(node_id)
@@ -255,7 +255,7 @@ class SecurityAgent:
 
             node_name_lower = node.name.lower()
 
-            if self._is_sql_injection_risk(node):
+            if self.is_sql_injection_risk(node):
                 vulns.append(Vulnerability(
                     vulnerability_type=VulnerabilityType.SQL_INJECTION,
                     node_id=node_id,
@@ -266,7 +266,7 @@ class SecurityAgent:
                     recommendation="Use parameterized queries and input validation",
                 ))
 
-            if self._is_unsanitized_input(node):
+            if self.is_unsanitized_input(node):
                 vulns.append(Vulnerability(
                     vulnerability_type=VulnerabilityType.UNSANITIZED_INPUT,
                     node_id=node_id,
@@ -301,7 +301,7 @@ class SecurityAgent:
                     and tgt_boundary != SecurityBoundary.EXTERNAL
                 ):
                     source_node = sg.find_node(source)
-                    if source_node and not self._has_sanitization(source_node):
+                    if source_node and not self.has_sanitization(source_node):
                         vulns.append(Vulnerability(
                             vulnerability_type=VulnerabilityType.TRUST_BOUNDARY_CROSSING,
                             node_id=source,
@@ -315,7 +315,7 @@ class SecurityAgent:
         vulns.sort(key=lambda v: self.SEVERITY_VALUES.get(v.severity, 0), reverse=True)
         return vulns
 
-    def _is_sql_injection_risk(self, node: object) -> bool:
+    def is_sql_injection_risk(self, node: object) -> bool:
         name_lower = node.name.lower()  # type: ignore[union-attr]
         has_sql = any(p in name_lower for p in self.SQL_PATTERNS)
         if not has_sql:
@@ -325,9 +325,9 @@ class SecurityAgent:
             "string" in inp or "raw" in inp or "text" in inp or "input" in inp
             for inp in inputs_lower
         )
-        return has_raw_input and not self._has_sanitization(node)
+        return has_raw_input and not self.has_sanitization(node)
 
-    def _is_unsanitized_input(self, node: object) -> bool:
+    def is_unsanitized_input(self, node: object) -> bool:
         name_lower = node.name.lower()  # type: ignore[union-attr]
         has_input = any(kw in name_lower for kw in self.INPUT_KEYWORDS)
         if not has_input:
@@ -337,9 +337,9 @@ class SecurityAgent:
             kw in out for kw in self.UNSAFE_OUTPUT_KEYWORDS
             for out in outputs
         )
-        return has_unsafe_output and not self._has_sanitization(node)
+        return has_unsafe_output and not self.has_sanitization(node)
 
-    def _has_sanitization(self, node: object) -> bool:
+    def has_sanitization(self, node: object) -> bool:
         name_lower = node.name.lower()  # type: ignore[union-attr]
         postconditions = [p.lower() for p in node.postconditions]  # type: ignore[union-attr]
         return (
@@ -347,7 +347,7 @@ class SecurityAgent:
             or any(any(s in pc for s in self.SANITIZE_PATTERNS) for pc in postconditions)
         )
 
-    def _compute_risk_score(self, vulns: list[Vulnerability], crossing_count: int) -> float:
+    def compute_risk_score(self, vulns: list[Vulnerability], crossing_count: int) -> float:
         vuln_score = sum(self.SEVERITY_VALUES.get(v.severity, 0.0) for v in vulns)
         crossing_score = crossing_count * 2.0
         return vuln_score + crossing_score

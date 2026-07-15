@@ -79,18 +79,18 @@ class PerformanceAgent:
     }
 
     def __init__(self, graph_index: GraphIndex) -> None:
-        self._index = graph_index
+        self.index = graph_index
 
     def analyze(self) -> PerformanceReport:
-        call_graph = self._index.get_graph(GraphLayer.CALL)
+        call_graph = self.index.get_graph(GraphLayer.CALL)
         if call_graph is None:
             return PerformanceReport()
 
-        critical_paths = self._find_critical_paths(call_graph)
-        expensive = self._find_expensive_computations(call_graph)
-        caching = self._find_caching_opportunities(call_graph)
-        parallelization = self._find_parallelization_opportunities(call_graph)
-        complexity_dist = self._complexity_distribution(call_graph)
+        critical_paths = self.find_critical_paths(call_graph)
+        expensive = self.find_expensive_computations(call_graph)
+        caching = self.find_caching_opportunities(call_graph)
+        parallelization = self.find_parallelization_opportunities(call_graph)
+        complexity_dist = self.complexity_distribution(call_graph)
         high_complexity = sum(
             count for complexity, count in complexity_dist.items()
             if complexity in self.EXPENSIVE_COMPLEXITIES
@@ -106,7 +106,7 @@ class PerformanceAgent:
             average_complexity_distribution=complexity_dist,
         )
 
-    def _find_critical_paths(self, call_graph: nx.DiGraph) -> list[CriticalPathInfo]:
+    def find_critical_paths(self, call_graph: nx.DiGraph) -> list[CriticalPathInfo]:
         entry_points = [
             n for n in call_graph.nodes
             if call_graph.in_degree(n) == 0
@@ -124,7 +124,7 @@ class PerformanceAgent:
             for target in exit_points[:10]:
                 if source == target:
                     continue
-                path = self._index.critical_path(source, target, layer=GraphLayer.CALL)
+                path = self.index.critical_path(source, target, layer=GraphLayer.CALL)
                 if path is None or len(path) < 2:
                     continue
 
@@ -143,9 +143,9 @@ class PerformanceAgent:
         paths.sort(key=lambda p: p.total_weight, reverse=True)
         return paths[:20]
 
-    def _find_expensive_computations(self, call_graph: nx.DiGraph) -> list[ExpensiveComputation]:
+    def find_expensive_computations(self, call_graph: nx.DiGraph) -> list[ExpensiveComputation]:
         expensive: list[ExpensiveComputation] = []
-        sg = self._index.software_graph
+        sg = self.index.software_graph
 
         for node_id in call_graph.nodes:
             node = sg.find_node(node_id)
@@ -155,8 +155,8 @@ class PerformanceAgent:
             if node.complexity.value not in self.EXPENSIVE_COMPLEXITIES:
                 continue
 
-            fi = self._index.fan_in(node_id, layer=GraphLayer.CALL)
-            fo = self._index.fan_out(node_id, layer=GraphLayer.CALL)
+            fi = self.index.fan_in(node_id, layer=GraphLayer.CALL)
+            fo = self.index.fan_out(node_id, layer=GraphLayer.CALL)
 
             callers = list(call_graph.predecessors(node_id))
 
@@ -175,12 +175,12 @@ class PerformanceAgent:
         expensive.sort(key=lambda e: e.cost_score, reverse=True)
         return expensive
 
-    def _find_caching_opportunities(self, call_graph: nx.DiGraph) -> list[CachingOpportunity]:
+    def find_caching_opportunities(self, call_graph: nx.DiGraph) -> list[CachingOpportunity]:
         opportunities: list[CachingOpportunity] = []
-        sg = self._index.software_graph
+        sg = self.index.software_graph
 
         for node_id in call_graph.nodes:
-            fi = self._index.fan_in(node_id, layer=GraphLayer.CALL)
+            fi = self.index.fan_in(node_id, layer=GraphLayer.CALL)
             if fi < 3:
                 continue
 
@@ -212,7 +212,7 @@ class PerformanceAgent:
         opportunities.sort(key=lambda o: o.fan_in, reverse=True)
         return opportunities
 
-    def _find_parallelization_opportunities(
+    def find_parallelization_opportunities(
         self, call_graph: nx.DiGraph
     ) -> list[ParallelizationOpportunity]:
         opportunities: list[ParallelizationOpportunity] = []
@@ -240,9 +240,9 @@ class PerformanceAgent:
 
         return opportunities
 
-    def _complexity_distribution(self, call_graph: nx.DiGraph) -> dict[str, int]:
+    def complexity_distribution(self, call_graph: nx.DiGraph) -> dict[str, int]:
         dist: dict[str, int] = {}
-        sg = self._index.software_graph
+        sg = self.index.software_graph
 
         for node_id in call_graph.nodes:
             node = sg.find_node(node_id)

@@ -122,82 +122,82 @@ class InMemoryStateStore(StateStore):
     """
 
     def __init__(self) -> None:
-        self._kv: dict[str, bytes] = {}
+        self.kv: dict[str, bytes] = {}
         # expiry[key] = wall-clock absolute deadline
-        self._expiry: dict[str, float] = {}
-        self._hashes: dict[str, dict[str, str]] = {}
-        self._lists: dict[str, list[str]] = {}
-        self._lock = asyncio.Lock()
+        self.expiry: dict[str, float] = {}
+        self.hashes: dict[str, dict[str, str]] = {}
+        self.lists: dict[str, list[str]] = {}
+        self.lock = asyncio.Lock()
 
-    def _expired(self, key: str) -> bool:
+    def expired(self, key: str) -> bool:
         """Return True if ``key`` has an expiry deadline that has passed."""
-        exp = self._expiry.get(key)
+        exp = self.expiry.get(key)
         return exp is not None and exp <= time.time()
 
     async def get(self, key: str) -> bytes | None:
-        async with self._lock:
-            if self._expired(key):
+        async with self.lock:
+            if self.expired(key):
                 # Lazy eviction on access so the in-memory store
                 # doesn't leak expired entries indefinitely.
-                self._kv.pop(key, None)
-                self._expiry.pop(key, None)
+                self.kv.pop(key, None)
+                self.expiry.pop(key, None)
                 return None
-            return self._kv.get(key)
+            return self.kv.get(key)
 
     async def set(self, key: str, value: bytes, *, ttl_seconds: int | None = None) -> None:
-        async with self._lock:
-            self._kv[key] = value
+        async with self.lock:
+            self.kv[key] = value
             if ttl_seconds is not None:
-                self._expiry[key] = time.time() + ttl_seconds
+                self.expiry[key] = time.time() + ttl_seconds
             else:
                 # Setting without a TTL clears any previous expiry.
-                self._expiry.pop(key, None)
+                self.expiry.pop(key, None)
 
     async def delete(self, key: str) -> None:
-        async with self._lock:
+        async with self.lock:
             # Delete from all four maps so a stale hash or list
             # entry can never outlive its KV key.
-            self._kv.pop(key, None)
-            self._expiry.pop(key, None)
-            self._hashes.pop(key, None)
-            self._lists.pop(key, None)
+            self.kv.pop(key, None)
+            self.expiry.pop(key, None)
+            self.hashes.pop(key, None)
+            self.lists.pop(key, None)
 
     async def incr(self, key: str, amount: int = 1) -> int:
-        async with self._lock:
-            cur = int(self._kv.get(key, b"0"))
+        async with self.lock:
+            cur = int(self.kv.get(key, b"0"))
             cur += amount
-            self._kv[key] = str(cur).encode("utf-8")
+            self.kv[key] = str(cur).encode("utf-8")
             return cur
 
     async def expire(self, key: str, ttl_seconds: int) -> None:
-        async with self._lock:
-            self._expiry[key] = time.time() + ttl_seconds
+        async with self.lock:
+            self.expiry[key] = time.time() + ttl_seconds
 
     async def keys(self, prefix: str) -> AsyncIterator[str]:
         # Snapshot under the lock; iterate outside so we don't hold
         # the lock across the yield.
-        async with self._lock:
-            snapshot = [k for k in self._kv if not self._expired(k)]
+        async with self.lock:
+            snapshot = [k for k in self.kv if not self.expired(k)]
         for k in snapshot:
             if k.startswith(prefix):
                 yield k
 
     async def hset(self, key: str, field: str, value: str) -> None:
-        async with self._lock:
-            self._hashes.setdefault(key, {})[field] = value
+        async with self.lock:
+            self.hashes.setdefault(key, {})[field] = value
 
     async def hgetall(self, key: str) -> dict[str, str]:
-        async with self._lock:
-            return dict(self._hashes.get(key, {}))
+        async with self.lock:
+            return dict(self.hashes.get(key, {}))
 
     async def lpush(self, key: str, value: str) -> int:
-        async with self._lock:
-            self._lists.setdefault(key, []).insert(0, value)
-            return len(self._lists[key])
+        async with self.lock:
+            self.lists.setdefault(key, []).insert(0, value)
+            return len(self.lists[key])
 
     async def rpop(self, key: str) -> str | None:
-        async with self._lock:
-            lst = self._lists.get(key)
+        async with self.lock:
+            lst = self.lists.get(key)
             if not lst:
                 return None
             return lst.pop()
@@ -207,13 +207,13 @@ class InMemoryStateStore(StateStore):
 
         Tests call this to keep state isolated between cases.
         """
-        self._kv.clear()
-        self._expiry.clear()
-        self._hashes.clear()
-        self._lists.clear()
+        self.kv.clear()
+        self.expiry.clear()
+        self.hashes.clear()
+        self.lists.clear()
 
 
-_SINGLETON: StateStore | None = None
+SINGLETON: StateStore | None = None
 
 
 def get_state_store() -> StateStore:
@@ -221,15 +221,15 @@ def get_state_store() -> StateStore:
 
     Use :func:`reset_state_store` between tests for isolation.
     """
-    global _SINGLETON
-    if _SINGLETON is None:
-        _SINGLETON = InMemoryStateStore()
-    return _SINGLETON
+    global SINGLETON
+    if SINGLETON is None:
+        SINGLETON = InMemoryStateStore()
+    return SINGLETON
 
 
 def reset_state_store() -> None:
     """Clear the singleton state store (for tests)."""
-    global _SINGLETON
-    if isinstance(_SINGLETON, InMemoryStateStore):
-        _SINGLETON.reset()
-    _SINGLETON = None
+    global SINGLETON
+    if isinstance(SINGLETON, InMemoryStateStore):
+        SINGLETON.reset()
+    SINGLETON = None

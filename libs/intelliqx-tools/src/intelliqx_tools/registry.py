@@ -48,11 +48,11 @@ class ToolRegistry:
     """
 
     def __init__(self) -> None:
-        self.__tools: dict[str, ToolDefinition] = {}
+        self.tools: dict[str, ToolDefinition] = {}
 
     def register(self, tool: ToolDefinition) -> None:
         """Register or replace ``tool``."""
-        self.__tools[tool.name] = tool
+        self.tools[tool.name] = tool
 
     def get(self, name: str) -> ToolDefinition:
         """Return the definition for ``name``.
@@ -60,13 +60,13 @@ class ToolRegistry:
         Raises:
             KeyError: If the tool is not registered.
         """
-        if name not in self.__tools:
+        if name not in self.tools:
             raise KeyError(f"Tool not found: {name!r}")
-        return self.__tools[name]
+        return self.tools[name]
 
     def list_tools(self) -> list[ToolDefinition]:
         """Return every registered definition."""
-        return list(self.__tools.values())
+        return list(self.tools.values())
 
     def find_by_capability(self, capability: str) -> list[ToolDefinition]:
         """Return every tool tagged with ``capability``.
@@ -74,4 +74,4 @@ class ToolRegistry:
         Linear scan; fine for the few hundred tools the platform
         expects to support.
         """
-        return [t for t in self.__tools.values() if capability in t.capabilities]
+        return [t for t in self.tools.values() if capability in t.capabilities]

@@ -104,13 +104,13 @@ class InMemoryObjectStore(ObjectStore):
     """
 
     def __init__(self) -> None:
-        self.__store: dict[str, bytes] = {}
-        self.__meta: dict[str, dict[str, Any]] = {}
+        self.store: dict[str, bytes] = {}
+        self.meta: dict[str, dict[str, Any]] = {}
 
     async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
-        self.__store[key] = data
-        self.__meta[key] = {"content_type": content_type, "size": len(data)}
-        return f"mem-{len(self.__store)}"
+        self.store[key] = data
+        self.meta[key] = {"content_type": content_type, "size": len(data)}
+        return f"mem-{len(self.store)}"
 
     def put_sync(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
         """Sync version of :meth:`put` for use outside an event loop.
@@ -118,31 +118,31 @@ class InMemoryObjectStore(ObjectStore):
         Used during object-store initialisation when the zvec index
         needs to write its initial manifest before any loop runs.
         """
-        self.__store[key] = data
-        self.__meta[key] = {"content_type": content_type, "size": len(data)}
-        return f"mem-{len(self.__store)}"
+        self.store[key] = data
+        self.meta[key] = {"content_type": content_type, "size": len(data)}
+        return f"mem-{len(self.store)}"
 
     async def get(self, key: str) -> bytes:
-        if key not in self.__store:
+        if key not in self.store:
             raise NotFoundError(f"Object not found: {key!r}")
-        return self.__store[key]
+        return self.store[key]
 
     async def exists(self, key: str) -> bool:
-        return key in self.__store
+        return key in self.store
 
     async def delete(self, key: str) -> None:
-        self.__store.pop(key, None)
-        self.__meta.pop(key, None)
+        self.store.pop(key, None)
+        self.meta.pop(key, None)
 
     async def list(self, prefix: str) -> AsyncIterator[str]:
-        for k in sorted(self.__store.keys()):
+        for k in sorted(self.store.keys()):
             if k.startswith(prefix):
                 yield k
 
     def reset(self) -> None:
         """Drop every entry. Used by tests for isolation."""
-        self.__store.clear()
-        self.__meta.clear()
+        self.store.clear()
+        self.meta.clear()
 
 
 class LocalFileSystemObjectStore(ObjectStore):
@@ -161,7 +161,7 @@ class LocalFileSystemObjectStore(ObjectStore):
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
 
-    def _path(self, key: str) -> Path:
+    def path(self, key: str) -> Path:
         """Translate a logical key to an absolute ``Path``.
 
         Leading ``"/"`` is stripped so the same key produces the same
@@ -172,7 +172,7 @@ class LocalFileSystemObjectStore(ObjectStore):
         return self.root / key
 
     async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
-        path = self._path(key)
+        path = self.path(key)
         path.parent.mkdir(parents=True, exist_ok=True)
         # ``asyncio.to_thread`` keeps the event loop responsive
         # even for large writes.
@@ -180,16 +180,16 @@ class LocalFileSystemObjectStore(ObjectStore):
         return f"local-{path.stat().st_size}"
 
     async def get(self, key: str) -> bytes:
-        path = self._path(key)
+        path = self.path(key)
         if not path.exists():
             raise NotFoundError(f"Object not found: {key!r}")
         return await asyncio.to_thread(path.read_bytes)
 
     async def exists(self, key: str) -> bool:
-        return self._path(key).exists()
+        return self.path(key).exists()
 
     async def delete(self, key: str) -> None:
-        path = self._path(key)
+        path = self.path(key)
         if path.exists():
             await asyncio.to_thread(path.unlink)
 
@@ -206,7 +206,7 @@ class LocalFileSystemObjectStore(ObjectStore):
                 yield str(p.relative_to(self.root))
 
 
-_SINGLETON: ObjectStore | None = None
+SINGLETON: ObjectStore | None = None
 
 
 def get_object_store() -> ObjectStore:
@@ -222,24 +222,24 @@ def get_object_store() -> ObjectStore:
     persistent backend (S3, GCS, Modal Volume) via a cloud adapter
     in their bootstrap.
     """
-    global _SINGLETON
-    if _SINGLETON is not None:
-        return _SINGLETON
+    global SINGLETON
+    if SINGLETON is not None:
+        return SINGLETON
     override = os.environ.get("INTELLIQX_OBJECT_STORE", "memory")
     if override.startswith("fs:"):
-        _SINGLETON = LocalFileSystemObjectStore(override[3:])
+        SINGLETON = LocalFileSystemObjectStore(override[3:])
     else:
-        _SINGLETON = InMemoryObjectStore()
-    return _SINGLETON
+        SINGLETON = InMemoryObjectStore()
+    return SINGLETON
 
 
 def reset_object_store() -> None:
     """Clear the singleton object store (for tests)."""
-    global _SINGLETON
-    _SINGLETON = None
+    global SINGLETON
+    SINGLETON = None
 
 
 def set_object_store(store: ObjectStore) -> None:
     """Replace the singleton object store (for tests and bootstrap)."""
-    global _SINGLETON
-    _SINGLETON = store
+    global SINGLETON
+    SINGLETON = store

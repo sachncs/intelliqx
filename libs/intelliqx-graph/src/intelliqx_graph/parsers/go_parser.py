@@ -68,18 +68,18 @@ class GoParser(BaseParser):
         entities: list[ParsedEntity] = []
         file_str = str(file_path)
 
-        self._walk(tree.root_node, source_bytes, file_str, entities)
+        self.walk(tree.root_node, source_bytes, file_str, entities)
         return entities
 
-    def _walk(self, node, source_bytes: bytes, file_str: str, entities: list[ParsedEntity]):
+    def walk(self, node, source_bytes: bytes, file_str: str, entities: list[ParsedEntity]):
         for child in node.children:
             ctype = child.type
 
             if ctype == "function_declaration":
-                entities.append(self._parse_function(child, source_bytes, file_str, parent=None))
+                entities.append(self.parse_function(child, source_bytes, file_str, parent=None))
 
             elif ctype == "method_declaration":
-                entities.append(self._parse_method(child, source_bytes, file_str))
+                entities.append(self.parse_method(child, source_bytes, file_str))
 
             elif ctype == "type_declaration":
                 for spec in child.children:
@@ -110,13 +110,13 @@ class GoParser(BaseParser):
                         ))
 
             elif ctype == "import_declaration":
-                entities.extend(self._parse_import(child, source_bytes, file_str))
+                entities.extend(self.parse_import(child, source_bytes, file_str))
 
-    def _parse_function(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
+    def parse_function(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
         name = node_text(name_node, source_bytes) if name_node else "anonymous"
         params_node = node.child_by_field_name("parameters")
-        params = self._parse_parameters(params_node, source_bytes) if params_node else []
+        params = self.parse_parameters(params_node, source_bytes) if params_node else []
         result_node = node.child_by_field_name("result")
         return_type = node_text(result_node, source_bytes) if result_node else None
 
@@ -133,7 +133,7 @@ class GoParser(BaseParser):
             complexity=estimate_complexity(node),
         )
 
-    def _parse_method(self, node, source_bytes: bytes, file_str: str) -> ParsedEntity:
+    def parse_method(self, node, source_bytes: bytes, file_str: str) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
         name = node_text(name_node, source_bytes) if name_node else "anonymous"
         receiver_node = node.child_by_field_name("receiver")
@@ -146,7 +146,7 @@ class GoParser(BaseParser):
                         parent_type = node_text(type_node, source_bytes).strip("*")
 
         params_node = node.child_by_field_name("parameters")
-        params = self._parse_parameters(params_node, source_bytes) if params_node else []
+        params = self.parse_parameters(params_node, source_bytes) if params_node else []
         result_node = node.child_by_field_name("result")
         return_type = node_text(result_node, source_bytes) if result_node else None
 
@@ -163,7 +163,7 @@ class GoParser(BaseParser):
             complexity=estimate_complexity(node),
         )
 
-    def _parse_import(self, node, source_bytes: bytes, file_str: str) -> list[ParsedEntity]:
+    def parse_import(self, node, source_bytes: bytes, file_str: str) -> list[ParsedEntity]:
         entities: list[ParsedEntity] = []
         for child in node.children:
             if child.type == "import_spec":
@@ -185,7 +185,7 @@ class GoParser(BaseParser):
                 ))
         return entities
 
-    def _parse_parameters(self, params_node, source_bytes: bytes) -> list[str]:
+    def parse_parameters(self, params_node, source_bytes: bytes) -> list[str]:
         params: list[str] = []
         for child in params_node.children:
             if child.type == "parameter_declaration":

@@ -183,7 +183,7 @@ class OKFLinkResolver:
         return out
 
 
-_PATH_NORMALISE_RE = re.compile(r"(^|/)\./")
+PATH_NORMALISE_RE = re.compile(r"(^|/)\./")
 
 
 def normalise_path(path: str) -> str:
@@ -192,5 +192,5 @@ def normalise_path(path: str) -> str:
     prev = None
     while prev != path:
         prev = path
-        path = _PATH_NORMALISE_RE.sub(r"\1", path)
+        path = PATH_NORMALISE_RE.sub(r"\1", path)
     return path

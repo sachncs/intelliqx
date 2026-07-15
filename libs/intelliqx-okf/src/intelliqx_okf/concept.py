@@ -93,13 +93,13 @@ class OKFConcept(BaseModel):
 # Matches the YAML frontmatter delimiter line: a line that is exactly
 # "---" (with optional trailing whitespace). The block must be at
 # the very top of the file.
-_FRONTMATTER_RE = re.compile(r"^---\s*$", re.MULTILINE)
+FRONTMATTER_RE = re.compile(r"^---\s*$", re.MULTILINE)
 
 # Matches markdown links of the form `[text](target)`. The
 # target is captured lazily up to the first unescaped ')'. This
 # intentionally doesn't try to handle complex URLs (parentheses in
 # URLs are uncommon in OKF).
-_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
 # Top-level markdown heading: ``# Heading`` (but not ``## `` or
 # ``### `` — those are sub-headings and stay inside the parent
@@ -107,7 +107,7 @@ _LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 # semantic way, so we treat the first ``# ...`` as the section
 # boundary and everything below until the next ``# ...`` is the
 # section's body.
-_SECTION_RE = re.compile(r"^# (.+)$", re.MULTILINE)
+SECTION_RE = re.compile(r"^# (.+)$", re.MULTILINE)
 
 
 def parse_frontmatter_and_body(text: str) -> tuple[dict[str, Any], str]:
@@ -120,7 +120,7 @@ def parse_frontmatter_and_body(text: str) -> tuple[dict[str, Any], str]:
     if not text.startswith("---\n") and not text.startswith("---\r\n"):
         return {}, text
     # Find the closing ``---`` after the opening one.
-    matches = list(_FRONTMATTER_RE.finditer(text))
+    matches = list(FRONTMATTER_RE.finditer(text))
     if len(matches) < 2:
         return {}, text
     close_start = matches[1].start()
@@ -146,7 +146,7 @@ def split_sections(body: str) -> list[OKFSection]:
     The body before the first ``# ...`` heading is returned as a
     section with ``heading=""`` (an "intro" section).
     """
-    matches = list(_SECTION_RE.finditer(body))
+    matches = list(SECTION_RE.finditer(body))
     if not matches:
         return [OKFSection(heading="", body=body)]
     sections: list[OKFSection] = []
@@ -168,7 +168,7 @@ def extract_links(body: str) -> list[OKFLink]:
     """
     seen: set[tuple[str, str]] = set()
     out: list[OKFLink] = []
-    for m in _LINK_RE.finditer(body):
+    for m in LINK_RE.finditer(body):
         text = m.group(1).strip()
         target = m.group(2).strip()
         key = (text, target)
@@ -184,7 +184,7 @@ def extract_citations(sections: list[OKFSection]) -> list[Citation]:
     for s in sections:
         if s.heading.lower() == "citations":
             out: list[Citation] = []
-            for m in _LINK_RE.finditer(s.body):
+            for m in LINK_RE.finditer(s.body):
                 label = m.group(1).strip()
                 # Strip a leading numeric prefix like "1. " or "[1] "
                 # so the citation number doesn't end up in the label.

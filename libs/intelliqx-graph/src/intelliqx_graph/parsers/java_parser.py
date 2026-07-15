@@ -68,37 +68,37 @@ class JavaParser(BaseParser):
         entities: list[ParsedEntity] = []
         file_str = str(file_path)
 
-        self._walk(tree.root_node, source_bytes, file_str, entities, parent=None)
+        self.walk(tree.root_node, source_bytes, file_str, entities, parent=None)
         return entities
 
-    def _walk(self, node, source_bytes: bytes, file_str: str, entities: list[ParsedEntity], parent: str | None):
+    def walk(self, node, source_bytes: bytes, file_str: str, entities: list[ParsedEntity], parent: str | None):
         for child in node.children:
             ctype = child.type
 
             if ctype == "class_declaration":
-                class_entity = self._parse_class(child, source_bytes, file_str, parent)
+                class_entity = self.parse_class(child, source_bytes, file_str, parent)
                 entities.append(class_entity)
-                self._walk(child, source_bytes, file_str, entities, parent=class_entity.name)
+                self.walk(child, source_bytes, file_str, entities, parent=class_entity.name)
 
             elif ctype == "interface_declaration":
-                class_entity = self._parse_interface(child, source_bytes, file_str, parent)
+                class_entity = self.parse_interface(child, source_bytes, file_str, parent)
                 entities.append(class_entity)
-                self._walk(child, source_bytes, file_str, entities, parent=class_entity.name)
+                self.walk(child, source_bytes, file_str, entities, parent=class_entity.name)
 
             elif ctype == "enum_declaration":
-                class_entity = self._parse_class(child, source_bytes, file_str, parent)
+                class_entity = self.parse_class(child, source_bytes, file_str, parent)
                 entities.append(class_entity)
 
             elif ctype == "method_declaration":
-                entities.append(self._parse_method(child, source_bytes, file_str, parent))
+                entities.append(self.parse_method(child, source_bytes, file_str, parent))
 
             elif ctype == "constructor_declaration":
-                entities.append(self._parse_constructor(child, source_bytes, file_str, parent))
+                entities.append(self.parse_constructor(child, source_bytes, file_str, parent))
 
             elif ctype == "import_declaration":
-                entities.append(self._parse_import(child, source_bytes, file_str))
+                entities.append(self.parse_import(child, source_bytes, file_str))
 
-    def _parse_class(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
+    def parse_class(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
         name = node_text(name_node, source_bytes) if name_node else "anonymous"
 
@@ -112,7 +112,7 @@ class JavaParser(BaseParser):
                 if child.type == "type_identifier":
                     bases.append(node_text(child, source_bytes))
 
-        annotations = self._parse_annotations(node, source_bytes)
+        annotations = self.parse_annotations(node, source_bytes)
 
         return ParsedEntity(
             name=name,
@@ -126,7 +126,7 @@ class JavaParser(BaseParser):
             decorators=annotations,
         )
 
-    def _parse_interface(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
+    def parse_interface(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
         name = node_text(name_node, source_bytes) if name_node else "anonymous"
 
@@ -148,15 +148,15 @@ class JavaParser(BaseParser):
             bases=bases,
         )
 
-    def _parse_method(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
+    def parse_method(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
         name = node_text(name_node, source_bytes) if name_node else "anonymous"
         params_node = node.child_by_field_name("parameters")
-        params = self._parse_parameters(params_node, source_bytes) if params_node else []
+        params = self.parse_parameters(params_node, source_bytes) if params_node else []
         return_type_node = node.child_by_field_name("type")
         return_type = node_text(return_type_node, source_bytes) if return_type_node else None
 
-        modifiers = self._parse_modifiers(node, source_bytes)
+        modifiers = self.parse_modifiers(node, source_bytes)
         is_static = "static" in modifiers
         is_abstract = "abstract" in modifiers
 
@@ -175,11 +175,11 @@ class JavaParser(BaseParser):
             complexity=estimate_complexity(node),
         )
 
-    def _parse_constructor(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
+    def parse_constructor(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
         name = node_text(name_node, source_bytes) if name_node else "anonymous"
         params_node = node.child_by_field_name("parameters")
-        params = self._parse_parameters(params_node, source_bytes) if params_node else []
+        params = self.parse_parameters(params_node, source_bytes) if params_node else []
 
         return ParsedEntity(
             name=name,
@@ -193,7 +193,7 @@ class JavaParser(BaseParser):
             complexity=estimate_complexity(node),
         )
 
-    def _parse_import(self, node, source_bytes: bytes, file_str: str) -> ParsedEntity:
+    def parse_import(self, node, source_bytes: bytes, file_str: str) -> ParsedEntity:
         source_text = node_text(node, source_bytes)
         import_source = source_text.replace("import ", "").replace(";", "").strip()
         is_from_import = ".*" not in import_source and import_source.count(".") > 1
@@ -213,7 +213,7 @@ class JavaParser(BaseParser):
             is_from_import=is_from_import,
         )
 
-    def _parse_parameters(self, params_node, source_bytes: bytes) -> list[str]:
+    def parse_parameters(self, params_node, source_bytes: bytes) -> list[str]:
         params: list[str] = []
         for child in params_node.children:
             if child.type == "formal_parameter":
@@ -227,7 +227,7 @@ class JavaParser(BaseParser):
                 params.append(f"...{node_text(child, source_bytes)}")
         return params
 
-    def _parse_modifiers(self, node, source_bytes: bytes) -> list[str]:
+    def parse_modifiers(self, node, source_bytes: bytes) -> list[str]:
         modifiers: list[str] = []
         for child in node.children:
             if child.type in ("public", "private", "protected", "static", "final", "abstract", "synchronized", "native", "strictfp"):
@@ -237,7 +237,7 @@ class JavaParser(BaseParser):
                     modifiers.append(mod.type)
         return modifiers
 
-    def _parse_annotations(self, node, source_bytes: bytes) -> list[str]:
+    def parse_annotations(self, node, source_bytes: bytes) -> list[str]:
         annotations: list[str] = []
         for child in node.children:
             if child.type == "annotation":

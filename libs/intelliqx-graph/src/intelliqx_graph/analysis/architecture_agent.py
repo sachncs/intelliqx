@@ -72,10 +72,10 @@ class ArchitectureAgent:
     FAN_THRESHOLD: ClassVar[int] = 10
 
     def __init__(self, graph_index: GraphIndex) -> None:
-        self._index = graph_index
+        self.index = graph_index
 
     def analyze(self) -> ArchitectureReport:
-        stats = self._index.stats()
+        stats = self.index.stats()
 
         total_nodes = sum(
             layer_stats["nodes"] for layer_stats in stats["layers"].values()
@@ -88,12 +88,12 @@ class ArchitectureAgent:
         density = call_stats.get("density", 0.0)
         is_dag = call_stats.get("is_dag", True)
 
-        coupling_findings = self._detect_coupling()
-        layering_violations = self._detect_layering_violations()
-        modules = self._detect_modules()
-        cycles = self._index.find_cycles(layer=GraphLayer.CALL)
-        high_coupling = self._find_high_coupling_nodes()
-        orphans = self._find_orphan_nodes()
+        coupling_findings = self.detect_coupling()
+        layering_violations = self.detect_layering_violations()
+        modules = self.detect_modules()
+        cycles = self.index.find_cycles(layer=GraphLayer.CALL)
+        high_coupling = self.find_high_coupling_nodes()
+        orphans = self.find_orphan_nodes()
 
         return ArchitectureReport(
             total_nodes=total_nodes,
@@ -108,22 +108,22 @@ class ArchitectureAgent:
             orphan_nodes=orphans,
         )
 
-    def _detect_coupling(self) -> list[CouplingFinding]:
+    def detect_coupling(self) -> list[CouplingFinding]:
         findings: list[CouplingFinding] = []
-        call_graph = self._index.get_graph(GraphLayer.CALL)
+        call_graph = self.index.get_graph(GraphLayer.CALL)
         if call_graph is None:
             return findings
 
         for node_id in call_graph.nodes:
-            fan_in = self._index.fan_in(node_id, layer=GraphLayer.CALL)
-            fan_out = self._index.fan_out(node_id, layer=GraphLayer.CALL)
+            fan_in = self.index.fan_in(node_id, layer=GraphLayer.CALL)
+            fan_out = self.index.fan_out(node_id, layer=GraphLayer.CALL)
             total = fan_in + fan_out
 
             if total < self.MEDIUM_THRESHOLD:
                 continue
 
-            severity = self._coupling_severity(fan_in, fan_out)
-            recommendation = self._coupling_recommendation(fan_in, fan_out)
+            severity = self.coupling_severity(fan_in, fan_out)
+            recommendation = self.coupling_recommendation(fan_in, fan_out)
             node_data = call_graph.nodes[node_id]
             node_name = node_data.get("name", node_id)
 
@@ -140,7 +140,7 @@ class ArchitectureAgent:
         findings.sort(key=lambda f: f.total_coupling, reverse=True)
         return findings
 
-    def _coupling_severity(self, fan_in: int, fan_out: int) -> CouplingSeverity:
+    def coupling_severity(self, fan_in: int, fan_out: int) -> CouplingSeverity:
         total = fan_in + fan_out
         if total >= self.CRITICAL_THRESHOLD:
             return CouplingSeverity.CRITICAL
@@ -150,18 +150,18 @@ class ArchitectureAgent:
             return CouplingSeverity.MEDIUM
         return CouplingSeverity.LOW
 
-    def _coupling_recommendation(self, fan_in: int, fan_out: int) -> str:
+    def coupling_recommendation(self, fan_in: int, fan_out: int) -> str:
         if fan_in > self.FAN_THRESHOLD:
             return "High fan-in suggests this node is a shared utility; consider extracting into a dedicated module"
         if fan_out > self.FAN_THRESHOLD:
             return "High fan-out suggests this node orchestrates too many concerns; consider decomposition"
         return "Moderate coupling; review for potential refactoring opportunities"
 
-    def _detect_layering_violations(self) -> list[LayeringViolation]:
+    def detect_layering_violations(self) -> list[LayeringViolation]:
         violations: list[LayeringViolation] = []
-        layer_map = self._build_node_layer_map()
+        layer_map = self.build_node_layer_map()
 
-        for _layer_name, graph in self._index.software_graph.layers.items():
+        for _layer_name, graph in self.index.software_graph.layers.items():
             for edge in graph.edges:
                 source_layer = layer_map.get(edge.source)
                 target_layer = layer_map.get(edge.target)
@@ -182,17 +182,17 @@ class ArchitectureAgent:
 
         return violations
 
-    def _build_node_layer_map(self) -> dict[str, str]:
+    def build_node_layer_map(self) -> dict[str, str]:
         node_layer: dict[str, str] = {}
-        for layer_name, sg_graph in self._index.software_graph.layers.items():
+        for layer_name, sg_graph in self.index.software_graph.layers.items():
             for node in sg_graph.nodes:
                 if node.id not in node_layer:
                     node_layer[node.id] = layer_name.value
         return node_layer
 
-    def _detect_modules(self) -> list[ModuleInfo]:
-        communities = self._index.detect_communities(layer=GraphLayer.CALL)
-        call_graph = self._index.get_graph(GraphLayer.CALL)
+    def detect_modules(self) -> list[ModuleInfo]:
+        communities = self.index.detect_communities(layer=GraphLayer.CALL)
+        call_graph = self.index.get_graph(GraphLayer.CALL)
         if call_graph is None:
             return []
 
@@ -221,13 +221,13 @@ class ArchitectureAgent:
         modules.sort(key=lambda m: m.cohesion, reverse=True)
         return modules
 
-    def _find_high_coupling_nodes(self) -> list[str]:
-        high_out = self._index.high_fan_out_nodes(threshold=self.FAN_THRESHOLD, layer=GraphLayer.CALL)
-        high_in = self._index.high_fan_in_nodes(threshold=self.FAN_THRESHOLD, layer=GraphLayer.CALL)
+    def find_high_coupling_nodes(self) -> list[str]:
+        high_out = self.index.high_fan_out_nodes(threshold=self.FAN_THRESHOLD, layer=GraphLayer.CALL)
+        high_in = self.index.high_fan_in_nodes(threshold=self.FAN_THRESHOLD, layer=GraphLayer.CALL)
         return list(set(high_out) | set(high_in))
 
-    def _find_orphan_nodes(self) -> list[str]:
-        call_graph = self._index.get_graph(GraphLayer.CALL)
+    def find_orphan_nodes(self) -> list[str]:
+        call_graph = self.index.get_graph(GraphLayer.CALL)
         if call_graph is None:
             return []
         return [

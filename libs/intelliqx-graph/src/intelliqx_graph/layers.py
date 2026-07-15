@@ -46,25 +46,25 @@ class LayerBuilderRegistry:
     """Registry of layer builders keyed by ``GraphLayer``."""
 
     def __init__(self) -> None:
-        self._builders: dict[GraphLayer, LayerBuilder] = {}
+        self.builders: dict[GraphLayer, LayerBuilder] = {}
 
     def register(self, builder: LayerBuilder) -> None:
         """Register a layer builder."""
-        self._builders[builder.layer] = builder
+        self.builders[builder.layer] = builder
 
     def get(self, layer: GraphLayer) -> LayerBuilder | None:
         """Return the builder for the given layer, or None."""
-        return self._builders.get(layer)
+        return self.builders.get(layer)
 
     def build_all(
         self, parsed_data: dict[str, Any]
     ) -> dict[GraphLayer, SGIRGraph]:
         """Invoke every registered builder and return the results."""
         results: dict[GraphLayer, SGIRGraph] = {}
-        for layer, builder in self._builders.items():
+        for layer, builder in self.builders.items():
             results[layer] = builder.build(parsed_data, results.get(layer))
         return results
 
     @property
     def registered_layers(self) -> list[GraphLayer]:
-        return list(self._builders.keys())
+        return list(self.builders.keys())

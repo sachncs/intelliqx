@@ -28,7 +28,7 @@ from intelliqx_okf.catalog import OKFCatalog, get_catalog, set_catalog
 
 logger = logging.getLogger(__name__)
 
-_CONCEPT_EMBED_BATCH = 32  # Embed this many concepts per LLM call.
+CONCEPT_EMBED_BATCH = 32  # Embed this many concepts per LLM call.
 
 
 async def bootstrap_okf_retrieval(
@@ -85,8 +85,8 @@ async def bootstrap_okf_retrieval(
 
         concepts_to_embed = [c for cid, c in bundle.concepts.items() if cid not in bundle.reserved]
 
-        for i in range(0, len(concepts_to_embed), _CONCEPT_EMBED_BATCH):
-            batch = concepts_to_embed[i : i + _CONCEPT_EMBED_BATCH]
+        for i in range(0, len(concepts_to_embed), CONCEPT_EMBED_BATCH):
+            batch = concepts_to_embed[i : i + CONCEPT_EMBED_BATCH]
             texts = [
                 " ".join(
                     filter(

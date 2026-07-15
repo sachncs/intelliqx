@@ -5,17 +5,17 @@ Each agent is deployed as a function URL named
 The adapter POSTs the request payload as JSON and parses the
 response the same way.
 
-Error handling pattern (``_try_init`` / ``_available``):
+Error handling pattern (``try_init`` / ``available``):
 
-* ``_try_init`` catches ``ImportError`` only (not ``OSError``)
+* ``try_init`` catches ``ImportError`` only (not ``OSError``)
   because ``httpx`` is a pure-Python HTTP client that does not
   perform network I/O or credential resolution at import time.
   The URL is constructed at call time, not at init time.
-* When ``_try_init`` returns ``False``, ``invoke`` returns an
+* When ``try_init`` returns ``False``, ``invoke`` returns an
   ``InvocationResponse`` with ``status="not_found"`` and the message
   ``"httpx SDK is not installed"``. This is **graceful degradation**
   — the orchestrator keeps running.
-* When ``_try_init`` returns ``True`` but the function URL is
+* When ``try_init`` returns ``True`` but the function URL is
   misconfigured or unreachable, the HTTP error or exception is
   caught and returned as an ``InvocationResponse`` with
   ``status="error"``. This keeps the orchestration loop alive.
@@ -42,9 +42,9 @@ class GCPFunctionsComputeRuntime(ComputeRuntime):
     def __init__(self, project_id: str | None = None, region: str | None = None) -> None:
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
         self.region = region or os.environ.get("INTELLIQX_GCP_REGION", "us-central1")
-        self.__available = self._try_init()
+        self.available = self.try_init()
 
-    def _try_init(self) -> bool:
+    def try_init(self) -> bool:
         """Check whether the ``httpx`` SDK is importable."""
         try:
             import httpx  # noqa: F401
@@ -68,7 +68,7 @@ class GCPFunctionsComputeRuntime(ComputeRuntime):
             InvocationResponse with status ``"ok"``, ``"error"``,
             or ``"not_found"``.
         """
-        if not self.__available:
+        if not self.available:
             return InvocationResponse(
                 agent_name=request.agent_name,
                 output={},

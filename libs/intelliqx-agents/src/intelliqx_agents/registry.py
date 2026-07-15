@@ -25,8 +25,8 @@ class AgentRegistry:
     """
 
     def __init__(self) -> None:
-        self.__factories: dict[str, AgentFactory] = {}
-        self.__meta: dict[str, Any] = {}
+        self.factories: dict[str, AgentFactory] = {}
+        self.meta: dict[str, Any] = {}
 
     def register(self, name: str, factory: AgentFactory, *, meta: Any | None = None) -> None:
         """Register a factory for ``name``.
@@ -39,8 +39,8 @@ class AgentRegistry:
                 anything else) attached to the registration for
                 later inspection.
         """
-        self.__factories[name] = factory
-        self.__meta[name] = meta
+        self.factories[name] = factory
+        self.meta[name] = meta
 
     def create(self, name: str) -> AgentBase:
         """Construct a fresh agent instance for ``name``.
@@ -48,28 +48,28 @@ class AgentRegistry:
         Raises:
             KeyError: If no factory is registered for ``name``.
         """
-        if name not in self.__factories:
+        if name not in self.factories:
             raise KeyError(f"Agent not registered: {name!r}")
-        return self.__factories[name]()
+        return self.factories[name]()
 
     def list(self) -> list[str]:
         """Return every registered name, sorted alphabetically."""
-        return sorted(self.__factories.keys())
+        return sorted(self.factories.keys())
 
     def get_meta(self, name: str) -> Any:
         """Return the metadata attached to ``name``, or ``None``."""
-        return self.__meta.get(name)
+        return self.meta.get(name)
 
 
-_SINGLETON: AgentRegistry | None = None
+SINGLETON: AgentRegistry | None = None
 
 
 def get_agent_registry() -> AgentRegistry:
     """Return the singleton :class:`AgentRegistry`."""
-    global _SINGLETON
-    if _SINGLETON is None:
-        _SINGLETON = AgentRegistry()
-    return _SINGLETON
+    global SINGLETON
+    if SINGLETON is None:
+        SINGLETON = AgentRegistry()
+    return SINGLETON
 
 
 def register_agent(name: str, factory: AgentFactory, *, meta: Any | None = None) -> None:
@@ -79,5 +79,5 @@ def register_agent(name: str, factory: AgentFactory, *, meta: Any | None = None)
 
 def reset_agent_registry() -> None:
     """Clear the singleton registry (for tests)."""
-    global _SINGLETON
-    _SINGLETON = None
+    global SINGLETON
+    SINGLETON = None

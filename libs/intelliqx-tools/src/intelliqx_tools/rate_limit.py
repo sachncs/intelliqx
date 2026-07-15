@@ -32,10 +32,10 @@ class RateLimiter:
 
     def __init__(self) -> None:
         # key -> {"tokens": float, "last_refill": float (monotonic)}
-        self.__buckets: dict[str, dict[str, float]] = defaultdict(
+        self.buckets: dict[str, dict[str, float]] = defaultdict(
             lambda: {"tokens": 0.0, "last_refill": time.monotonic()}
         )
-        self.__lock = asyncio.Lock()
+        self.lock = asyncio.Lock()
 
     async def acquire(self, key: str, rate_per_minute: int) -> None:
         """Block until a token is available for ``key``.
@@ -54,8 +54,8 @@ class RateLimiter:
         # Tokens per second: the bucket refills smoothly.
         refill_per_sec = capacity / 60.0
         while True:
-            async with self.__lock:
-                b = self.__buckets[key]
+            async with self.lock:
+                b = self.buckets[key]
                 now = time.monotonic()
                 elapsed = now - b["last_refill"]
                 # Cap at capacity to avoid long-quiet-period bursts.

@@ -6,19 +6,19 @@ per agent, named ``intelliqx-{agent_name}`` (e.g. ``intelliqx-planner``,
 can exceed the 15-minute Lambda limit, use AWS Fargate instead (a
 separate adapter in production deployments).
 
-Error handling pattern (``_try_init`` / ``_available``):
+Error handling pattern (``try_init`` / ``available``):
 
-* ``_try_init`` catches ``(ImportError, OSError)``. ``ImportError``
+* ``try_init`` catches ``(ImportError, OSError)``. ``ImportError``
   covers the absence of ``boto3``. ``OSError`` covers credential
   resolution failures at client-creation time (missing AWS
   credentials, invalid region, or network error resolving the
   Lambda endpoint).
-* When ``_try_init`` returns ``False``, ``invoke`` returns an
+* When ``try_init`` returns ``False``, ``invoke`` returns an
   ``InvocationResponse`` with ``status="not_found"`` and a
   descriptive error message. This is **graceful degradation** — the
   compute layer degrades to a "not found" response rather than
   crashing the orchestrator.
-* When ``_try_init`` returns ``True`` but Lambda invocation fails
+* When ``try_init`` returns ``True`` but Lambda invocation fails
   at call time, the exception is caught and returned as an
   ``InvocationResponse`` with ``status="error"``. This keeps the
   orchestration loop alive even when individual agent invocations
@@ -45,14 +45,14 @@ class AWSLambdaComputeRuntime(ComputeRuntime):
 
     def __init__(self, region: str | None = None) -> None:
         self.region = region or os.environ.get("AWS_REGION", "us-east-1")
-        self.__client: Any = None
-        self.__available = self._try_init()
+        self.client: Any = None
+        self.available = self.try_init()
 
-    def _try_init(self) -> bool:
+    def try_init(self) -> bool:
         try:
             import boto3  # type: ignore
 
-            self.__client = boto3.client("lambda", region_name=self.region)
+            self.client = boto3.client("lambda", region_name=self.region)
             return True
         except (ImportError, OSError):
             return False
@@ -72,7 +72,7 @@ class AWSLambdaComputeRuntime(ComputeRuntime):
             InvocationResponse with one of statuses
             ``"ok"``, ``"error"``, or ``"not_found"``.
         """
-        if not self.__available:
+        if not self.available:
             return InvocationResponse(
                 agent_name=request.agent_name,
                 output={},
@@ -87,7 +87,7 @@ class AWSLambdaComputeRuntime(ComputeRuntime):
             # Synchronous RequestResponse invoke. The boto3 call is
             # blocking; we offload to a worker thread.
             response = await asyncio.to_thread(
-                self.__client.invoke,
+                self.client.invoke,
                 FunctionName=f"intelliqx-{request.agent_name}",
                 InvocationType="RequestResponse",
                 Payload=json.dumps(request.model_dump(mode="json")),

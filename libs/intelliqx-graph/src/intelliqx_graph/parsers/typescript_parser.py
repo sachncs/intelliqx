@@ -68,31 +68,31 @@ class TypeScriptParser(BaseParser):
         entities: list[ParsedEntity] = []
         file_str = str(file_path)
 
-        self._walk(tree.root_node, source_bytes, file_str, entities, parent=None)
+        self.walk(tree.root_node, source_bytes, file_str, entities, parent=None)
         return entities
 
-    def _walk(self, node, source_bytes: bytes, file_str: str, entities: list[ParsedEntity], parent: str | None):
+    def walk(self, node, source_bytes: bytes, file_str: str, entities: list[ParsedEntity], parent: str | None):
         for child in node.children:
             ctype = child.type
 
             if ctype in ("function_declaration", "generator_function_declaration"):
-                entities.append(self._parse_function(child, source_bytes, file_str, parent))
+                entities.append(self.parse_function(child, source_bytes, file_str, parent))
 
             elif ctype == "method_definition":
-                entities.append(self._parse_method(child, source_bytes, file_str, parent))
+                entities.append(self.parse_method(child, source_bytes, file_str, parent))
 
             elif ctype == "class_declaration":
-                class_entity = self._parse_class(child, source_bytes, file_str, parent)
+                class_entity = self.parse_class(child, source_bytes, file_str, parent)
                 entities.append(class_entity)
-                self._walk(child, source_bytes, file_str, entities, parent=class_entity.name)
+                self.walk(child, source_bytes, file_str, entities, parent=class_entity.name)
 
             elif ctype == "interface_declaration":
-                class_entity = self._parse_interface(child, source_bytes, file_str, parent)
+                class_entity = self.parse_interface(child, source_bytes, file_str, parent)
                 entities.append(class_entity)
-                self._walk(child, source_bytes, file_str, entities, parent=class_entity.name)
+                self.walk(child, source_bytes, file_str, entities, parent=class_entity.name)
 
             elif ctype in ("import_statement",):
-                entities.append(self._parse_import(child, source_bytes, file_str))
+                entities.append(self.parse_import(child, source_bytes, file_str))
 
             elif ctype == "lexical_declaration":
                 for grandchild in child.children:
@@ -117,7 +117,7 @@ class TypeScriptParser(BaseParser):
                 name_node = child.child_by_field_name("name")
                 name = node_text(name_node, source_bytes) if name_node else "anonymous"
                 params_node = child.child_by_field_name("parameters")
-                params = self._parse_parameters(params_node, source_bytes) if params_node else []
+                params = self.parse_parameters(params_node, source_bytes) if params_node else []
                 entities.append(ParsedEntity(
                     name=name,
                     entity_type="function",
@@ -131,11 +131,11 @@ class TypeScriptParser(BaseParser):
                     complexity=estimate_complexity(child),
                 ))
 
-    def _parse_function(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
+    def parse_function(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
         name = node_text(name_node, source_bytes) if name_node else "anonymous"
         params_node = node.child_by_field_name("parameters")
-        params = self._parse_parameters(params_node, source_bytes) if params_node else []
+        params = self.parse_parameters(params_node, source_bytes) if params_node else []
 
         return ParsedEntity(
             name=name,
@@ -150,11 +150,11 @@ class TypeScriptParser(BaseParser):
             complexity=estimate_complexity(node),
         )
 
-    def _parse_method(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
+    def parse_method(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
         name = node_text(name_node, source_bytes) if name_node else "anonymous"
         params_node = node.child_by_field_name("parameters")
-        params = self._parse_parameters(params_node, source_bytes) if params_node else []
+        params = self.parse_parameters(params_node, source_bytes) if params_node else []
         is_static = any(c.type == "static" for c in node.children)
 
         return ParsedEntity(
@@ -171,7 +171,7 @@ class TypeScriptParser(BaseParser):
             complexity=estimate_complexity(node),
         )
 
-    def _parse_class(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
+    def parse_class(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
         name = node_text(name_node, source_bytes) if name_node else "anonymous"
 
@@ -191,7 +191,7 @@ class TypeScriptParser(BaseParser):
             bases=bases,
         )
 
-    def _parse_interface(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
+    def parse_interface(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
         name = node_text(name_node, source_bytes) if name_node else "anonymous"
         return ParsedEntity(
@@ -204,7 +204,7 @@ class TypeScriptParser(BaseParser):
             parent=parent,
         )
 
-    def _parse_import(self, node, source_bytes: bytes, file_str: str) -> ParsedEntity:
+    def parse_import(self, node, source_bytes: bytes, file_str: str) -> ParsedEntity:
         source_text = node_text(node, source_bytes)
         import_source = ""
         import_names: list[str] = []
@@ -244,7 +244,7 @@ class TypeScriptParser(BaseParser):
             is_from_import=is_from_import,
         )
 
-    def _parse_parameters(self, params_node, source_bytes: bytes) -> list[str]:
+    def parse_parameters(self, params_node, source_bytes: bytes) -> list[str]:
         params: list[str] = []
         for child in params_node.children:
             if child.type == "required_parameter" or child.type == "optional_parameter":

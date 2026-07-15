@@ -133,28 +133,24 @@ class InMemoryVectorIndex:
     """
 
     def __init__(self, dim: int) -> None:
-        self.__dim = dim
+        self.dim = dim
         # id -> VectorDoc
-        self.__docs: dict[str, VectorDoc] = {}
-
-    @property
-    def dim(self) -> int:
-        return self.__dim
+        self.docs: dict[str, VectorDoc] = {}
 
     async def upsert(self, docs: Sequence[VectorDoc]) -> int:
         added = 0
         for d in docs:
-            if len(d.vector) != self.__dim:
-                raise ValueError(f"Vector dim mismatch: expected {self.__dim}, got {len(d.vector)}")
-            self.__docs[d.id] = d
+            if len(d.vector) != self.dim:
+                raise ValueError(f"Vector dim mismatch: expected {self.dim}, got {len(d.vector)}")
+            self.docs[d.id] = d
             added += 1
         return added
 
     async def delete(self, ids: Sequence[str]) -> int:
         removed = 0
         for i in ids:
-            if i in self.__docs:
-                del self.__docs[i]
+            if i in self.docs:
+                del self.docs[i]
                 removed += 1
         return removed
 
@@ -166,14 +162,14 @@ class InMemoryVectorIndex:
         tenant_id: str | None = None,
         filter_metadata: dict[str, Any] | None = None,
     ) -> list[SearchResult]:
-        if len(vector) != self.__dim:
-            raise ValueError(f"Vector dim mismatch: expected {self.__dim}, got {len(vector)}")
+        if len(vector) != self.dim:
+            raise ValueError(f"Vector dim mismatch: expected {self.dim}, got {len(vector)}")
 
         # First filter: drop candidates that don't match tenant or
         # metadata pre-filters. The expensive part (cosine sim) only
         # runs on the survivors.
         candidates: list[VectorDoc] = []
-        for d in self.__docs.values():
+        for d in self.docs.values():
             if tenant_id is not None and d.tenant_id != tenant_id:
                 continue
             if filter_metadata:
@@ -212,11 +208,11 @@ class InMemoryVectorIndex:
 
     async def count(self, tenant_id: str | None = None) -> int:
         if tenant_id is None:
-            return len(self.__docs)
-        return sum(1 for d in self.__docs.values() if d.tenant_id == tenant_id)
+            return len(self.docs)
+        return sum(1 for d in self.docs.values() if d.tenant_id == tenant_id)
 
 
-_SINGLETON: VectorIndex | None = None
+SINGLETON: VectorIndex | None = None
 
 
 def get_vector_index() -> VectorIndex:
@@ -235,8 +231,8 @@ def get_vector_index() -> VectorIndex:
       in ``INTELLIQX_VECTOR_DB`` (default ``:memory:``).
     * ``"zvec"`` — :class:`ZvecIndex` (Zilliz).
     """
-    global _SINGLETON
-    if _SINGLETON is None:
+    global SINGLETON
+    if SINGLETON is None:
         import os
 
         backend = os.environ.get("INTELLIQX_VECTOR_BACKEND", "memory")
@@ -245,14 +241,14 @@ def get_vector_index() -> VectorIndex:
             from intelliqx_vector.sqlite_vec_index import SqliteVecIndex
 
             db_path = os.environ.get("INTELLIQX_VECTOR_DB", ":memory:")
-            _SINGLETON = SqliteVecIndex(dim=dim, db_path=db_path)
+            SINGLETON = SqliteVecIndex(dim=dim, db_path=db_path)
         elif backend == "zvec":
             from intelliqx_vector.zvec_index import ZvecIndex
 
-            _SINGLETON = ZvecIndex(dim=dim)
+            SINGLETON = ZvecIndex(dim=dim)
         else:
-            _SINGLETON = InMemoryVectorIndex(dim=dim)
-    return _SINGLETON
+            SINGLETON = InMemoryVectorIndex(dim=dim)
+    return SINGLETON
 
 
 def set_vector_index(idx: VectorIndex) -> None:
@@ -263,11 +259,11 @@ def set_vector_index(idx: VectorIndex) -> None:
     ``VectorIndex`` implementation) before the first
     :func:`get_vector_index` call.
     """
-    global _SINGLETON
-    _SINGLETON = idx
+    global SINGLETON
+    SINGLETON = idx
 
 
 def reset_vector_index() -> None:
     """Clear the singleton (for tests)."""
-    global _SINGLETON
-    _SINGLETON = None
+    global SINGLETON
+    SINGLETON = None
