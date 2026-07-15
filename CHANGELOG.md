@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed — Codebase quality pass
+
+* **Dead code removed.** Deleted unused `create_adk_workflow()` from
+  `agents.sgir.pipeline`, unused `make_run_id()` from
+  `agents.coordination.events`, redundant `anyio_backend` fixture from
+  `tests/conftest`, redundant `TenantContext`/`AgentContext` re-imports
+  from `intelliqx_agents.base.invoke()`, redundant `struct` re-import
+  from `intelliqx_okf.catalog`, and unused `EdgeType.MESSAGE` enum
+  member from `intelliqx_graph.models`.
+* **Semi-private symbols made public.** Renamed 10 underscore-prefixed
+  helper functions that were imported by tests: `extract_imports`,
+  `extract_requirements`, `shared_keywords`, `pixel_diff_pct`,
+  `parse_dom`, `infer_workflow`, `generate_candidates`, `find_free_port`,
+  `trim_to_cost`, `validate_dag`. All test imports updated.
+* **Docs synchronised.** Phase status lines in `docs/phases/phase-{2..7}`
+  updated to match `docs/phases/README.md`. Cost model doc updated to
+  reference renamed functions. Source-code docstring in
+  `agents.execution.design_intel` updated.
+
 ### Added
 
 * **MiniMax LLM adapter** — new

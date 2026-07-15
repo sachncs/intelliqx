@@ -2,7 +2,7 @@
 
 **Goal**: Implement the four core Intelligence-category reasoning agents — Requirements Intelligence, Code Intelligence, Test Design, Critic — plus supporting Risk Assessment, Coverage Analysis, and Test Data scaffolding.
 
-**Status**: PENDING
+**Status**: COMPLETE
 
 ---
 
