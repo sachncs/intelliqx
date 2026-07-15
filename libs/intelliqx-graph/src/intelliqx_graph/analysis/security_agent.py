@@ -248,15 +248,38 @@ class SecurityAgent:
         data_flow: nx.DiGraph | None,
         boundary_map: dict[str, SecurityBoundary],
     ) -> list[Vulnerability]:
+        """Run every vulnerability detector and return a severity-sorted list.
+
+        The work is split across two helpers because each helper
+        covers an orthogonal phase: per-node checks (which only
+        need the call graph + boundary map) and per-edge checks
+        (which need the data flow graph). Both helpers read the
+        shared boundary map.
+        """
+        vulns: list[Vulnerability] = []
+        vulns.extend(self._scan_per_node(call_graph, boundary_map))
+        vulns.extend(self._scan_per_edge(data_flow, boundary_map))
+        vulns.sort(
+            key=lambda v: self.SEVERITY_VALUES.get(v.severity, 0),
+            reverse=True,
+        )
+        return vulns
+
+    def _scan_per_node(
+        self,
+        call_graph: nx.DiGraph | None,
+        boundary_map: dict[str, SecurityBoundary],
+    ) -> list[Vulnerability]:
+        """Apply the three per-node vulnerability detectors."""
         vulns: list[Vulnerability] = []
         sg = self.index.software_graph
+        if call_graph is None:
+            return vulns
 
-        for node_id in (call_graph.nodes if call_graph else []):
+        for node_id in call_graph.nodes:
             node = sg.find_node(node_id)
             if node is None:
                 continue
-
-            node_name_lower = node.name.lower()
 
             if self.is_sql_injection_risk(node):
                 vulns.append(Vulnerability(
@@ -282,7 +305,7 @@ class SecurityAgent:
 
             if (
                 boundary_map.get(node_id, SecurityBoundary.NONE) == SecurityBoundary.NONE
-                and any(kw in node_name_lower for kw in self.SENSITIVE_NAME_KEYWORDS)
+                and any(kw in node.name.lower() for kw in self.SENSITIVE_NAME_KEYWORDS)
             ):
                 vulns.append(Vulnerability(
                     vulnerability_type=VulnerabilityType.SENSITIVE_DATA_EXPOSURE,
@@ -293,29 +316,40 @@ class SecurityAgent:
                     affected_data_flow=[node_id],
                     recommendation="Apply appropriate security boundaries to sensitive data handlers",
                 ))
+        return vulns
 
-        if data_flow is not None:
-            for source, target in data_flow.edges():
-                src_boundary = boundary_map.get(source, SecurityBoundary.NONE)
-                tgt_boundary = boundary_map.get(target, SecurityBoundary.NONE)
-                if (
-                    src_boundary == SecurityBoundary.NONE
-                    and tgt_boundary != SecurityBoundary.NONE
-                    and tgt_boundary != SecurityBoundary.EXTERNAL
-                ):
-                    source_node = sg.find_node(source)
-                    if source_node and not self.has_sanitization(source_node):
-                        vulns.append(Vulnerability(
-                            vulnerability_type=VulnerabilityType.TRUST_BOUNDARY_CROSSING,
-                            node_id=source,
-                            node_name=source_node.name,
-                            severity="medium",
-                            description=f"Untrusted node '{source_node.name}' feeds into {tgt_boundary.value} boundary",
-                            affected_data_flow=[source, target],
-                            recommendation="Validate and sanitize data crossing trust boundaries",
-                        ))
-
-        vulns.sort(key=lambda v: self.SEVERITY_VALUES.get(v.severity, 0), reverse=True)
+    def _scan_per_edge(
+        self,
+        data_flow: nx.DiGraph | None,
+        boundary_map: dict[str, SecurityBoundary],
+    ) -> list[Vulnerability]:
+        """Apply the per-edge trust-boundary-crossing detector."""
+        if data_flow is None:
+            return []
+        sg = self.index.software_graph
+        vulns: list[Vulnerability] = []
+        for source, target in data_flow.edges():
+            src_boundary = boundary_map.get(source, SecurityBoundary.NONE)
+            tgt_boundary = boundary_map.get(target, SecurityBoundary.NONE)
+            if (
+                src_boundary == SecurityBoundary.NONE
+                and tgt_boundary != SecurityBoundary.NONE
+                and tgt_boundary != SecurityBoundary.EXTERNAL
+            ):
+                source_node = sg.find_node(source)
+                if source_node and not self.has_sanitization(source_node):
+                    vulns.append(Vulnerability(
+                        vulnerability_type=VulnerabilityType.TRUST_BOUNDARY_CROSSING,
+                        node_id=source,
+                        node_name=source_node.name,
+                        severity="medium",
+                        description=(
+                            f"Untrusted node '{source_node.name}' feeds into "
+                            f"{tgt_boundary.value} boundary"
+                        ),
+                        affected_data_flow=[source, target],
+                        recommendation="Validate and sanitize data crossing trust boundaries",
+                    ))
         return vulns
 
     def is_sql_injection_risk(self, node: object) -> bool:
