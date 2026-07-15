@@ -94,7 +94,7 @@ class CodeIntelAgent(AgentBase):
         for f in input.files:
             path = f["path"]
             content = f.get("content", "")
-            deps = _extract_imports(content)
+            deps = extract_imports(content)
             deps_per_file[path] = deps
             # Each file gets a fresh ``file-<ulid>`` node id so the
             # node identity is stable across runs of the same input.
@@ -176,7 +176,7 @@ class CodeIntelAgent(AgentBase):
         )
 
 
-def _extract_imports(content: str) -> set[str]:
+def extract_imports(content: str) -> set[str]:
     """Extract Python top-level module names from ``content``.
 
     Covers the two most common forms:

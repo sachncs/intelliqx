@@ -4,7 +4,7 @@ import pytest
 from intelliqx_compute.runtime import InvocationRequest
 
 from agents import register_all, register_compute_handlers
-from agents.execution.self_healing import SelfHealingAgent, _generate_candidates
+from agents.execution.self_healing import SelfHealingAgent, generate_candidates
 
 SAMPLE_HTML = """
 <form id="login-form">
@@ -18,7 +18,7 @@ SAMPLE_HTML = """
 
 @pytest.mark.unit
 def test_candidates_include_id():
-    cands = _generate_candidates("#old-id", SAMPLE_HTML)
+    cands = generate_candidates("#old-id", SAMPLE_HTML)
     selectors = [c.selector for c in cands]
     assert "#username" in selectors
     assert "#submit-btn" in selectors
@@ -26,28 +26,28 @@ def test_candidates_include_id():
 
 @pytest.mark.unit
 def test_candidates_include_data_testid():
-    cands = _generate_candidates("#x", SAMPLE_HTML)
+    cands = generate_candidates("#x", SAMPLE_HTML)
     selectors = [c.selector for c in cands]
     assert '[data-testid="forgot-pw-link"]' in selectors
 
 
 @pytest.mark.unit
 def test_candidates_include_name_attr():
-    cands = _generate_candidates("#x", SAMPLE_HTML)
+    cands = generate_candidates("#x", SAMPLE_HTML)
     selectors = [c.selector for c in cands]
     assert '[name="username"]' in selectors
 
 
 @pytest.mark.unit
 def test_candidates_include_aria_label():
-    cands = _generate_candidates("#x", SAMPLE_HTML)
+    cands = generate_candidates("#x", SAMPLE_HTML)
     selectors = [c.selector for c in cands]
     assert '[aria-label="Forgot password"]' in selectors
 
 
 @pytest.mark.unit
 def test_candidates_dedupe():
-    cands = _generate_candidates("#x", SAMPLE_HTML)
+    cands = generate_candidates("#x", SAMPLE_HTML)
     selectors = [c.selector for c in cands]
     assert len(selectors) == len(set(selectors))
 

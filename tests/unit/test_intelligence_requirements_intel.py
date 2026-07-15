@@ -7,20 +7,20 @@ from intelliqx_kg.graph import get_kg
 from agents import register_all, register_compute_handlers
 from agents.intelligence.requirements_intel import (
     RequirementsIntelAgent,
-    _extract_requirements,
-    _shared_keywords,
+    extract_requirements,
+    shared_keywords,
 )
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_extract_requirements_from_numbered_list():
+async def testextract_requirements_from_numbered_list():
     text = """
 1. Users can log in with email and password [high]
 2. Users can reset their password [medium]
 3. Admin can view all users [critical]
 """
-    reqs = _extract_requirements(text)
+    reqs = extract_requirements(text)
     assert len(reqs) == 3
     assert reqs[0]["priority"] == "high"
     assert reqs[2]["priority"] == "critical"
@@ -28,13 +28,13 @@ async def test_extract_requirements_from_numbered_list():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_extract_requirements_from_bullets():
+async def testextract_requirements_from_bullets():
     text = """
 - Search by keyword
 - Filter by date
 - Sort by name
 """
-    reqs = _extract_requirements(text)
+    reqs = extract_requirements(text)
     assert len(reqs) == 3
 
 
@@ -42,7 +42,7 @@ async def test_extract_requirements_from_bullets():
 def test_shared_keywords():
     a = "Users can reset their password"
     b = "User password reset is critical"
-    shared = _shared_keywords(a, b)
+    shared = shared_keywords(a, b)
     assert "password" in shared
     assert "reset" in shared
 
@@ -52,7 +52,7 @@ def test_shared_keywords_excludes_stopwords():
     a = "the a an"
     b = "the a an"
     # "the" and "a"/"an" are all in the stopword set; "a" and "an" are len<=2, so also filtered.
-    assert _shared_keywords(a, b) == []  # all stopwords
+    assert shared_keywords(a, b) == []  # all stopwords
 
 
 @pytest.mark.unit

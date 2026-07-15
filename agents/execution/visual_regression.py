@@ -96,7 +96,7 @@ class VisualRegressionAgent(AgentBase):
                 current_hash=current_hash,
             )
 
-        diff_pct = _pixel_diff_pct(baseline_bytes, input.image_bytes)
+        diff_pct = pixel_diff_pct(baseline_bytes, input.image_bytes)
         is_regression = diff_pct > input.pixel_threshold
         return VisualRegressionOutput(
             name=input.name,
@@ -107,7 +107,7 @@ class VisualRegressionAgent(AgentBase):
         )
 
 
-def _pixel_diff_pct(a: bytes, b: bytes) -> float:
+def pixel_diff_pct(a: bytes, b: bytes) -> float:
     """Approximate pixel diff percentage using byte-by-byte comparison.
 
     Production code should decode PNGs to pixels. For test

@@ -82,7 +82,7 @@ class EnvironmentAgent(AgentBase):
 
         from tests.fixtures.reference_app.app import app as ref_app
 
-        port = input.port or _find_free_port()
+        port = input.port or find_free_port()
         config = uvicorn.Config(ref_app, host="127.0.0.1", port=port, log_level="error")
         server = uvicorn.Server(config)
 
@@ -162,7 +162,7 @@ class EnvironmentAgent(AgentBase):
         )
 
 
-def _find_free_port() -> int:
+def find_free_port() -> int:
     """Return an OS-assigned free TCP port.
 
     Binding to port 0 lets the kernel pick; we read the assigned

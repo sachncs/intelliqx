@@ -5,27 +5,27 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_storage.store import InMemoryObjectStore
 
 from agents import register_all, register_compute_handlers
-from agents.execution.visual_regression import VisualRegressionAgent, _pixel_diff_pct
+from agents.execution.visual_regression import VisualRegressionAgent, pixel_diff_pct
 
 
 @pytest.mark.unit
 def test_pixel_diff_pct_zero_for_identical():
-    assert _pixel_diff_pct(b"hello", b"hello") == 0.0
+    assert pixel_diff_pct(b"hello", b"hello") == 0.0
 
 
 @pytest.mark.unit
 def test_pixel_diff_pct_nonzero_for_different():
-    assert _pixel_diff_pct(b"hello", b"world") > 0.0
+    assert pixel_diff_pct(b"hello", b"world") > 0.0
 
 
 @pytest.mark.unit
 def test_pixel_diff_pct_caps_at_one():
-    assert _pixel_diff_pct(b"a", b"b" * 100) <= 1.0
+    assert pixel_diff_pct(b"a", b"b" * 100) <= 1.0
 
 
 @pytest.mark.unit
 def test_pixel_diff_pct_empty():
-    assert _pixel_diff_pct(b"", b"abc") == 1.0
+    assert pixel_diff_pct(b"", b"abc") == 1.0
 
 
 @pytest.mark.unit

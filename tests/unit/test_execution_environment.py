@@ -62,12 +62,12 @@ async def test_environment_fails_for_unreachable_app():
     # Patch the agent to use a bogus app path so it fails to bind
     from agents.execution import environment as env_module
 
-    original = env_module._find_free_port
+    original = env_module.find_free_port
 
     def bogus_app():
         return 1  # reserved port, uvicorn will fail to bind
 
-    env_module._find_free_port = bogus_app
+    env_module.find_free_port = bogus_app
     try:
         with pytest.raises(RuntimeError):
             await agent.invoke(
@@ -83,4 +83,4 @@ async def test_environment_fails_for_unreachable_app():
                 )
             )
     finally:
-        env_module._find_free_port = original
+        env_module.find_free_port = original

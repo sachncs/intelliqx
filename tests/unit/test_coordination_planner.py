@@ -6,7 +6,7 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_core.models import PlanNode
 
 from agents import register_all, register_compute_handlers
-from agents.coordination.planner import PlannerAgent, _trim_to_cost, _validate_dag
+from agents.coordination.planner import PlannerAgent, trim_to_cost, validate_dag
 from agents.coordination.templates import plan_for
 
 
@@ -125,21 +125,21 @@ def test_validate_dag_detects_cycle():
     n1 = PlanNode(node_id="n1", agent="x", depends_on=("n2",))
     n2 = PlanNode(node_id="n2", agent="x", depends_on=("n1",))
     with pytest.raises(ValueError, match="cycle"):
-        _validate_dag([n1, n2])
+        validate_dag([n1, n2])
 
 
 @pytest.mark.unit
 def test_validate_dag_detects_missing_dep():
     n1 = PlanNode(node_id="n1", agent="x", depends_on=("nope",))
     with pytest.raises(ValueError, match="unknown"):
-        _validate_dag([n1])
+        validate_dag([n1])
 
 
 @pytest.mark.unit
 def test_validate_dag_ok():
     n1 = PlanNode(node_id="n1", agent="x")
     n2 = PlanNode(node_id="n2", agent="x", depends_on=("n1",))
-    _validate_dag([n1, n2])
+    validate_dag([n1, n2])
 
 
 @pytest.mark.unit
@@ -147,7 +147,7 @@ def test_trim_to_cost_keeps_required_when_within_ceiling():
     required = PlanNode(node_id="r1", agent="planner", inputs={})
     optional = PlanNode(node_id="o1", agent="planner", inputs={"optional": True})
     # cost(2x planner) = 0.10, ceiling = 0.20 → keep both
-    kept = _trim_to_cost([required, optional], ceiling=0.20)
+    kept = trim_to_cost([required, optional], ceiling=0.20)
     assert any(n.node_id == "r1" for n in kept)
     assert any(n.node_id == "o1" for n in kept)
 
@@ -157,7 +157,7 @@ def test_trim_to_cost_drops_optional_first():
     required = PlanNode(node_id="r1", agent="planner", inputs={})
     optional = PlanNode(node_id="o1", agent="planner", inputs={"optional": True})
     # cost(2x planner) = 0.10, ceiling = 0.06 → drop optional (cheapest path)
-    kept = _trim_to_cost([required, optional], ceiling=0.06)
+    kept = trim_to_cost([required, optional], ceiling=0.06)
     assert any(n.node_id == "r1" for n in kept)
     assert not any(n.node_id == "o1" for n in kept)
 
@@ -167,7 +167,7 @@ def test_trim_to_cost_drops_required_when_required_alone_exceeds():
     required = PlanNode(node_id="r1", agent="planner", inputs={})
     optional = PlanNode(node_id="o1", agent="planner", inputs={"optional": True})
     # cost(2x planner) = 0.10, ceiling = 0.03 → must drop one of them
-    kept = _trim_to_cost([required, optional], ceiling=0.03)
+    kept = trim_to_cost([required, optional], ceiling=0.03)
     assert len(kept) == 0 or len(kept) == 1
 
 

@@ -74,7 +74,7 @@ class DesignIntelOutput(BaseModel):
     Attributes:
         elements: Every parsed UI element on the page.
         workflow_steps: High-level workflow inferred from the
-            elements (see :func:`_infer_workflow`).
+            elements (see :func:`infer_workflow`).
         semantic_graph_id: Reserved for future KG graph-id
             population; always ``None`` in v1.
     """
@@ -105,8 +105,8 @@ class DesignIntelAgent(AgentBase):
 
     @traced_agent("design_intel")
     async def run(self, ctx: AgentContext, input: DesignIntelInput) -> DesignIntelOutput:
-        elements = _parse_dom(input.dom_html, interactive_tags=self.INTERACTIVE_TAGS)
-        workflow = _infer_workflow(elements)
+        elements = parse_dom(input.dom_html, interactive_tags=self.INTERACTIVE_TAGS)
+        workflow = infer_workflow(elements)
         # Persist to KG so other agents (RAG, accessibility) can
         # query the page structure. The selector is the node id
         # because selectors are stable identifiers within a page.
@@ -126,7 +126,7 @@ class DesignIntelAgent(AgentBase):
         return DesignIntelOutput(elements=elements, workflow_steps=workflow)
 
 
-def _parse_dom(html: str, *, interactive_tags: str | None = None) -> list[UIElement]:
+def parse_dom(html: str, *, interactive_tags: str | None = None) -> list[UIElement]:
     """Extract interactive UI elements from ``html``.
 
     ``interactive_tags`` defaults to the agent's
@@ -178,7 +178,7 @@ def _parse_dom(html: str, *, interactive_tags: str | None = None) -> list[UIElem
     return out
 
 
-def _infer_workflow(elements: list[UIElement]) -> list[str]:
+def infer_workflow(elements: list[UIElement]) -> list[str]:
     """Infer high-level user workflow steps from the parsed elements.
 
     Heuristic:

@@ -81,7 +81,7 @@ class RequirementsIntelAgent(AgentBase):
 
     @traced_agent("requirements_intel")
     async def run(self, ctx: AgentContext, input: RequirementsInput) -> RequirementsIntelOutput:
-        requirements = _extract_requirements(input.text)
+        requirements = extract_requirements(input.text)
         # Persist to KG
         kg = get_kg()
         nodes: list[Node] = []
@@ -107,7 +107,7 @@ class RequirementsIntelAgent(AgentBase):
         edges: list[Edge] = []
         for i, src in enumerate(nodes):
             for dst in nodes[i + 1 :]:
-                shared = _shared_keywords(src.attrs.get("title", ""), dst.attrs.get("title", ""))
+                shared = shared_keywords(src.attrs.get("title", ""), dst.attrs.get("title", ""))
                 if shared:
                     edges.append(
                         Edge(
@@ -133,7 +133,7 @@ class RequirementsIntelAgent(AgentBase):
         return RequirementsIntelOutput(graph=graph, requirement_count=len(nodes))
 
 
-def _extract_requirements(text: str) -> list[dict[str, Any]]:
+def extract_requirements(text: str) -> list[dict[str, Any]]:
     """Extract requirements from a structured-text PRD.
 
     A "requirement" is any line that begins with a numbered
@@ -165,7 +165,7 @@ def _extract_requirements(text: str) -> list[dict[str, Any]]:
     return out
 
 
-def _shared_keywords(a: str, b: str) -> list[str]:
+def shared_keywords(a: str, b: str) -> list[str]:
     """Return sorted shared content-words between two strings.
 
     Stopwords (``the``, ``a``, ``of`` …) and words of length <= 2

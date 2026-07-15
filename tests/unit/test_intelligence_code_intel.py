@@ -5,7 +5,7 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_kg.graph import get_kg
 
 from agents import register_all, register_compute_handlers
-from agents.intelligence.code_intel import CodeIntelAgent, _extract_imports
+from agents.intelligence.code_intel import CodeIntelAgent, extract_imports
 
 
 @pytest.mark.unit
@@ -15,7 +15,7 @@ import os
 from typing import Any
 from agents.coordination.planner import PlannerAgent
 """
-    deps = _extract_imports(src)
+    deps = extract_imports(src)
     assert "os" in deps
     assert "typing" in deps
     assert "agents.coordination.planner" in deps
@@ -23,7 +23,7 @@ from agents.coordination.planner import PlannerAgent
 
 @pytest.mark.unit
 def test_extract_imports_empty():
-    assert _extract_imports("") == set()
+    assert extract_imports("") == set()
 
 
 @pytest.mark.unit

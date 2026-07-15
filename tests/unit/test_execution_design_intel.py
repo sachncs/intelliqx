@@ -5,7 +5,7 @@ from intelliqx_compute.runtime import InvocationRequest
 from intelliqx_kg.graph import get_kg
 
 from agents import register_all, register_compute_handlers
-from agents.execution.design_intel import DesignIntelAgent, UIElement, _infer_workflow, _parse_dom
+from agents.execution.design_intel import DesignIntelAgent, UIElement, infer_workflow, parse_dom
 
 SAMPLE_HTML = """
 <!DOCTYPE html>
@@ -29,7 +29,7 @@ SAMPLE_HTML = """
 
 @pytest.mark.unit
 def test_parse_dom_extracts_elements():
-    elements = _parse_dom(SAMPLE_HTML)
+    elements = parse_dom(SAMPLE_HTML)
     ids = {e.id for e in elements}
     assert "title" in ids
     assert "username" in ids
@@ -38,7 +38,7 @@ def test_parse_dom_extracts_elements():
 
 @pytest.mark.unit
 def test_parse_dom_selector_format():
-    elements = _parse_dom(SAMPLE_HTML)
+    elements = parse_dom(SAMPLE_HTML)
     title = next((e for e in elements if e.id == "title"), None)
     assert title is not None
     assert title.selector == "#title"
@@ -47,8 +47,8 @@ def test_parse_dom_selector_format():
 
 @pytest.mark.unit
 def test_infer_workflow_with_form_and_button():
-    elements = _parse_dom(SAMPLE_HTML)
-    steps = _infer_workflow(elements)
+    elements = parse_dom(SAMPLE_HTML)
+    steps = infer_workflow(elements)
     assert "Fill form fields" in steps
     assert "Click submit button" in steps
 
@@ -56,7 +56,7 @@ def test_infer_workflow_with_form_and_button():
 @pytest.mark.unit
 def test_infer_workflow_with_links_only():
     elements = [UIElement(tag="a", selector="#x")]
-    steps = _infer_workflow(elements)
+    steps = infer_workflow(elements)
     assert "Navigate via links" in steps
 
 

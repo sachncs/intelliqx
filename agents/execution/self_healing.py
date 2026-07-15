@@ -87,7 +87,7 @@ class SelfHealingAgent(AgentBase):
 
     @traced_agent("self_healing")
     async def run(self, ctx: AgentContext, input: SelfHealingInput) -> SelfHealingOutput:
-        candidates = _generate_candidates(
+        candidates = generate_candidates(
             input.failed_selector, input.dom_html, intent=input.intent
         )
         # LLM refinement. In tests the fake client returns a
@@ -121,7 +121,7 @@ class SelfHealingAgent(AgentBase):
         )
 
 
-def _generate_candidates(failed: str, html: str, *, intent: str = "") -> list[SelfHealingCandidate]:
+def generate_candidates(failed: str, html: str, *, intent: str = "") -> list[SelfHealingCandidate]:
     """Generate candidate selectors by inspecting the DOM.
 
     Heuristics (in priority order — higher confidence wins):

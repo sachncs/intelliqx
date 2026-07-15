@@ -112,18 +112,18 @@ class PlannerAgent(AgentBase[PlannerInput, PlannerOutput]):
         # Validate the full DAG *before* any trimming. This catches
         # template bugs (e.g. a typo in a dep) that would otherwise
         # surface only after trimming has lost context.
-        _validate_dag(nodes)
+        validate_dag(nodes)
 
-        estimated_cost = sum(_node_cost(n) for n in nodes)
+        estimated_cost = sum(node_cost(n) for n in nodes)
         if estimated_cost > cost_ceiling:
             # Trim optional nodes (and their dependents) until
             # within the cost ceiling.
-            nodes = _trim_to_cost(nodes, cost_ceiling)
-            estimated_cost = sum(_node_cost(n) for n in nodes)
+            nodes = trim_to_cost(nodes, cost_ceiling)
+            estimated_cost = sum(node_cost(n) for n in nodes)
 
         # Re-validate after trimming (idempotent — DAG is still
         # acyclic, dependencies still satisfied).
-        _validate_dag(nodes)
+        validate_dag(nodes)
 
         plan_id = new_id()
         return PlannerOutput(
@@ -134,18 +134,8 @@ class PlannerAgent(AgentBase[PlannerInput, PlannerOutput]):
         )
 
 
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
-
-def _node_cost(n: PlanNode) -> float:
-    """Return the estimated USD cost for invoking ``n``.
-
-    The numbers are *estimates* tuned for AWS Bedrock + Lambda
-    pricing. They drive cost-ceiling trimming; treat them as rough
-    rather than authoritative.
-    """
+def node_cost(n: PlanNode) -> float:
+    """Return the estimated USD cost for invoking ``n``."""
     base = {
         "planner": 0.05,
         "orchestrator": 0.02,
@@ -167,30 +157,27 @@ def _node_cost(n: PlanNode) -> float:
     return base.get(n.agent, 0.10)
 
 
-def _trim_to_cost(nodes: list[PlanNode], ceiling: float) -> list[PlanNode]:
+def trim_to_cost(nodes: list[PlanNode], ceiling: float) -> list[PlanNode]:
     """Drop nodes until the plan's cost fits within ``ceiling``.
 
     The sort key is ``(optional_first, descending_cost)``: we drop
     optional nodes before required ones, and within each class we
     drop the most expensive first.
 
-    **DAG preservation.** Dropping a node may leave its
-    *transitive dependents* with a dangling ``depends_on``. Those
-    dependents are dropped too, regardless of their own
-    optional/required status. This is intentional: a plan that
-    can't afford the upstream work is no better than a plan that
-    doesn't include the downstream work.
+    Dropping a node may leave its *transitive dependents* with a
+    dangling ``depends_on``. Those dependents are dropped too,
+    regardless of their own optional/required status.
     """
     sorted_nodes = sorted(
-        nodes, key=lambda n: (0 if n.inputs.get("optional") else 1, -_node_cost(n))
+        nodes, key=lambda n: (0 if n.inputs.get("optional") else 1, -node_cost(n))
     )
     dropped: set[str] = set()
-    cur = sum(_node_cost(n) for n in nodes)
+    cur = sum(node_cost(n) for n in nodes)
     for n in sorted_nodes:
         if cur <= ceiling:
             break
         dropped.add(n.node_id)
-        cur -= _node_cost(n)
+        cur -= node_cost(n)
     _ripple_drop(nodes, dropped)
     return [n for n in nodes if n.node_id not in dropped]
 
@@ -198,8 +185,7 @@ def _trim_to_cost(nodes: list[PlanNode], ceiling: float) -> list[PlanNode]:
 def _ripple_drop(nodes: list[PlanNode], dropped: set[str]) -> None:
     """Drop any node (required or optional) that depends on a dropped node.
 
-    Repeated until stable. See the module docstring of
-    :func:`_trim_to_cost` for the rationale.
+    Repeated until stable.
     """
     changed = True
     while changed:
@@ -212,18 +198,13 @@ def _ripple_drop(nodes: list[PlanNode], dropped: set[str]) -> None:
                 changed = True
 
 
-def _validate_dag(nodes: list[PlanNode]) -> None:
+def validate_dag(nodes: list[PlanNode]) -> None:
     """Raise :class:`ValueError` if ``nodes`` is not a valid DAG.
 
     Two checks:
         1. Every ``depends_on`` reference points to a node that
            actually exists.
         2. The graph has no cycles (Kahn's algorithm, O(V + E)).
-
-    The cycle check is implemented with Kahn's topological-sort
-    algorithm because it produces a definitive answer in linear
-    time, unlike a depth-first search which only proves the
-    absence of cycles by traversing everything.
     """
     ids = {n.node_id for n in nodes}
     for n in nodes:
