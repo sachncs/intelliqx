@@ -35,14 +35,14 @@ class VerificationReport(BaseModel):
     findings: list[str] = Field(default_factory=list)
 
 
-def _node_ids(graph: SoftwareGraph) -> set[str]:
+def node_ids(graph: SoftwareGraph) -> set[str]:
     ids: set[str] = set()
     for lg in graph.layers.values():
         ids.update(lg.node_ids)
     return ids
 
 
-def _edge_keys(graph: SoftwareGraph) -> set[tuple[str, str]]:
+def edge_keys(graph: SoftwareGraph) -> set[tuple[str, str]]:
     keys: set[tuple[str, str]] = set()
     for lg in graph.layers.values():
         for e in lg.edges:
@@ -50,24 +50,24 @@ def _edge_keys(graph: SoftwareGraph) -> set[tuple[str, str]]:
     return keys
 
 
-def _build_trace_set(
+def build_trace_set(
     graph: SoftwareGraph,
     graph_index: GraphIndex,
     entry_points: list[str],
     max_depth: int = 50,
 ) -> set[tuple[str, ...]]:
     traces: set[tuple[str, ...]] = set()
-    all_ids = _node_ids(graph)
+    all_ids = node_ids(graph)
 
     for ep in entry_points:
         if ep not in all_ids:
             continue
-        _dfs_traces(graph_index, ep, [], traces, all_ids, set(), max_depth)
+        dfs_traces(graph_index, ep, [], traces, all_ids, set(), max_depth)
 
     return traces
 
 
-def _dfs_traces(
+def dfs_traces(
     graph_index: GraphIndex,
     current: str,
     path: list[str],
@@ -92,7 +92,7 @@ def _dfs_traces(
         traces.add(tuple(path))
     else:
         for s in successors[:10]:
-            _dfs_traces(graph_index, s, path, traces, valid_ids, visited, depth_remaining - 1)
+            dfs_traces(graph_index, s, path, traces, valid_ids, visited, depth_remaining - 1)
 
     path.pop()
     visited.discard(current)
@@ -112,10 +112,10 @@ class VerificationAgent:
         self._after_index = GraphIndex(after)
 
     def verify(self) -> VerificationReport:
-        before_nodes = _node_ids(self._before)
-        after_nodes = _node_ids(self._after)
-        before_edges = _edge_keys(self._before)
-        after_edges = _edge_keys(self._after)
+        before_nodes = node_ids(self._before)
+        after_nodes = node_ids(self._after)
+        before_edges = edge_keys(self._before)
+        after_edges = edge_keys(self._after)
 
         nodes_added = len(after_nodes - before_nodes)
         nodes_removed = len(before_nodes - after_nodes)
@@ -125,10 +125,10 @@ class VerificationAgent:
         findings: list[str] = []
         behavior_preserved = True
 
-        traces_before = _build_trace_set(
+        traces_before = build_trace_set(
             self._before, self._before_index, self._entry_points,
         )
-        traces_after = _build_trace_set(
+        traces_after = build_trace_set(
             self._after, self._after_index, self._entry_points,
         )
 

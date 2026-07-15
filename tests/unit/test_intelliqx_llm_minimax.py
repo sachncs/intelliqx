@@ -26,8 +26,8 @@ def test_minimax_init_without_api_key_is_unavailable():
     with patch.dict("os.environ", {}, clear=True):
         client = MiniMaxLLMClient(api_key="")
     assert client.api_key == ""
-    # No key -> _try_init returns False -> __available is False.
-    assert client._available is False  # type: ignore[attr-defined]
+    # No key -> try_init returns False -> available is False.
+    assert client.available is False
 
 
 @pytest.mark.unit
@@ -35,7 +35,7 @@ def test_minimax_init_with_api_key_is_available():
     """A populated API key (real or fake) makes the adapter available."""
     client = MiniMaxLLMClient(api_key="sk-fake-test")
     assert client.api_key == "sk-fake-test"
-    assert client._available is True  # type: ignore[attr-defined]
+    assert client.available is True
 
 
 @pytest.mark.unit
@@ -87,10 +87,10 @@ async def test_minimax_complete_calls_litellm_acompletion():
     fake_litellm.aembedding = AsyncMock()
 
     client = MiniMaxLLMClient(api_key="sk-test")
-    # Bypass _try_init so the test does not depend on the installed
+    # Bypass try_init so the test does not depend on the installed
     # litellm version; inject our own client explicitly.
-    client._client = fake_litellm  # type: ignore[attr-defined]
-    client._available = True  # type: ignore[attr-defined]
+    client.sdk = fake_litellm
+    client.available = True
 
     response = await client.complete(_request("hi"))
 
@@ -113,8 +113,8 @@ async def test_minimax_complete_falls_back_on_litellm_error():
     fake_litellm.aembedding = AsyncMock()
 
     client = MiniMaxLLMClient(api_key="sk-test")
-    client._client = fake_litellm  # type: ignore[attr-defined]
-    client._available = True  # type: ignore[attr-defined]
+    client.sdk = fake_litellm
+    client.available = True
 
     response = await client.complete(_request("hello"))
     assert response.content.startswith("[minimax-fallback:")
@@ -152,8 +152,8 @@ async def test_minimax_embed_calls_litellm_aembedding():
     fake_litellm.aembedding = AsyncMock(return_value=_FakeResponse())
 
     client = MiniMaxLLMClient(api_key="sk-test")
-    client._client = fake_litellm  # type: ignore[attr-defined]
-    client._available = True  # type: ignore[attr-defined]
+    client.sdk = fake_litellm
+    client.available = True
 
     out = await client.embed(["x", "y"], model="minimax/text-embedding-01")
 
@@ -173,8 +173,8 @@ async def test_minimax_embed_falls_back_on_litellm_error():
     fake_litellm.acompletion = AsyncMock()
 
     client = MiniMaxLLMClient(api_key="sk-test", embed_dim=8)
-    client._client = fake_litellm  # type: ignore[attr-defined]
-    client._available = True  # type: ignore[attr-defined]
+    client.sdk = fake_litellm
+    client.available = True
 
     out = await client.embed(["foo"])
     assert len(out) == 1

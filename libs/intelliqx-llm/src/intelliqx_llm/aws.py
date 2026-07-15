@@ -6,19 +6,19 @@ local dev and CI on non-AWS machines still work. The fallback
 content is prefixed with ``[bedrock-fallback:]`` so callers can tell
 which path produced the response.
 
-Error handling pattern (``_try_init`` / ``_available``):
+Error handling pattern (``try_init`` / ``available``):
 
-* ``_try_init`` catches ``(ImportError, OSError)``. ``ImportError``
+* ``try_init`` catches ``(ImportError, OSError)``. ``ImportError``
   covers the absence of ``boto3``. ``OSError`` covers credential
   resolution failures at client-creation time (missing AWS
   credentials, invalid region, or STS errors).
-* When ``_try_init`` returns ``False``, ``complete`` returns a
+* When ``try_init`` returns ``False``, ``complete`` returns a
   deterministic mock response (SHA-256 of the last user message)
   prefixed with ``[bedrock-fallback:]``. ``embed`` returns a
   deterministic pseudo-embedding via ``deterministic_embedding``.
   This is **graceful degradation** — LLM-dependent tests and CI
   keep running on non-AWS machines.
-* When ``_try_init`` returns ``True`` but Bedrock invocation fails
+* When ``try_init`` returns ``True`` but Bedrock invocation fails
   at call time (e.g. model access denied, throttling), the
   ``embed`` method falls back to ``deterministic_embedding``. The
   ``complete`` method lets the boto3 exception propagate so the
@@ -59,20 +59,20 @@ class BedrockLLMClient(LLMClient):
     def __init__(self, region: str | None = None, model: str | None = None) -> None:
         self.region = region or os.environ.get("AWS_REGION", "us-east-1")
         self.model = model or self.DEFAULT_MODEL
-        self._client: Any = None
-        self._available = self._try_init()
+        self.sdk: Any = None
+        self.available = self.try_init()
 
-    def _try_init(self) -> bool:
+    def try_init(self) -> bool:
         try:
             import boto3  # type: ignore
 
-            self._client = boto3.client("bedrock-runtime", region_name=self.region)
+            self.sdk = boto3.client("bedrock-runtime", region_name=self.region)
             return True
         except (ImportError, OSError):
             return False
 
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
-        if not self._available:
+        if not self.available:
             # Deterministic fallback for tests/dev.
             last_user = next(
                 (m["content"] for m in reversed(request.messages) if m.get("role") == "user"), ""
@@ -98,7 +98,7 @@ class BedrockLLMClient(LLMClient):
             body["system"] = system
         # Offload the boto3 call to a worker thread.
         response = await asyncio.to_thread(
-            self._client.invoke_model, modelId=request.model, body=str(body).replace("'", '"')
+            self.sdk.invoke_model, modelId=request.model, body=str(body).replace("'", '"')
         )
         import json as _json
 
@@ -115,7 +115,7 @@ class BedrockLLMClient(LLMClient):
         )
 
     async def embed(self, texts: Sequence[str], *, model: str = "auto") -> list[list[float]]:
-        if not self._available:
+        if not self.available:
             return deterministic_embedding(texts, 1024)
         try:
             import json as _json
@@ -125,7 +125,7 @@ class BedrockLLMClient(LLMClient):
             for t in texts:
                 body = _json.dumps({"inputText": t})
                 response = await asyncio.to_thread(
-                    self._client.invoke_model, modelId=TITAN_EMBED_MODEL, body=body
+                    self.sdk.invoke_model, modelId=TITAN_EMBED_MODEL, body=body
                 )
                 payload = _json.loads(response["body"].read())
                 out.append(payload["embedding"])

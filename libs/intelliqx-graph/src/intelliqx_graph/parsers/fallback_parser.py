@@ -38,7 +38,7 @@ _IMPORT_PATTERNS = [
 ]
 
 
-def _estimate_complexity_from_text(source: str) -> str:
+def estimate_complexity_from_text(source: str) -> str:
     complexity = 1
     keywords = ["if", "else if", "elif", "while", "for", "switch", "case", "catch", "except"]
     for keyword in keywords:
@@ -104,7 +104,7 @@ class FallbackParser(BaseParser):
                     line_end=end_line,
                     language="fallback",
                     bases=bases,
-                    complexity=_estimate_complexity_from_text("\n".join(lines[line_num - 1:end_line])),
+                    complexity=estimate_complexity_from_text("\n".join(lines[line_num - 1:end_line])),
                 ))
 
         for pattern in _FUNCTION_PATTERNS:
@@ -140,7 +140,7 @@ class FallbackParser(BaseParser):
                     language="fallback",
                     parameters=params,
                     is_async=is_async,
-                    complexity=_estimate_complexity_from_text(func_source),
+                    complexity=estimate_complexity_from_text(func_source),
                 ))
 
         for pattern in _IMPORT_PATTERNS:

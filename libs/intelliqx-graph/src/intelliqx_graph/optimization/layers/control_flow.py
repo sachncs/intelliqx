@@ -14,7 +14,7 @@ from intelliqx_graph.models import (
 )
 
 
-def _make_node_id(file_path: str, name: str) -> str:
+def make_node_id(file_path: str, name: str) -> str:
     return f"{file_path}::{name}"
 
 
@@ -48,7 +48,7 @@ class ControlFlowBuilder(LayerBuilder):
             if entity.entity_type not in {"function", "method", "class"}:
                 continue
 
-            nid = _make_node_id(entity.file_path, entity.name)
+            nid = make_node_id(entity.file_path, entity.name)
             if nid in node_ids:
                 continue
             node_ids.add(nid)
@@ -71,15 +71,15 @@ class ControlFlowBuilder(LayerBuilder):
                 inputs=entity.parameters,
                 outputs=[entity.return_type] if entity.return_type else [],
                 complexity=entity.complexity,
-                side_effects=_detect_side_effects(entity),
+                side_effects=detect_side_effects(entity),
             ))
 
         for entity in entities:
             if entity.entity_type == "class":
-                class_id = _make_node_id(entity.file_path, entity.name)
+                class_id = make_node_id(entity.file_path, entity.name)
                 for child in entities:
                     if child.parent == entity.name and child.entity_type == "method":
-                        method_id = _make_node_id(child.file_path, child.name)
+                        method_id = make_node_id(child.file_path, child.name)
                         if class_id in node_ids and method_id in node_ids:
                             edges.append(SGIREdge(
                                 source=class_id,
@@ -91,11 +91,11 @@ class ControlFlowBuilder(LayerBuilder):
         for entity in entities:
             if entity.entity_type not in {"function", "method"}:
                 continue
-            if _is_entry_point(entity):
-                nid = _make_node_id(entity.file_path, entity.name)
+            if is_entry_point(entity):
+                nid = make_node_id(entity.file_path, entity.name)
                 if nid in node_ids:
                     for call_name in entity.calls:
-                        target_ids = _resolve_ids(call_name, entities, node_ids)
+                        target_ids = resolve_ids(call_name, entities, node_ids)
                         for target_id in target_ids:
                             if target_id != nid:
                                 edges.append(SGIREdge(
@@ -117,7 +117,7 @@ class ControlFlowBuilder(LayerBuilder):
         )
 
 
-def _detect_side_effects(entity: Any) -> list[str]:
+def detect_side_effects(entity: Any) -> list[str]:
     effects: list[str] = []
     if entity.is_async:
         effects.append("async")
@@ -132,7 +132,7 @@ def _detect_side_effects(entity: Any) -> list[str]:
     return effects
 
 
-def _is_entry_point(entity: Any) -> bool:
+def is_entry_point(entity: Any) -> bool:
     for decorator in entity.decorators:
         low = decorator.lower()
         for pattern in _CONTROL_FLOW_DECORATORS:
@@ -141,11 +141,11 @@ def _is_entry_point(entity: Any) -> bool:
     return False
 
 
-def _resolve_ids(name: str, entities: list[Any], node_ids: set[str]) -> list[str]:
+def resolve_ids(name: str, entities: list[Any], node_ids: set[str]) -> list[str]:
     results: list[str] = []
     for entity in entities:
         if entity.name == name:
-            nid = _make_node_id(entity.file_path, entity.name)
+            nid = make_node_id(entity.file_path, entity.name)
             if nid in node_ids:
                 results.append(nid)
     return results

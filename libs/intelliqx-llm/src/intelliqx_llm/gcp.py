@@ -4,19 +4,19 @@ Lazy-imports ``vertexai``. Falls back to a deterministic mock with
 ``[vertex-fallback:]`` prefix when the SDK or credentials are
 unavailable.
 
-Error handling pattern (``_try_init`` / ``_available``):
+Error handling pattern (``try_init`` / ``available``):
 
-* ``_try_init`` catches ``(ImportError, OSError)``. ``ImportError``
+* ``try_init`` catches ``(ImportError, OSError)``. ``ImportError``
   covers the absence of the ``google-cloud-aiplatform`` package
   (which provides ``vertexai``). ``OSError`` covers credential
   resolution failures (missing ``GOOGLE_APPLICATION_CREDENTIALS``,
   expired service-account key, or unreachable metadata server).
-* When ``_try_init`` returns ``False``, ``complete`` returns a
+* When ``try_init`` returns ``False``, ``complete`` returns a
   deterministic mock response (SHA-256 of the last user message)
   prefixed with ``[vertex-fallback:]``. ``embed`` returns a
   deterministic pseudo-embedding. This is **graceful degradation**
   — LLM-dependent tests and CI keep running on non-GCP machines.
-* When ``_try_init`` returns ``True`` but Vertex AI invocation
+* When ``try_init`` returns ``True`` but Vertex AI invocation
   fails at call time (e.g. model not found, quota exceeded), the
   exception is caught and a ``[vertex-fallback:]`` response is
   returned. This is more permissive than the AWS adapter because
@@ -58,20 +58,20 @@ class VertexLLMClient(LLMClient):
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
         self.region = region or os.environ.get("INTELLIQX_GCP_REGION", "us-central1")
         self.model = model or self.DEFAULT_MODEL
-        self._client: Any = None
-        self._available = self._try_init()
+        self.sdk: Any = None
+        self.available = self.try_init()
 
-    def _try_init(self) -> bool:
+    def try_init(self) -> bool:
         try:
             from vertexai.generative_models import GenerativeModel  # type: ignore
 
-            self._client = GenerativeModel(self.model)
+            self.sdk = GenerativeModel(self.model)
             return True
         except (ImportError, OSError):
             return False
 
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
-        if not self._available:
+        if not self.available:
             last_user = next(
                 (m["content"] for m in reversed(request.messages) if m.get("role") == "user"), ""
             )
@@ -98,7 +98,7 @@ class VertexLLMClient(LLMClient):
             gen_kwargs: dict[str, Any] = {"generation_config": gen_config}
             if system_msg:
                 gen_kwargs["system_instruction"] = system_msg
-            response = await self._client.generate_content_async(contents=contents, **gen_kwargs)
+            response = await self.sdk.generate_content_async(contents=contents, **gen_kwargs)
             text = response.text or ""
             usage = LLMUsage()
             if response.usage_metadata:
@@ -120,7 +120,7 @@ class VertexLLMClient(LLMClient):
             )
 
     async def embed(self, texts: Sequence[str], *, model: str = "auto") -> list[list[float]]:
-        if not self._available:
+        if not self.available:
             return deterministic_embedding(texts, 768)
         try:
             import asyncio

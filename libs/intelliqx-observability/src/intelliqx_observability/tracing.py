@@ -85,7 +85,7 @@ class Tracer:
             A :class:`SpanProxy` for setting additional attributes
             and adding events.
         """
-        span = self._tracer.start_span(name, attributes=_to_otel_attrs(attrs))
+        span = self._tracer.start_span(name, attributes=to_otel_attrs(attrs))
         start = time.monotonic()
         try:
             yield SpanProxy(span)
@@ -118,7 +118,7 @@ class SpanProxy:
             key: Attribute name (e.g. ``"tenant_id"``).
             value: Value; non-trivial types are stringified.
         """
-        self._span.set_attribute(key, _to_otel_value(value))
+        self._span.set_attribute(key, to_otel_value(value))
 
     def add_event(self, name: str, **attrs: Any) -> None:
         """Add a timestamped event to the span.
@@ -127,15 +127,15 @@ class SpanProxy:
             name: Event name (e.g. ``"node_failed"``).
             **attrs: Event attributes.
         """
-        self._span.add_event(name, attributes=_to_otel_attrs(attrs))
+        self._span.add_event(name, attributes=to_otel_attrs(attrs))
 
 
-def _to_otel_attrs(attrs: dict[str, Any]) -> dict[str, Any]:
+def to_otel_attrs(attrs: dict[str, Any]) -> dict[str, Any]:
     """Coerce every attribute to an OTel-compatible primitive."""
-    return {k: _to_otel_value(v) for k, v in attrs.items()}
+    return {k: to_otel_value(v) for k, v in attrs.items()}
 
 
-def _to_otel_value(v: Any) -> Any:
+def to_otel_value(v: Any) -> Any:
     """Coerce a value to an OTel-allowed primitive (str|int|float|bool)."""
     if isinstance(v, (str, int, float, bool)):
         return v

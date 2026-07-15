@@ -15,7 +15,7 @@ from intelliqx_graph.models import (
 from intelliqx_graph.query import GraphIndex
 
 
-def _rebuild_graph(
+def rebuild_graph(
     graph: SGIRGraph,
     nodes: list[SGIRNode],
     edges: list[SGIREdge],
@@ -28,7 +28,7 @@ def _rebuild_graph(
     )
 
 
-def _node_map(graph: SGIRGraph) -> dict[str, SGIRNode]:
+def node_map(graph: SGIRGraph) -> dict[str, SGIRNode]:
     return {n.id: n for n in graph.nodes}
 
 
@@ -58,7 +58,7 @@ def remove_dead_nodes(
         for n in layer_graph.nodes:
             if n.id in dead_in_layer:
                 n.is_dead = True
-        working.layers[layer_graph.layer] = _rebuild_graph(
+        working.layers[layer_graph.layer] = rebuild_graph(
             layer_graph, surviving_nodes, surviving_edges,
         )
 
@@ -69,11 +69,11 @@ def remove_dead_nodes(
 # detect_duplicates
 # ------------------------------------------------------------------
 
-def _subgraph_signature(
+def subgraph_signature(
     graph: SGIRGraph,
     node_ids: frozenset[str],
 ) -> tuple[str, ...]:
-    node_map = _node_map(graph)
+    nm = node_map(graph)
     sub_edges = [
         (e.source, e.target, e.edge_type)
         for e in graph.edges
@@ -81,7 +81,7 @@ def _subgraph_signature(
     ]
     sorted_edges = sorted(sub_edges, key=lambda e: (e[0], e[1]))
     return tuple(
-        (node_map[nid].node_type.value if nid in node_map else "unknown", src, tgt, et.value)
+        (nm[nid].node_type.value if nid in nm else "unknown", src, tgt, et.value)
         for nid, src, tgt, et in [
             (nid, s, t, e) for s, t, e in sorted_edges for nid in (s, t)
         ]
@@ -104,12 +104,12 @@ def detect_duplicates(
         for node in layer_graph.nodes:
             if node.id in visited:
                 continue
-            component = _bfs_component(node.id, adjacency)
+            component = bfs_component(node.id, adjacency)
             if len(component) < 2:
                 visited.update(component)
                 continue
             component_frozen = frozenset(component)
-            sig = _subgraph_signature(layer_graph, component_frozen)
+            sig = subgraph_signature(layer_graph, component_frozen)
             if sig in seen_signatures:
                 existing = seen_signatures[sig][0]
                 duplicates.append((existing, node.id))
@@ -120,7 +120,7 @@ def detect_duplicates(
     return duplicates
 
 
-def _bfs_component(start: str, adjacency: dict[str, set[str]]) -> set[str]:
+def bfs_component(start: str, adjacency: dict[str, set[str]]) -> set[str]:
     component: set[str] = set()
     queue = [start]
     while queue:
@@ -149,13 +149,13 @@ def inline_trivial_nodes(
         inline_candidates: set[str] = set()
         for node in layer_graph.nodes:
             out_degree = graph_index.fan_out(node.id, layer=layer_graph.layer)
-            if out_degree == 1 and _is_simple_node(node, threshold):
+            if out_degree == 1 and is_simple_node(node, threshold):
                 inline_candidates.add(node.id)
 
         if not inline_candidates:
             continue
 
-        node_map = _node_map(layer_graph)
+        nm = node_map(layer_graph)
         edge_map: dict[str, list[SGIREdge]] = {}
         for e in layer_graph.edges:
             edge_map.setdefault(e.source, []).append(e)
@@ -183,23 +183,23 @@ def inline_trivial_nodes(
             if target is None:
                 continue
             for ie in in_edges:
-                node_map[cid].optimization_notes.append(f"inlined into {target}")
+                nm[cid].optimization_notes.append(f"inlined into {target}")
                 new_edges.append(SGIREdge(
                     source=ie.source,
                     target=target,
                     edge_type=ie.edge_type,
                     weight=ie.weight,
-                    label=f"inlined:{node_map[cid].name}",
+                    label=f"inlined:{nm[cid].name}",
                 ))
 
-        working.layers[layer_graph.layer] = _rebuild_graph(
+        working.layers[layer_graph.layer] = rebuild_graph(
             layer_graph, surviving_nodes, new_edges,
         )
 
     return working
 
 
-def _is_simple_node(node: SGIRNode, threshold: int) -> bool:
+def is_simple_node(node: SGIRNode, threshold: int) -> bool:
     complexity_order = {
         "O(1)": 0,
         "O(log n)": 1,
@@ -235,7 +235,7 @@ def parallelize_independent_branches(
             nx_graph.add_edge(edge.source, edge.target)
 
         if nx.is_directed_acyclic_graph(nx_graph):
-            levels = _parallel_levels(nx_graph)
+            levels = parallel_levels(nx_graph)
             for level in levels:
                 if len(level) > 1:
                     independent_branches.append(sorted(level))
@@ -256,7 +256,7 @@ def parallelize_independent_branches(
     return deduped
 
 
-def _parallel_levels(graph: nx.DiGraph) -> list[set[str]]:
+def parallel_levels(graph: nx.DiGraph) -> list[set[str]]:
     levels: list[set[str]] = []
     assigned: set[str] = set()
     roots = {n for n in graph.nodes if graph.in_degree(n) == 0}
@@ -303,7 +303,7 @@ def clean_dependency_cycles(
             subgraph = nx_graph.subgraph(scc)
             cycle_edges = list(nx.simple_cycles(subgraph))
             for cycle in cycle_edges:
-                worst_edge = _select_cycle_break_edge(cycle, layer_graph)
+                worst_edge = select_cycle_break_edge(cycle, layer_graph)
                 if worst_edge is not None:
                     edges_to_remove.add(worst_edge)
 
@@ -311,25 +311,25 @@ def clean_dependency_cycles(
             e for e in layer_graph.edges
             if (e.source, e.target) not in edges_to_remove
         ]
-        working.layers[layer_graph.layer] = _rebuild_graph(
+        working.layers[layer_graph.layer] = rebuild_graph(
             layer_graph, layer_graph.nodes, surviving_edges,
         )
 
     return working
 
 
-def _select_cycle_break_edge(
+def select_cycle_break_edge(
     cycle: list[str],
     layer_graph: SGIRGraph,
 ) -> tuple[str, str] | None:
-    node_map = _node_map(layer_graph)
+    nm = node_map(layer_graph)
     worst_complexity = -1
     worst_edge: tuple[str, str] | None = None
 
     for i in range(len(cycle)):
         src = cycle[i]
         tgt = cycle[(i + 1) % len(cycle)]
-        node = node_map.get(src)
+        node = nm.get(src)
         if node is None:
             continue
         complexity_val = {
@@ -366,7 +366,7 @@ def reduce_complexity(
                 new_nodes.append(node)
                 continue
 
-            parts = _split_node(node)
+            parts = split_node(node)
             splits[node.id] = [p.id for p in parts]
             new_nodes.extend(parts)
 
@@ -400,14 +400,14 @@ def reduce_complexity(
                     label="split_chain",
                 ))
 
-        working.layers[layer_graph.layer] = _rebuild_graph(
+        working.layers[layer_graph.layer] = rebuild_graph(
             layer_graph, new_nodes, new_edges,
         )
 
     return working
 
 
-def _split_node(node: SGIRNode, num_parts: int = 2) -> list[SGIRNode]:
+def split_node(node: SGIRNode, num_parts: int = 2) -> list[SGIRNode]:
     parts: list[SGIRNode] = []
     for i in range(num_parts):
         part_id = f"{node.id}__part{i}"

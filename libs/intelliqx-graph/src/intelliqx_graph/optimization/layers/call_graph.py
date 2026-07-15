@@ -14,7 +14,7 @@ from intelliqx_graph.models import (
 )
 
 
-def _make_node_id(file_path: str, name: str) -> str:
+def make_node_id(file_path: str, name: str) -> str:
     return f"{file_path}::{name}"
 
 
@@ -35,7 +35,7 @@ class CallGraphBuilder(LayerBuilder):
             if entity.entity_type not in callable_types:
                 continue
 
-            nid = _make_node_id(entity.file_path, entity.name)
+            nid = make_node_id(entity.file_path, entity.name)
             if nid in node_ids:
                 continue
             node_ids.add(nid)
@@ -64,9 +64,9 @@ class CallGraphBuilder(LayerBuilder):
             if entity.entity_type not in callable_types:
                 continue
 
-            source_id = _make_node_id(entity.file_path, entity.name)
+            source_id = make_node_id(entity.file_path, entity.name)
             for call_name in entity.calls:
-                target_id = _find_call_target(call_name, entity, entities, node_ids)
+                target_id = find_call_target(call_name, entity, entities, node_ids)
                 if target_id and target_id != source_id:
                     edges.append(SGIREdge(
                         source=source_id,
@@ -87,7 +87,7 @@ class CallGraphBuilder(LayerBuilder):
         )
 
 
-def _find_call_target(
+def find_call_target(
     call_name: str,
     caller: Any,
     entities: list[Any],
@@ -95,10 +95,10 @@ def _find_call_target(
 ) -> str | None:
     for entity in entities:
         if entity.name == call_name:
-            nid = _make_node_id(entity.file_path, entity.name)
+            nid = make_node_id(entity.file_path, entity.name)
             if nid in node_ids:
                 return nid
-    parent_id = _make_node_id(caller.file_path, f"{caller.parent}.{call_name}") if caller.parent else None
+    parent_id = make_node_id(caller.file_path, f"{caller.parent}.{call_name}") if caller.parent else None
     if parent_id and parent_id in node_ids:
         return parent_id
     return None

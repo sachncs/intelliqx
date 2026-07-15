@@ -14,11 +14,11 @@ from tree_sitter_languages import get_parser
 from intelliqx_graph.parsers import BaseParser, ParsedEntity
 
 
-def _node_text(node, source_bytes: bytes) -> str:
+def node_text(node, source_bytes: bytes) -> str:
     return source_bytes[node.start_byte:node.end_byte].decode("utf-8", errors="ignore")
 
 
-def _estimate_complexity(node) -> str:
+def estimate_complexity(node) -> str:
     complexity = 1
     stack = [node]
     while stack:
@@ -100,7 +100,7 @@ class TypeScriptParser(BaseParser):
                         init = grandchild.child_by_field_name("value")
                         if init and init.type in ("arrow_function", "function"):
                             name_node = grandchild.child_by_field_name("name")
-                            name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+                            name = node_text(name_node, source_bytes) if name_node else "anonymous"
                             entities.append(ParsedEntity(
                                 name=name,
                                 entity_type="function",
@@ -110,12 +110,12 @@ class TypeScriptParser(BaseParser):
                                 language="typescript",
                                 parent=parent,
                                 is_async=any(c.type == "async" for c in child.children),
-                                complexity=_estimate_complexity(init),
+                                complexity=estimate_complexity(init),
                             ))
 
             elif ctype == "function":
                 name_node = child.child_by_field_name("name")
-                name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+                name = node_text(name_node, source_bytes) if name_node else "anonymous"
                 params_node = child.child_by_field_name("parameters")
                 params = self._parse_parameters(params_node, source_bytes) if params_node else []
                 entities.append(ParsedEntity(
@@ -128,12 +128,12 @@ class TypeScriptParser(BaseParser):
                     parent=parent,
                     parameters=params,
                     is_async=any(c.type == "async" for c in child.children),
-                    complexity=_estimate_complexity(child),
+                    complexity=estimate_complexity(child),
                 ))
 
     def _parse_function(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
-        name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+        name = node_text(name_node, source_bytes) if name_node else "anonymous"
         params_node = node.child_by_field_name("parameters")
         params = self._parse_parameters(params_node, source_bytes) if params_node else []
 
@@ -147,12 +147,12 @@ class TypeScriptParser(BaseParser):
             parent=parent,
             parameters=params,
             is_async=any(c.type == "async" for c in node.children),
-            complexity=_estimate_complexity(node),
+            complexity=estimate_complexity(node),
         )
 
     def _parse_method(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
-        name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+        name = node_text(name_node, source_bytes) if name_node else "anonymous"
         params_node = node.child_by_field_name("parameters")
         params = self._parse_parameters(params_node, source_bytes) if params_node else []
         is_static = any(c.type == "static" for c in node.children)
@@ -168,17 +168,17 @@ class TypeScriptParser(BaseParser):
             parameters=params,
             is_static=is_static,
             is_async=any(c.type == "async" for c in node.children),
-            complexity=_estimate_complexity(node),
+            complexity=estimate_complexity(node),
         )
 
     def _parse_class(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
-        name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+        name = node_text(name_node, source_bytes) if name_node else "anonymous"
 
         bases: list[str] = []
         superclass = node.child_by_field_name("superclass")
         if superclass:
-            bases.append(_node_text(superclass, source_bytes))
+            bases.append(node_text(superclass, source_bytes))
 
         return ParsedEntity(
             name=name,
@@ -193,7 +193,7 @@ class TypeScriptParser(BaseParser):
 
     def _parse_interface(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
-        name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+        name = node_text(name_node, source_bytes) if name_node else "anonymous"
         return ParsedEntity(
             name=name,
             entity_type="class",
@@ -205,7 +205,7 @@ class TypeScriptParser(BaseParser):
         )
 
     def _parse_import(self, node, source_bytes: bytes, file_str: str) -> ParsedEntity:
-        source_text = _node_text(node, source_bytes)
+        source_text = node_text(node, source_bytes)
         import_source = ""
         import_names: list[str] = []
         is_from_import = False
@@ -214,23 +214,23 @@ class TypeScriptParser(BaseParser):
             is_from_import = True
             for child in node.children:
                 if child.type == "string":
-                    import_source = _node_text(child, source_bytes).strip("'\"")
+                    import_source = node_text(child, source_bytes).strip("'\"")
                 elif child.type == "import_clause":
                     for sub in child.children:
                         if sub.type == "identifier":
-                            import_names.append(_node_text(sub, source_bytes))
+                            import_names.append(node_text(sub, source_bytes))
                         elif sub.type == "named_imports":
                             for specifier in sub.children:
                                 if specifier.type == "import_specifier":
                                     name = specifier.child_by_field_name("name") or specifier.child_by_field_name("alias")
                                     if name:
-                                        import_names.append(_node_text(name, source_bytes))
+                                        import_names.append(node_text(name, source_bytes))
         else:
             for child in node.children:
                 if child.type == "import_clause":
                     for sub in child.children:
                         if sub.type == "identifier":
-                            import_names.append(_node_text(sub, source_bytes))
+                            import_names.append(node_text(sub, source_bytes))
 
         return ParsedEntity(
             name=f"from_{import_source}" if import_source else f"import_{import_names[0] if import_names else 'unknown'}",
@@ -251,13 +251,13 @@ class TypeScriptParser(BaseParser):
                 name_node = child.child_by_field_name("name")
                 type_node = child.child_by_field_name("type")
                 if name_node:
-                    name_text = _node_text(name_node, source_bytes)
+                    name_text = node_text(name_node, source_bytes)
                     if type_node:
-                        params.append(f"{name_text}: {_node_text(type_node, source_bytes)}")
+                        params.append(f"{name_text}: {node_text(type_node, source_bytes)}")
                     else:
                         params.append(name_text)
             elif child.type == "rest_parameter":
                 name_node = child.child_by_field_name("name")
                 if name_node:
-                    params.append(f"...{_node_text(name_node, source_bytes)}")
+                    params.append(f"...{node_text(name_node, source_bytes)}")
         return params

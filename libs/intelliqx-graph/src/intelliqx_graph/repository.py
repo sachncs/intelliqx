@@ -147,7 +147,7 @@ def scan_repository(root: str | Path) -> RepositoryMetadata:
                 pass
 
     # Detect frameworks from file content (sample a few files)
-    frameworks = _detect_frameworks(root)
+    frameworks = detect_frameworks(root)
 
     # Determine dominant language
     sorted_langs = sorted(languages.items(), key=lambda x: x[1], reverse=True)
@@ -163,7 +163,7 @@ def scan_repository(root: str | Path) -> RepositoryMetadata:
     )
 
 
-def _detect_frameworks(root: Path) -> list[str]:
+def detect_frameworks(root: Path) -> list[str]:
     """Detect frameworks by sampling a small number of files."""
     frameworks: list[str] = []
     sample_count = 0

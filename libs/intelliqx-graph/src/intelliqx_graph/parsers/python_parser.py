@@ -13,7 +13,7 @@ from pathlib import Path
 from intelliqx_graph.parsers import BaseParser, ParsedEntity
 
 
-def _estimate_complexity(node: ast.AST) -> str:
+def estimate_complexity(node: ast.AST) -> str:
     """Rough cyclomatic complexity estimate from AST nodes."""
     complexity = 1
     for child in ast.walk(node):
@@ -36,7 +36,7 @@ def _estimate_complexity(node: ast.AST) -> str:
         return "O(n^3)"
 
 
-def _extract_decorators(node: ast.AST) -> list[str]:
+def extract_decorators(node: ast.AST) -> list[str]:
     """Extract decorator names from a function or class node."""
     decorators: list[str] = []
     for dec in getattr(node, "decorator_list", []):
@@ -54,7 +54,7 @@ def _extract_decorators(node: ast.AST) -> list[str]:
     return decorators
 
 
-def _get_name_from_annotation(node: ast.AST | None) -> str | None:
+def get_name_from_annotation(node: ast.AST | None) -> str | None:
     """Best-effort extraction of a type annotation as a string."""
     if node is None:
         return None
@@ -118,7 +118,7 @@ class PythonParser(BaseParser):
         """Parse a function or method definition."""
         params: list[str] = []
         for arg in node.args.args:
-            ann = _get_name_from_annotation(arg.annotation)
+            ann = get_name_from_annotation(arg.annotation)
             if ann:
                 params.append(f"{arg.arg}: {ann}")
             else:
@@ -133,11 +133,11 @@ class PythonParser(BaseParser):
             language="python",
             parent=parent,
             parameters=params,
-            return_type=_get_name_from_annotation(node.returns),
+            return_type=get_name_from_annotation(node.returns),
             is_async=isinstance(node, ast.AsyncFunctionDef),
-            decorators=_extract_decorators(node),
+            decorators=extract_decorators(node),
             docstring=ast.get_docstring(node),
-            complexity=_estimate_complexity(node),
+            complexity=estimate_complexity(node),
         )
 
     def _parse_class(self, node: ast.ClassDef, file_str: str, parent: str | None) -> ParsedEntity:
@@ -158,7 +158,7 @@ class PythonParser(BaseParser):
             language="python",
             parent=parent,
             bases=bases,
-            decorators=_extract_decorators(node),
+            decorators=extract_decorators(node),
             docstring=ast.get_docstring(node),
         )
 

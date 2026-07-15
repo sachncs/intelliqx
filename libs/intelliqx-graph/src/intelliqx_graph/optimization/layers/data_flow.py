@@ -14,7 +14,7 @@ from intelliqx_graph.models import (
 )
 
 
-def _make_node_id(file_path: str, name: str) -> str:
+def make_node_id(file_path: str, name: str) -> str:
     return f"{file_path}::{name}"
 
 
@@ -34,7 +34,7 @@ class DataFlowBuilder(LayerBuilder):
             if entity.entity_type not in {"function", "method"}:
                 continue
 
-            nid = _make_node_id(entity.file_path, entity.name)
+            nid = make_node_id(entity.file_path, entity.name)
             if nid in node_ids:
                 continue
             node_ids.add(nid)
@@ -60,7 +60,7 @@ class DataFlowBuilder(LayerBuilder):
             if entity.entity_type not in {"function", "method"}:
                 continue
 
-            source_id = _make_node_id(entity.file_path, entity.name)
+            source_id = make_node_id(entity.file_path, entity.name)
             for ref in entity.references:
                 if ref in name_to_ids:
                     for target_id in name_to_ids[ref]:

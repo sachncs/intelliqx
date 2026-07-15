@@ -110,7 +110,7 @@ _LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 _SECTION_RE = re.compile(r"^# (.+)$", re.MULTILINE)
 
 
-def _parse_frontmatter_and_body(text: str) -> tuple[dict[str, Any], str]:
+def parse_frontmatter_and_body(text: str) -> tuple[dict[str, Any], str]:
     """Split a markdown file into ``(frontmatter_dict, body)``.
 
     The file MUST start with a ``---`` line; if it doesn't, the
@@ -140,7 +140,7 @@ def _parse_frontmatter_and_body(text: str) -> tuple[dict[str, Any], str]:
     return parsed, body
 
 
-def _split_sections(body: str) -> list[OKFSection]:
+def split_sections(body: str) -> list[OKFSection]:
     """Split ``body`` into ``# Heading`` sections.
 
     The body before the first ``# ...`` heading is returned as a
@@ -160,7 +160,7 @@ def _split_sections(body: str) -> list[OKFSection]:
     return sections
 
 
-def _extract_links(body: str) -> list[OKFLink]:
+def extract_links(body: str) -> list[OKFLink]:
     """Pull every markdown link out of ``body``.
 
     Duplicate (text, target) pairs are collapsed so callers don't
@@ -179,7 +179,7 @@ def _extract_links(body: str) -> list[OKFLink]:
     return out
 
 
-def _extract_citations(sections: list[OKFSection]) -> list[Citation]:
+def extract_citations(sections: list[OKFSection]) -> list[Citation]:
     """Find the ``# Citations`` section and parse its numbered list."""
     for s in sections:
         if s.heading.lower() == "citations":
@@ -195,7 +195,7 @@ def _extract_citations(sections: list[OKFSection]) -> list[Citation]:
     return []
 
 
-def _split_frontmatter_from_extras(parsed: dict) -> tuple[OKFFrontmatter, dict]:
+def split_frontmatter_from_extras(parsed: dict) -> tuple[OKFFrontmatter, dict]:
     """Separate known fields from arbitrary extras.
 
     The OKF spec (§4.1) calls out the six known fields; everything
@@ -225,13 +225,13 @@ def load_concept(path: Path | str) -> OKFConcept:
     """
     p = Path(path)
     text = p.read_text(encoding="utf-8")
-    parsed, body = _parse_frontmatter_and_body(text)
+    parsed, body = parse_frontmatter_and_body(text)
     if "type" not in parsed or not parsed.get("type"):
         raise ValueError(f"OKF concept {p} has no 'type' frontmatter field (required by spec §4.1)")
-    frontmatter, _extras = _split_frontmatter_from_extras(parsed)
-    sections = _split_sections(body)
-    links = _extract_links(body)
-    citations = _extract_citations(sections)
+    frontmatter, _extras = split_frontmatter_from_extras(parsed)
+    sections = split_sections(body)
+    links = extract_links(body)
+    citations = extract_citations(sections)
     concept_id = str(p).removesuffix(".md")
     return OKFConcept(
         concept_id=concept_id,

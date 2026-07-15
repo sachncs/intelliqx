@@ -14,11 +14,11 @@ from tree_sitter_languages import get_parser
 from intelliqx_graph.parsers import BaseParser, ParsedEntity
 
 
-def _node_text(node, source_bytes: bytes) -> str:
+def node_text(node, source_bytes: bytes) -> str:
     return source_bytes[node.start_byte:node.end_byte].decode("utf-8", errors="ignore")
 
 
-def _estimate_complexity(node) -> str:
+def estimate_complexity(node) -> str:
     complexity = 1
     stack = [node]
     while stack:
@@ -100,17 +100,17 @@ class JavaParser(BaseParser):
 
     def _parse_class(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
-        name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+        name = node_text(name_node, source_bytes) if name_node else "anonymous"
 
         bases: list[str] = []
         superclass = node.child_by_field_name("superclass")
         if superclass:
-            bases.append(_node_text(superclass, source_bytes))
+            bases.append(node_text(superclass, source_bytes))
         interfaces = node.child_by_field_name("interfaces")
         if interfaces:
             for child in interfaces.children:
                 if child.type == "type_identifier":
-                    bases.append(_node_text(child, source_bytes))
+                    bases.append(node_text(child, source_bytes))
 
         annotations = self._parse_annotations(node, source_bytes)
 
@@ -128,14 +128,14 @@ class JavaParser(BaseParser):
 
     def _parse_interface(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
-        name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+        name = node_text(name_node, source_bytes) if name_node else "anonymous"
 
         bases: list[str] = []
         interfaces = node.child_by_field_name("interfaces")
         if interfaces:
             for child in interfaces.children:
                 if child.type == "type_identifier":
-                    bases.append(_node_text(child, source_bytes))
+                    bases.append(node_text(child, source_bytes))
 
         return ParsedEntity(
             name=name,
@@ -150,11 +150,11 @@ class JavaParser(BaseParser):
 
     def _parse_method(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
-        name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+        name = node_text(name_node, source_bytes) if name_node else "anonymous"
         params_node = node.child_by_field_name("parameters")
         params = self._parse_parameters(params_node, source_bytes) if params_node else []
         return_type_node = node.child_by_field_name("type")
-        return_type = _node_text(return_type_node, source_bytes) if return_type_node else None
+        return_type = node_text(return_type_node, source_bytes) if return_type_node else None
 
         modifiers = self._parse_modifiers(node, source_bytes)
         is_static = "static" in modifiers
@@ -172,12 +172,12 @@ class JavaParser(BaseParser):
             return_type=return_type,
             is_static=is_static,
             is_abstract=is_abstract,
-            complexity=_estimate_complexity(node),
+            complexity=estimate_complexity(node),
         )
 
     def _parse_constructor(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
-        name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+        name = node_text(name_node, source_bytes) if name_node else "anonymous"
         params_node = node.child_by_field_name("parameters")
         params = self._parse_parameters(params_node, source_bytes) if params_node else []
 
@@ -190,11 +190,11 @@ class JavaParser(BaseParser):
             language="java",
             parent=parent,
             parameters=params,
-            complexity=_estimate_complexity(node),
+            complexity=estimate_complexity(node),
         )
 
     def _parse_import(self, node, source_bytes: bytes, file_str: str) -> ParsedEntity:
-        source_text = _node_text(node, source_bytes)
+        source_text = node_text(node, source_bytes)
         import_source = source_text.replace("import ", "").replace(";", "").strip()
         is_from_import = ".*" not in import_source and import_source.count(".") > 1
 
@@ -219,12 +219,12 @@ class JavaParser(BaseParser):
             if child.type == "formal_parameter":
                 type_node = child.child_by_field_name("type")
                 name_node = child.child_by_field_name("name")
-                type_text = _node_text(type_node, source_bytes) if type_node else ""
-                name_text = _node_text(name_node, source_bytes) if name_node else ""
+                type_text = node_text(type_node, source_bytes) if type_node else ""
+                name_text = node_text(name_node, source_bytes) if name_node else ""
                 if type_text and name_text:
                     params.append(f"{type_text} {name_text}")
             elif child.type == "spread_parameter":
-                params.append(f"...{_node_text(child, source_bytes)}")
+                params.append(f"...{node_text(child, source_bytes)}")
         return params
 
     def _parse_modifiers(self, node, source_bytes: bytes) -> list[str]:
@@ -243,5 +243,5 @@ class JavaParser(BaseParser):
             if child.type == "annotation":
                 name_node = child.child_by_field_name("name")
                 if name_node:
-                    annotations.append(f"@{_node_text(name_node, source_bytes)}")
+                    annotations.append(f"@{node_text(name_node, source_bytes)}")
         return annotations

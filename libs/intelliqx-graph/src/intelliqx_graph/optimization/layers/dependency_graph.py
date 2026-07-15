@@ -14,7 +14,7 @@ from intelliqx_graph.models import (
 )
 
 
-def _make_node_id(prefix: str, name: str) -> str:
+def make_node_id(prefix: str, name: str) -> str:
     return f"{prefix}::{name}"
 
 
@@ -40,8 +40,8 @@ class DependencyGraphBuilder(LayerBuilder):
         for entity in entities:
             if entity.entity_type == "import":
                 for imp_name in entity.import_names:
-                    source_id = _make_node_id("module", entity.file_path)
-                    target_id = _make_node_id("module", imp_name)
+                    source_id = make_node_id("module", entity.file_path)
+                    target_id = make_node_id("module", imp_name)
 
                     if source_id not in node_ids:
                         node_ids.add(source_id)

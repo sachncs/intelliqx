@@ -14,7 +14,7 @@ from intelliqx_graph.models import (
 )
 
 
-def _make_node_id(prefix: str, name: str) -> str:
+def make_node_id(prefix: str, name: str) -> str:
     return f"{prefix}::{name}"
 
 
@@ -89,7 +89,7 @@ class DeploymentGraphBuilder(LayerBuilder):
             ))
 
             for build_system in repository.build_systems:
-                build_id = _make_node_id("build", build_system)
+                build_id = make_node_id("build", build_system)
                 if build_id not in node_ids:
                     node_ids.add(build_id)
                     nodes.append(SGIRNode(
@@ -105,9 +105,9 @@ class DeploymentGraphBuilder(LayerBuilder):
                         label="builds_with",
                     ))
 
-        config_entities = [e for e in entities if _is_config_entity(e)]
+        config_entities = [e for e in entities if is_config_entity(e)]
         for entity in config_entities:
-            nid = _make_node_id("config", entity.name)
+            nid = make_node_id("config", entity.name)
             if nid not in node_ids:
                 node_ids.add(nid)
                 nodes.append(SGIRNode(
@@ -133,9 +133,9 @@ class DeploymentGraphBuilder(LayerBuilder):
                             label="configures",
                         ))
 
-        infra_nodes = _detect_infra_components(repository)
+        infra_nodes = detect_infra_components(repository)
         for infra_name, infra_type in infra_nodes:
-            infra_id = _make_node_id("infra", infra_name)
+            infra_id = make_node_id("infra", infra_name)
             if infra_id not in node_ids:
                 node_ids.add(infra_id)
                 nodes.append(SGIRNode(
@@ -164,7 +164,7 @@ class DeploymentGraphBuilder(LayerBuilder):
                     for d in decorators_lower
                 )
                 if is_deployable:
-                    nid = _make_node_id(entity.file_path, entity.name)
+                    nid = make_node_id(entity.file_path, entity.name)
                     if nid not in node_ids:
                         node_ids.add(nid)
                         nodes.append(SGIRNode(
@@ -201,12 +201,12 @@ class DeploymentGraphBuilder(LayerBuilder):
         )
 
 
-def _is_config_entity(entity: Any) -> bool:
+def is_config_entity(entity: Any) -> bool:
     name_lower = entity.name.lower()
     return any(p in name_lower for p in _CONFIG_FILE_PATTERNS)
 
 
-def _detect_infra_components(repository: Any | None) -> list[tuple[str, str]]:
+def detect_infra_components(repository: Any | None) -> list[tuple[str, str]]:
     components: list[tuple[str, str]] = []
     if not repository:
         return components

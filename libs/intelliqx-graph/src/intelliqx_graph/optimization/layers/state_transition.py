@@ -14,7 +14,7 @@ from intelliqx_graph.models import (
 )
 
 
-def _make_node_id(file_path: str, name: str) -> str:
+def make_node_id(file_path: str, name: str) -> str:
     return f"{file_path}::{name}"
 
 
@@ -59,7 +59,7 @@ class StateTransitionBuilder(LayerBuilder):
 
         for entity in entities:
             if entity.entity_type == "class":
-                nid = _make_node_id(entity.file_path, entity.name)
+                nid = make_node_id(entity.file_path, entity.name)
                 if nid not in node_ids:
                     node_ids.add(nid)
                     nodes.append(SGIRNode(
@@ -96,7 +96,7 @@ class StateTransitionBuilder(LayerBuilder):
                     other_methods.append(method)
 
             for method in lifecycle_methods:
-                nid = _make_node_id(method.file_path, method.name)
+                nid = make_node_id(method.file_path, method.name)
                 if nid not in node_ids:
                     node_ids.add(nid)
                     nodes.append(SGIRNode(
@@ -114,7 +114,7 @@ class StateTransitionBuilder(LayerBuilder):
                         outputs=[method.return_type] if method.return_type else [],
                     ))
 
-                class_id = _make_node_id(method.file_path, class_name)
+                class_id = make_node_id(method.file_path, class_name)
                 if class_id in node_ids:
                     edges.append(SGIREdge(
                         source=class_id,
@@ -125,8 +125,8 @@ class StateTransitionBuilder(LayerBuilder):
 
             for i, method in enumerate(lifecycle_methods):
                 if i > 0:
-                    prev_id = _make_node_id(lifecycle_methods[i - 1].file_path, lifecycle_methods[i - 1].name)
-                    curr_id = _make_node_id(method.file_path, method.name)
+                    prev_id = make_node_id(lifecycle_methods[i - 1].file_path, lifecycle_methods[i - 1].name)
+                    curr_id = make_node_id(method.file_path, method.name)
                     if prev_id in node_ids and curr_id in node_ids:
                         edges.append(SGIREdge(
                             source=prev_id,
@@ -136,7 +136,7 @@ class StateTransitionBuilder(LayerBuilder):
                         ))
 
             for method in event_methods:
-                nid = _make_node_id(method.file_path, method.name)
+                nid = make_node_id(method.file_path, method.name)
                 if nid not in node_ids:
                     node_ids.add(nid)
                     nodes.append(SGIRNode(
@@ -155,7 +155,7 @@ class StateTransitionBuilder(LayerBuilder):
                     ))
 
                 for called in method.calls:
-                    target_ids = _resolve_ids(called, entities, node_ids)
+                    target_ids = resolve_ids(called, entities, node_ids)
                     for target_id in target_ids:
                         if target_id != nid:
                             edges.append(SGIREdge(
@@ -167,9 +167,9 @@ class StateTransitionBuilder(LayerBuilder):
 
         for entity in entities:
             if entity.entity_type == "class" and entity.bases:
-                nid = _make_node_id(entity.file_path, entity.name)
+                nid = make_node_id(entity.file_path, entity.name)
                 for base in entity.bases:
-                    base_id = _find_class_id(base, entities, node_ids)
+                    base_id = find_class_id(base, entities, node_ids)
                     if base_id and nid in node_ids:
                         edges.append(SGIREdge(
                             source=nid,
@@ -190,20 +190,20 @@ class StateTransitionBuilder(LayerBuilder):
         )
 
 
-def _resolve_ids(name: str, entities: list[Any], node_ids: set[str]) -> list[str]:
+def resolve_ids(name: str, entities: list[Any], node_ids: set[str]) -> list[str]:
     results: list[str] = []
     for entity in entities:
         if entity.name == name:
-            nid = _make_node_id(entity.file_path, entity.name)
+            nid = make_node_id(entity.file_path, entity.name)
             if nid in node_ids:
                 results.append(nid)
     return results
 
 
-def _find_class_id(name: str, entities: list[Any], node_ids: set[str]) -> str | None:
+def find_class_id(name: str, entities: list[Any], node_ids: set[str]) -> str | None:
     for entity in entities:
         if entity.entity_type == "class" and entity.name == name:
-            nid = _make_node_id(entity.file_path, entity.name)
+            nid = make_node_id(entity.file_path, entity.name)
             if nid in node_ids:
                 return nid
     return None

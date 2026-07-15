@@ -38,7 +38,7 @@ from typing import Any
 from intelliqx_vector.index import SearchResult, VectorDoc
 
 
-def _serialize(vector: list[float]) -> bytes:
+def serialize(vector: list[float]) -> bytes:
     """Convert a float list into sqlite-vec's expected byte format.
 
     Uses :func:`sqlite_vec.serialize_float32`; the function is
@@ -50,7 +50,7 @@ def _serialize(vector: list[float]) -> bytes:
     return sqlite_vec.serialize_float32(vector)
 
 
-def _cosine_similarity(a: bytes, b: bytes) -> float:
+def cosine_similarity(a: bytes, b: bytes) -> float:
     """Cosine similarity between two sqlite-vec packed vectors.
 
     Returns a value in ``[-1, 1]`` where 1.0 means identical.
@@ -180,7 +180,7 @@ class SqliteVecIndex:
                     raise ValueError(
                         f"Vector dim mismatch: expected {self.dim}, got {len(d.vector)}"
                     )
-                packed = _serialize(d.vector)
+                packed = serialize(d.vector)
                 cur.execute(
                     """
                     INSERT INTO documents (id, tenant_id, text, metadata_json, vector)
@@ -280,7 +280,7 @@ class SqliteVecIndex:
 
         # Step 2: Vector search — retrieve enough candidates.
         oversample = max(top_k, len(eligible_rowids))
-        packed = _serialize(vector)
+        packed = serialize(vector)
         cur.execute(
             """
             SELECT rowid, embedding
@@ -297,7 +297,7 @@ class SqliteVecIndex:
         for vec_rowid, emb_blob in vector_results:
             if vec_rowid not in eligible_rowids:
                 continue
-            score = _cosine_similarity(query_packed, emb_blob)
+            score = cosine_similarity(query_packed, emb_blob)
             meta_info = eligible_meta[vec_rowid]
             try:
                 meta = json.loads(meta_info["metadata_json"]) if meta_info["metadata_json"] else {}

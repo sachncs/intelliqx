@@ -15,7 +15,7 @@ from intelliqx_graph.models import (
 )
 
 
-def _make_node_id(file_path: str, name: str) -> str:
+def make_node_id(file_path: str, name: str) -> str:
     return f"{file_path}::{name}"
 
 
@@ -82,10 +82,10 @@ class SecurityGraphBuilder(LayerBuilder):
             if entity.entity_type not in {"function", "method", "class"}:
                 continue
 
-            boundary = _classify_security_boundary(entity)
-            auth_ops = _detect_auth_patterns(entity)
+            boundary = classify_security_boundary(entity)
+            auth_ops = detect_auth_patterns(entity)
 
-            nid = _make_node_id(entity.file_path, entity.name)
+            nid = make_node_id(entity.file_path, entity.name)
             if nid not in node_ids:
                 node_ids.add(nid)
                 nodes.append(SGIRNode(
@@ -126,7 +126,7 @@ class SecurityGraphBuilder(LayerBuilder):
                 ))
 
             for ref in entity.references:
-                if _is_sensitive_data(ref):
+                if is_sensitive_data(ref):
                     sens_id = f"sensitive::{ref}"
                     if sens_id not in node_ids:
                         node_ids.add(sens_id)
@@ -157,7 +157,7 @@ class SecurityGraphBuilder(LayerBuilder):
         )
 
 
-def _classify_security_boundary(entity: Any) -> SecurityBoundary:
+def classify_security_boundary(entity: Any) -> SecurityBoundary:
     all_names = entity.calls + entity.references + entity.decorators
     all_text = " ".join(all_names).lower()
 
@@ -172,7 +172,7 @@ def _classify_security_boundary(entity: Any) -> SecurityBoundary:
     return SecurityBoundary.NONE
 
 
-def _detect_auth_patterns(entity: Any) -> list[str]:
+def detect_auth_patterns(entity: Any) -> list[str]:
     found: list[str] = []
     all_names = entity.calls + entity.references + entity.decorators
     for name in all_names:
@@ -185,6 +185,6 @@ def _detect_auth_patterns(entity: Any) -> list[str]:
     return found
 
 
-def _is_sensitive_data(name: str) -> bool:
+def is_sensitive_data(name: str) -> bool:
     name_lower = name.lower()
     return any(p in name_lower for p in _SENSITIVE_DATA_PATTERNS)

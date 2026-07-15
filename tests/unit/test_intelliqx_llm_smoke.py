@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 import pytest
-from intelliqx_llm._smoke import _parse_args, main
+from intelliqx_llm._smoke import main, parse_args
 from intelliqx_llm.client import FakeLLMClient, reset_llm_client, set_llm_client
 
 
@@ -18,8 +18,8 @@ def _reset_singleton():
     reset_llm_client()
 
 
-def test_parse_args_defaults():
-    args = _parse_args([])
+def testparse_args_defaults():
+    args = parse_args([])
     assert args.prompt.startswith("In one sentence")
     assert args.max_tokens == 256
     assert args.embed is False
@@ -27,14 +27,14 @@ def test_parse_args_defaults():
     assert args.model is None
 
 
-def test_parse_args_embed():
-    args = _parse_args(["--embed", "--max-tokens", "64"])
+def testparse_args_embed():
+    args = parse_args(["--embed", "--max-tokens", "64"])
     assert args.embed is True
     assert args.max_tokens == 64
 
 
-def test_parse_args_prompt_override():
-    args = _parse_args(["--prompt", "Hi", "--model", "minimax/MiniMax-M2-lightning"])
+def testparse_args_prompt_override():
+    args = parse_args(["--prompt", "Hi", "--model", "minimax/MiniMax-M2-lightning"])
     assert args.prompt == "Hi"
     assert args.model == "minimax/MiniMax-M2-lightning"
 

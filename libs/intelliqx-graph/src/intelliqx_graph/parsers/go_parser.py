@@ -14,11 +14,11 @@ from tree_sitter_languages import get_parser
 from intelliqx_graph.parsers import BaseParser, ParsedEntity
 
 
-def _node_text(node, source_bytes: bytes) -> str:
+def node_text(node, source_bytes: bytes) -> str:
     return source_bytes[node.start_byte:node.end_byte].decode("utf-8", errors="ignore")
 
 
-def _estimate_complexity(node) -> str:
+def estimate_complexity(node) -> str:
     complexity = 1
     stack = [node]
     while stack:
@@ -85,7 +85,7 @@ class GoParser(BaseParser):
                 for spec in child.children:
                     if spec.type == "type_spec":
                         name_node = spec.child_by_field_name("name")
-                        name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+                        name = node_text(name_node, source_bytes) if name_node else "anonymous"
                         type_node = spec.child_by_field_name("type")
                         entity_type = "class"
                         if (type_node and type_node.type == "interface_type") or (type_node and type_node.type == "struct_type"):
@@ -97,7 +97,7 @@ class GoParser(BaseParser):
                                 if field.type == "field_declaration":
                                     field_type = field.child_by_field_name("type")
                                     if field_type:
-                                        bases.append(_node_text(field_type, source_bytes))
+                                        bases.append(node_text(field_type, source_bytes))
 
                         entities.append(ParsedEntity(
                             name=name,
@@ -114,11 +114,11 @@ class GoParser(BaseParser):
 
     def _parse_function(self, node, source_bytes: bytes, file_str: str, parent: str | None) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
-        name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+        name = node_text(name_node, source_bytes) if name_node else "anonymous"
         params_node = node.child_by_field_name("parameters")
         params = self._parse_parameters(params_node, source_bytes) if params_node else []
         result_node = node.child_by_field_name("result")
-        return_type = _node_text(result_node, source_bytes) if result_node else None
+        return_type = node_text(result_node, source_bytes) if result_node else None
 
         return ParsedEntity(
             name=name,
@@ -130,12 +130,12 @@ class GoParser(BaseParser):
             parent=parent,
             parameters=params,
             return_type=return_type,
-            complexity=_estimate_complexity(node),
+            complexity=estimate_complexity(node),
         )
 
     def _parse_method(self, node, source_bytes: bytes, file_str: str) -> ParsedEntity:
         name_node = node.child_by_field_name("name")
-        name = _node_text(name_node, source_bytes) if name_node else "anonymous"
+        name = node_text(name_node, source_bytes) if name_node else "anonymous"
         receiver_node = node.child_by_field_name("receiver")
         parent_type = None
         if receiver_node:
@@ -143,12 +143,12 @@ class GoParser(BaseParser):
                 if child.type == "parameter_declaration":
                     type_node = child.child_by_field_name("type")
                     if type_node:
-                        parent_type = _node_text(type_node, source_bytes).strip("*")
+                        parent_type = node_text(type_node, source_bytes).strip("*")
 
         params_node = node.child_by_field_name("parameters")
         params = self._parse_parameters(params_node, source_bytes) if params_node else []
         result_node = node.child_by_field_name("result")
-        return_type = _node_text(result_node, source_bytes) if result_node else None
+        return_type = node_text(result_node, source_bytes) if result_node else None
 
         return ParsedEntity(
             name=name,
@@ -160,7 +160,7 @@ class GoParser(BaseParser):
             parent=parent_type,
             parameters=params,
             return_type=return_type,
-            complexity=_estimate_complexity(node),
+            complexity=estimate_complexity(node),
         )
 
     def _parse_import(self, node, source_bytes: bytes, file_str: str) -> list[ParsedEntity]:
@@ -168,9 +168,9 @@ class GoParser(BaseParser):
         for child in node.children:
             if child.type == "import_spec":
                 path_node = child.child_by_field_name("path")
-                import_source = _node_text(path_node, source_bytes).strip('"') if path_node else ""
+                import_source = node_text(path_node, source_bytes).strip('"') if path_node else ""
                 alias_node = child.child_by_field_name("name")
-                import_name = _node_text(alias_node, source_bytes) if alias_node else import_source.split("/")[-1]
+                import_name = node_text(alias_node, source_bytes) if alias_node else import_source.split("/")[-1]
 
                 entities.append(ParsedEntity(
                     name=f"from_{import_source}",
@@ -191,10 +191,10 @@ class GoParser(BaseParser):
             if child.type == "parameter_declaration":
                 names: list[str] = []
                 type_node = child.child_by_field_name("type")
-                type_text = _node_text(type_node, source_bytes) if type_node else ""
+                type_text = node_text(type_node, source_bytes) if type_node else ""
                 for sub in child.children:
                     if sub.type == "identifier":
-                        names.append(_node_text(sub, source_bytes))
+                        names.append(node_text(sub, source_bytes))
                 for name in names:
                     if type_text:
                         params.append(f"{name}: {type_text}")
@@ -204,5 +204,5 @@ class GoParser(BaseParser):
                 name_node = child.child_by_field_name("name")
                 type_node = child.child_by_field_name("type")
                 if name_node and type_node:
-                    params.append(f"...{_node_text(name_node, source_bytes)}: {_node_text(type_node, source_bytes)}")
+                    params.append(f"...{node_text(name_node, source_bytes)}: {node_text(type_node, source_bytes)}")
         return params

@@ -21,20 +21,20 @@ Configuration is via two env vars:
 * ``MINIMAX_API_BASE`` — base URL for the OpenAI-compatible endpoint
   (default ``https://api.minimax.io/v1``).
 
-Error handling pattern (``_try_init`` / ``_available``):
+Error handling pattern (``try_init`` / ``available``):
 
-* ``_try_init`` returns ``True`` only when both ``litellm`` and the
+* ``try_init`` returns ``True`` only when both ``litellm`` and the
   ``MINIMAX_API_KEY`` env var are present. Missing litellm is
   caught as :class:`ImportError`; missing credentials raise a
   :class:`RuntimeError` from the ``MiniMaxLLMClient.__init__`` so
   the failure is obvious in the logs.
-* When ``_available`` is ``False``, ``complete`` and ``embed`` fall
+* When ``available`` is ``False``, ``complete`` and ``embed`` fall
   back to the deterministic helpers from
   :mod:`intelliqx_llm.client`. This is **graceful degradation** —
   tests and CI on machines without the MiniMax SDK or API key keep
   running and surface a clearly-prefixed ``[minimax-fallback:]``
   response so callers can tell which path produced the answer.
-* When ``_available`` is ``True`` but a MiniMax API call fails at
+* When ``available`` is ``True`` but a MiniMax API call fails at
   request time (rate limit, transient network error, etc.), the
   exception is caught and a fallback response is returned. This
   mirrors the permissiveness of the Vertex AI adapter because
@@ -108,10 +108,10 @@ class MiniMaxLLMClient(LLMClient):
         self.model = model or self.DEFAULT_MODEL
         self.embed_model = embed_model or self.DEFAULT_EMBED_MODEL
         self.embed_dim = embed_dim or self.DEFAULT_EMBED_DIM
-        self._client: Any = None
-        self._available = self._try_init()
+        self.sdk: Any = None
+        self.available = self.try_init()
 
-    def _try_init(self) -> bool:
+    def try_init(self) -> bool:
         """Probe the litellm SDK and the credentials.
 
         Returns:
@@ -129,11 +129,11 @@ class MiniMaxLLMClient(LLMClient):
             return False
         # Touch the attribute so mypy sees the import. litellm is
         # lazy; we don't pay its import cost on cold start.
-        self._client = litellm
+        self.sdk = litellm
         return True
 
     @staticmethod
-    def _last_user_message(messages: list[dict[str, str]]) -> str:
+    def last_user_message(messages: list[dict[str, str]]) -> str:
         """Return the content of the last ``user``-role message.
 
         Used to derive a deterministic fallback digest when the
@@ -158,7 +158,7 @@ class MiniMaxLLMClient(LLMClient):
             provider. Falls back to ``[minimax-fallback:<digest>]``
             when the API is unreachable.
         """
-        if not self._available:
+        if not self.available:
             return self._fallback_complete(request)
 
         try:
@@ -167,7 +167,7 @@ class MiniMaxLLMClient(LLMClient):
             # (``/anthropic/v1/messages``) is also supported by
             # litellm but adds an ``anthropic_version`` requirement
             # that we don't currently use.
-            response = await self._client.acompletion(
+            response = await self.sdk.acompletion(
                 model=request.model,
                 messages=request.messages,
                 temperature=request.temperature,
@@ -198,7 +198,7 @@ class MiniMaxLLMClient(LLMClient):
         digest is the first 32 hex chars of SHA-256 over the last
         user message so tests can still assert on-call shape.
         """
-        last_user = self._last_user_message(request.messages)
+        last_user = self.last_user_message(request.messages)
         digest = hashlib.sha256(last_user.encode("utf-8")).hexdigest()[:32]
         return CompletionResponse(
             content=f"[minimax-fallback:{digest}]",
@@ -220,7 +220,7 @@ class MiniMaxLLMClient(LLMClient):
             the API is unreachable or the upstream model is
             misconfigured.
         """
-        if not self._available:
+        if not self.available:
             return deterministic_embedding(list(texts), self.embed_dim)
 
         embed_model = model or self.embed_model
@@ -228,7 +228,7 @@ class MiniMaxLLMClient(LLMClient):
             embed_model = self.embed_model
 
         try:
-            response = await self._client.aembedding(
+            response = await self.sdk.aembedding(
                 model=embed_model, input=list(texts), api_key=self.api_key, api_base=self.api_base
             )
         except Exception:

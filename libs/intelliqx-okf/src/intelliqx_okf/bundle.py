@@ -76,7 +76,7 @@ def load_bundle(root: Path | str, *, follow_symlinks: bool = False) -> OKFBundle
     errors: list[tuple[Path, str]] = []
     reserved: set[str] = set()
 
-    for path in _walk_md(root_path, follow_symlinks):
+    for path in walk_md(root_path, follow_symlinks):
         if not path.is_file():
             continue
         # Compute the concept id relative to the bundle root, with
@@ -107,7 +107,7 @@ def load_bundle(root: Path | str, *, follow_symlinks: bool = False) -> OKFBundle
     return OKFBundle(root=root_path, concepts=concepts, errors=errors, reserved=reserved)
 
 
-def _walk_md(root: Path, follow_symlinks: bool) -> Iterator[Path]:
+def walk_md(root: Path, follow_symlinks: bool) -> Iterator[Path]:
     """Recursive ``.md`` walker.
 
     ``Path.rglob`` doesn't accept a pattern in some 3.12+ configs;
@@ -175,7 +175,7 @@ class OKFLinkResolver:
                 if target_id.endswith(".md"):
                     target_id = target_id[: -len(".md")]
                 # Normalise away any ``./`` prefix segments.
-                target_id = _normalise_path(target_id)
+                target_id = normalise_path(target_id)
                 if target_id not in self.bundle.concepts:
                     self.unresolved_count += 1
                     continue
@@ -186,7 +186,7 @@ class OKFLinkResolver:
 _PATH_NORMALISE_RE = re.compile(r"(^|/)\./")
 
 
-def _normalise_path(path: str) -> str:
+def normalise_path(path: str) -> str:
     """Collapse ``./`` segments in a POSIX path."""
     # Iterative replacement to handle chains like ``a/./b/./c``.
     prev = None

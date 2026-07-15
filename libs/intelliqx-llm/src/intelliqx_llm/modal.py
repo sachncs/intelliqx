@@ -14,20 +14,20 @@ The OpenAI-compatible wire format (``/v1/chat/completions`` and
 ``/v1/embeddings``) means the same code works against any vLLM
 deployment regardless of the underlying model.
 
-Error handling pattern (``_available`` flag):
+Error handling pattern (``available`` flag):
 
-* Unlike other adapters, ``_available`` is set from
+* Unlike other adapters, ``available`` is set from
   ``bool(self.endpoint_url)`` — a simple env-var check rather than
   an import test — because the real dependency (``httpx``) is only
-  imported inside ``complete``/``embed`` when ``_available`` is
+  imported inside ``complete``/``embed`` when ``available`` is
   ``True``. If ``httpx`` is missing at that point, a loud
   ``RuntimeError`` is raised.
-* When ``_available`` is ``False`` (no ``endpoint_url`` configured),
+* When ``available`` is ``False`` (no ``endpoint_url`` configured),
   ``complete`` returns a deterministic mock response prefixed with
   ``[vllm-fallback:]`` and ``embed`` returns a deterministic
   pseudo-embedding. This is **graceful degradation** — Modal-less
   CI and local dev keep working.
-* When ``_available`` is ``True`` but the vLLM endpoint is
+* When ``available`` is ``True`` but the vLLM endpoint is
   unreachable or returns an error, the ``httpx`` exception
   propagates (via ``r.raise_for_status()``). This is **fail loud**
   — silent fallback would mask a real deployment problem.
@@ -67,13 +67,13 @@ class VLLMModalLLMClient(LLMClient):
     ) -> None:
         self.endpoint_url = endpoint_url or os.environ.get("INTELLIQX_VLLM_URL", "")
         self.model = model
-        self._client = None
+        self.sdk = None
         # "Available" here means a real endpoint is configured; the
         # fallback path is always reachable for tests.
-        self._available = bool(self.endpoint_url)
+        self.available = bool(self.endpoint_url)
 
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
-        if not self._available:
+        if not self.available:
             last_user = next(
                 (m["content"] for m in reversed(request.messages) if m.get("role") == "user"), ""
             )
@@ -111,7 +111,7 @@ class VLLMModalLLMClient(LLMClient):
         )
 
     async def embed(self, texts: Sequence[str], *, model: str = "auto") -> list[list[float]]:
-        if not self._available:
+        if not self.available:
             return deterministic_embedding(texts, 768)
         # Real vLLM /v1/embeddings call.
         try:

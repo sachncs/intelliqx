@@ -34,7 +34,7 @@ from typing import Any
 from intelliqx_llm.client import CompletionRequest, get_llm_client
 
 
-def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="intelliqx-llm-smoke",
         description=(
@@ -67,12 +67,12 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _print_env(client: Any, args: argparse.Namespace) -> None:
+def print_env(client: Any, args: argparse.Namespace) -> None:
     backend = os.environ.get("INTELLIQX_LLM_BACKEND", "fake")
     model = args.model or getattr(client, "model", None) or getattr(client, "DEFAULT_MODEL", "?")
     embed_model = getattr(client, "embed_model", None) or "?"
-    dim = getattr(client, "embed_dim", getattr(client, "_dim", "?"))
-    available = getattr(client, "_available", None)
+    dim = getattr(client, "embed_dim", getattr(client, "dim", "?"))
+    available = getattr(client, "available", None)
     if available is None:
         available = "<not-applicable>"
     print(
@@ -101,7 +101,7 @@ async def _run_complete(args: argparse.Namespace) -> int:
     if rc != 0:
         return rc
     if args.show_env:
-        _print_env(client, args)
+        print_env(client, args)
     request = CompletionRequest(
         model=args.model or "auto",
         messages=[{"role": "user", "content": args.prompt}],
@@ -132,7 +132,7 @@ async def _run_embed(args: argparse.Namespace) -> int:
     if rc != 0:
         return rc
     if args.show_env:
-        _print_env(client, args)
+        print_env(client, args)
     start = time.monotonic()
     try:
         vectors = await client.embed([args.prompt], model=args.model or "auto")
@@ -148,7 +148,7 @@ async def _run_embed(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parse_args(argv)
+    args = parse_args(argv)
     runner = _run_embed if args.embed else _run_complete
     return asyncio.run(runner(args))
 

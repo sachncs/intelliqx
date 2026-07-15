@@ -72,7 +72,7 @@ from intelliqx_okf.bundle import OKFBundle
 _RRF_K = 60  # Constant for reciprocal-rank fusion.
 
 
-def _pack_floats(vector: list[float]) -> bytes:
+def pack_floats(vector: list[float]) -> bytes:
     """Pack a Python ``list[float]`` into the byte string sqlite-vec expects.
 
     Uses 4 bytes per float (little-endian, IEEE-754). Equivalent to
@@ -82,7 +82,7 @@ def _pack_floats(vector: list[float]) -> bytes:
     return struct.pack(f"<{len(vector)}f", *vector)
 
 
-def _tokenize_fts5(query: str) -> str:
+def tokenize_fts5(query: str) -> str:
     """Safely convert a natural-language query into an FTS5 expression.
 
     Extracts alphanumeric tokens (stripping punctuation), quotes each
@@ -92,11 +92,11 @@ def _tokenize_fts5(query: str) -> str:
 
     Examples::
 
-        >>> _tokenize_fts5("hello-world")
+        >>> tokenize_fts5("hello-world")
         '"hello" AND "world"'
-        >>> _tokenize_fts5("how do I test?")
+        >>> tokenize_fts5("how do I test?")
         '"how" AND "do" AND "I" AND "test"'
-        >>> _tokenize_fts5('"quoted" phrase')
+        >>> tokenize_fts5('"quoted" phrase')
         '"quoted" AND "phrase"'
     """
     tokens = re.findall(r"[A-Za-z0-9]+", query)
@@ -302,7 +302,7 @@ class OKFCatalog:
         cur.execute("DELETE FROM concepts_ai WHERE rowid = ?", (rowid,))
         cur.execute(
             "INSERT INTO concepts_ai (rowid, embedding) VALUES (?, ?)",
-            (rowid, _pack_floats(vector)),
+            (rowid, pack_floats(vector)),
         )
         self._conn.commit()
 
@@ -374,7 +374,7 @@ class OKFCatalog:
         """Retrieve FTS5 candidates constrained by structured filters."""
         if not self._has_fts5 or not query:
             return []
-        fts_expr = _tokenize_fts5(query)
+        fts_expr = tokenize_fts5(query)
         if not fts_expr:
             return []
         cur = self._conn.cursor()
@@ -514,7 +514,7 @@ class OKFCatalog:
             }
             for row in eligible
         }
-        packed = _pack_floats(query_embedding)
+        packed = pack_floats(query_embedding)
         cur.execute(
             "SELECT rowid, embedding FROM concepts_ai WHERE embedding MATCH ? AND k = ?",
             (packed, max(limit, len(eligible_by_rowid))),

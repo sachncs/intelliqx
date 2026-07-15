@@ -14,7 +14,7 @@ from intelliqx_graph.models import (
 )
 
 
-def _make_node_id(file_path: str, name: str) -> str:
+def make_node_id(file_path: str, name: str) -> str:
     return f"{file_path}::{name}"
 
 
@@ -74,12 +74,12 @@ class ResourceGraphBuilder(LayerBuilder):
             if entity.entity_type not in {"function", "method"}:
                 continue
 
-            nid = _make_node_id(entity.file_path, entity.name)
+            nid = make_node_id(entity.file_path, entity.name)
             if nid in node_ids:
                 continue
             node_ids.add(nid)
 
-            side_effects = _detect_io_operations(entity)
+            side_effects = detect_io_operations(entity)
 
             nodes.append(SGIRNode(
                 id=nid,
@@ -95,7 +95,7 @@ class ResourceGraphBuilder(LayerBuilder):
                 inputs=entity.parameters,
                 outputs=[entity.return_type] if entity.return_type else [],
                 side_effects=side_effects,
-                resource_usage=_build_resource_usage(entity),
+                resource_usage=build_resource_usage(entity),
             ))
 
             for resource_name in side_effects:
@@ -107,13 +107,13 @@ class ResourceGraphBuilder(LayerBuilder):
                         id=res_id,
                         name=resource_name,
                         node_type=NodeType.SERVICE,
-                        resource_usage={"type": _classify_resource(resource_name)},
+                        resource_usage={"type": classify_resource(resource_name)},
                     ))
 
                 edges.append(SGIREdge(
                     source=nid,
                     target=res_id,
-                    edge_type=EdgeType.NETWORK if _is_external(resource_name) else EdgeType.DATABASE,
+                    edge_type=EdgeType.NETWORK if is_external(resource_name) else EdgeType.DATABASE,
                     label=resource_name,
                 ))
 
@@ -129,7 +129,7 @@ class ResourceGraphBuilder(LayerBuilder):
         )
 
 
-def _detect_io_operations(entity: Any) -> list[str]:
+def detect_io_operations(entity: Any) -> list[str]:
     effects: list[str] = []
     all_names = entity.calls + entity.references
     for name in all_names:
@@ -142,9 +142,9 @@ def _detect_io_operations(entity: Any) -> list[str]:
     return effects
 
 
-def _build_resource_usage(entity: Any) -> dict[str, Any]:
+def build_resource_usage(entity: Any) -> dict[str, Any]:
     usage: dict[str, Any] = {}
-    io_ops = _detect_io_operations(entity)
+    io_ops = detect_io_operations(entity)
     if io_ops:
         usage["io_operations"] = io_ops
     if entity.is_async:
@@ -152,7 +152,7 @@ def _build_resource_usage(entity: Any) -> dict[str, Any]:
     return usage
 
 
-def _classify_resource(name: str) -> str:
+def classify_resource(name: str) -> str:
     name_lower = name.lower()
     if any(p in name_lower for p in {"database", "query", "cursor", "connection", "execute"}):
         return "database"
@@ -165,6 +165,6 @@ def _classify_resource(name: str) -> str:
     return "file"
 
 
-def _is_external(name: str) -> bool:
+def is_external(name: str) -> bool:
     name_lower = name.lower()
     return any(p in name_lower for p in _EXTERNAL_CALL_PATTERNS)
