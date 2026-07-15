@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from enum import Enum
 from itertools import pairwise
 from typing import ClassVar
@@ -80,6 +81,15 @@ class SecurityAgent:
     SENSITIVE_NAME_KEYWORDS: ClassVar[set[str]] = {"password", "secret", "token", "key"}
     RISK_SCORES: ClassVar[dict[str, float]] = {"high": 3, "medium": 2, "low": 1}
     SEVERITY_VALUES: ClassVar[dict[str, float]] = {"high": 10.0, "medium": 5.0, "low": 1.0}
+
+    # Word-boundary regex for sensitive-name matches. Avoiding
+    # naive ``"key" in name_lower`` prevents false positives on
+    # benign tokens like ``monkey_patch``, ``key_value`` pairs,
+    # or test names such as ``test_dict_keys``.
+    SENSITIVE_NAME_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"\b(?:password|secret|token|key)\b",
+        re.IGNORECASE,
+    )
 
     def __init__(self, graph_index: GraphIndex) -> None:
         self.index = graph_index
@@ -305,7 +315,7 @@ class SecurityAgent:
 
             if (
                 boundary_map.get(node_id, SecurityBoundary.NONE) == SecurityBoundary.NONE
-                and any(kw in node.name.lower() for kw in self.SENSITIVE_NAME_KEYWORDS)
+                and self.name_matches_sensitive(node.name)
             ):
                 vulns.append(Vulnerability(
                     vulnerability_type=VulnerabilityType.SENSITIVE_DATA_EXPOSURE,
@@ -351,6 +361,16 @@ class SecurityAgent:
                         recommendation="Validate and sanitize data crossing trust boundaries",
                     ))
         return vulns
+
+    def name_matches_sensitive(self, name: str) -> bool:
+        """Return True if ``name`` contains a sensitive keyword as a whole word.
+
+        Substring matches like ``"api_key"`` or ``"monkey"`` no
+        longer trigger; only the bare keywords ``password``,
+        ``secret``, ``token``, ``key`` count, anchored by word
+        boundaries on either side.
+        """
+        return bool(self.SENSITIVE_NAME_RE.search(name))
 
     def is_sql_injection_risk(self, node: object) -> bool:
         name_lower = node.name.lower()  # type: ignore[union-attr]
