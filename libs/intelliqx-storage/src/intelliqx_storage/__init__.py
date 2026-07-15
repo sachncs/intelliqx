@@ -17,11 +17,22 @@ Tenants are *not* enforced by the store itself; the
 :class:`intelliqx_tenant.IsolationEnforcer` provides runtime checks.
 """
 
+from intelliqx_storage.base import ObjectStore
 from intelliqx_storage.store import (
+    STORAGE_BACKEND_REGISTRY,
     InMemoryObjectStore,
     LocalFileSystemObjectStore,
-    ObjectStore,
     get_object_store,
+    list_storage_backends,
+    register_storage_backend,
 )
 
-__all__ = ["InMemoryObjectStore", "LocalFileSystemObjectStore", "ObjectStore", "get_object_store"]
+__all__ = [
+    "STORAGE_BACKEND_REGISTRY",
+    "InMemoryObjectStore",
+    "LocalFileSystemObjectStore",
+    "ObjectStore",
+    "get_object_store",
+    "list_storage_backends",
+    "register_storage_backend",
+]

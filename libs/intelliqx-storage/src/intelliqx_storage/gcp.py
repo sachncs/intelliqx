@@ -29,7 +29,7 @@ from typing import Any
 
 from intelliqx_core.errors import NotFoundError
 
-from intelliqx_storage.store import ObjectStore
+from intelliqx_storage.base import ObjectStore
 
 
 class GCSObjectStore(ObjectStore):
@@ -65,8 +65,15 @@ class GCSObjectStore(ObjectStore):
             return f"{self.prefix}/{key}"
         return key
 
-    async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
-        """Upload ``data`` to GCS at ``key``.
+    async def put(
+        self,
+        key: str,
+        value: bytes,
+        metadata: dict[str, Any] | None = None,
+        *,
+        content_type: str | None = None,
+    ) -> str:
+        """Upload ``value`` to GCS at ``key``.
 
         Offloads the blocking ``upload_from_string`` call to a worker
         thread. If ``content_type`` is not provided, defaults to
@@ -74,7 +81,8 @@ class GCSObjectStore(ObjectStore):
 
         Args:
             key: The object key.
-            data: The bytes to upload.
+            value: The bytes to upload.
+            metadata: Optional object metadata.
             content_type: Optional MIME type.
 
         Returns:
@@ -86,8 +94,10 @@ class GCSObjectStore(ObjectStore):
         if not self.available:
             raise RuntimeError("GCSObjectStore requires google-cloud-storage + GCP credentials")
         blob = self.bucket.blob(self.key(key))
+        if metadata:
+            blob.metadata = {name: str(item) for name, item in metadata.items()}
         await asyncio.to_thread(
-            blob.upload_from_string, data, content_type=content_type or "application/octet-stream"
+            blob.upload_from_string, value, content_type=content_type or "application/octet-stream"
         )
         return f"gs://{self.bucket_name}/{self.key(key)}"
 

@@ -29,9 +29,10 @@ Error handling pattern (``try_init`` / ``available``):
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
-from intelliqx_state.store import StateStore
+from intelliqx_state.base import StateStore
 
 
 class ElastiCacheStateStore(StateStore):
@@ -49,10 +50,12 @@ class ElastiCacheStateStore(StateStore):
             that would lose state between processes.
     """
 
-    def __init__(self, host: str, port: int = 6379, db: int = 0) -> None:
-        self.host = host
-        self.port = port
-        self.db = db
+    def __init__(
+        self, host: str | None = None, port: int | None = None, db: int | None = None
+    ) -> None:
+        self.host = host if host is not None else os.environ.get("REDIS_HOST", "localhost")
+        self.port = port if port is not None else int(os.environ.get("REDIS_PORT", "6379"))
+        self.db = db if db is not None else int(os.environ.get("REDIS_DB", "0"))
         self.sdk: Any = None
         self.available = self.try_init()
 
@@ -208,6 +211,12 @@ class ElastiCacheStateStore(StateStore):
             raise RuntimeError("ElastiCache requires redis SDK + endpoint")
         return await self.sdk.hgetall(key)
 
+    async def hkeys(self, key: str) -> list[str]:
+        """Return all hash field names under ``key``."""
+        if not self.available:
+            raise RuntimeError("ElastiCache requires redis SDK + endpoint")
+        return await self.sdk.hkeys(key)
+
     async def lpush(self, key: str, value: str) -> int:
         """Push ``value`` to the head of the list at ``key``.
 
@@ -243,3 +252,7 @@ class ElastiCacheStateStore(StateStore):
         if not self.available:
             raise RuntimeError("ElastiCache requires redis SDK + endpoint")
         return await self.sdk.rpop(key)
+
+    def reset(self) -> None:
+        """Leave remote state intact when resetting the local singleton."""
+        return None

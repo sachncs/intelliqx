@@ -31,7 +31,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from intelliqx_events.bus import EventBus
+from intelliqx_events.base import EventBus
 from intelliqx_events.handler import EventHandler
 
 
@@ -49,6 +49,8 @@ class GCPPubSubBus(EventBus):
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
         self.publisher: Any = None
         self.subscriptions: dict[str, list[EventHandler]] = {}
+        self.subscription_ids: dict[str, tuple[str, EventHandler]] = {}
+        self.next_subscription_id = 0
         self.fallback = fallback
         self.available = self.try_init()
 
@@ -87,7 +89,7 @@ class GCPPubSubBus(EventBus):
                         await res
                 except Exception:
                     if handler.dlq:
-                        await self.publish(handler.dlq, event)
+                        await self.dlq(event, handler.dlq)
                     else:
                         raise
             return getattr(getattr(event, "metadata", None), "event_id", "local")
@@ -113,7 +115,33 @@ class GCPPubSubBus(EventBus):
         else:
             handler = handler.model_copy(update={"dlq": dlq or handler.dlq})
         self.subscriptions.setdefault(topic, []).append(handler)
-        return f"gcp-{topic}-{len(self.subscriptions[topic])}"
+        self.next_subscription_id += 1
+        subscription_id = f"gcp-{topic}-{self.next_subscription_id}"
+        self.subscription_ids[subscription_id] = (topic, handler)
+        return subscription_id
+
+    def unsubscribe(self, subscription_id: str | None = None) -> None:
+        """Remove a local subscription used by the fallback path."""
+        if subscription_id is None:
+            self.subscriptions.clear()
+            self.subscription_ids.clear()
+            return
+        subscription = self.subscription_ids.pop(subscription_id, None)
+        if subscription is None:
+            return
+        topic, handler = subscription
+        self.subscriptions[topic] = [
+            registered for registered in self.subscriptions[topic] if registered is not handler
+        ]
+        if not self.subscriptions[topic]:
+            self.subscriptions.pop(topic, None)
+
+    async def dlq(self, event: BaseModel, topic: str | None = None) -> None:
+        """Route an event to the configured dead-letter topic."""
+        if self.fallback is not None:
+            await self.fallback.dlq(event, topic)
+            return
+        await self.publish(topic or "dlq", event)
 
     async def start(self) -> None:
         """No-op: Pub/Sub delivery is push-based."""

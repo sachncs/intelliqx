@@ -18,11 +18,19 @@ adapters' contract. Subscribers can opt into a dead-letter topic via
 there.
 """
 
-from intelliqx_events.bus import EventBus, InMemoryEventBus, get_event_bus
+from intelliqx_events.base import EventBus
+from intelliqx_events.bus import (
+    EVENT_BUS_REGISTRY,
+    InMemoryEventBus,
+    get_event_bus,
+    list_event_bus_backends,
+    register_event_bus_backend,
+)
 from intelliqx_events.handler import EventHandler
 from intelliqx_events.schemas import EventContract, EventRegistry, get_registry
 
 __all__ = [
+    "EVENT_BUS_REGISTRY",
     "EventBus",
     "EventContract",
     "EventHandler",
@@ -30,4 +38,6 @@ __all__ = [
     "InMemoryEventBus",
     "get_event_bus",
     "get_registry",
+    "list_event_bus_backends",
+    "register_event_bus_backend",
 ]

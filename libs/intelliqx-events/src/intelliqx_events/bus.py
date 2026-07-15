@@ -1,14 +1,8 @@
 """Event bus interface and in-process implementation.
 
-The :class:`EventBus` is the contract every adapter fulfils. Two
-methods:
-
-* ``publish(topic, event)`` — fan-out delivery to every subscriber of
-  ``topic``. Returns the event id (so callers can correlate).
-* ``subscribe(topic, handler, *, dlq=None)`` — register a handler.
-  ``dlq`` is the optional dead-letter topic; failed invocations are
-  routed there instead of being raised (in-process) or sent to the
-  cloud's native DLQ (cloud adapters).
+The :class:`EventBus` is the contract every adapter fulfils. Its
+publish, subscribe, unsubscribe, and dead-letter operations share the
+same interface across in-memory and cloud backends.
 
 Plus lifecycle hooks (``start`` / ``stop``) that cloud adapters use to
 flush background workers; the in-memory implementation treats them
@@ -17,68 +11,15 @@ as no-ops.
 
 from __future__ import annotations
 
-import abc
 import asyncio
+import os
 from collections import defaultdict
 from collections.abc import Callable
 
 from pydantic import BaseModel
 
+from intelliqx_events.base import EventBus
 from intelliqx_events.handler import EventHandler
-
-
-class EventBus(abc.ABC):
-    """Abstract event bus.
-
-    Subclasses must implement ``publish`` and ``subscribe``. The
-    ``start`` / ``stop`` lifecycle hooks exist so cloud adapters
-    can manage background workers; the in-memory bus treats them as
-    no-ops.
-    """
-
-    @abc.abstractmethod
-    async def publish(self, topic: str, event: BaseModel) -> str:
-        """Publish an event to a topic.
-
-        Args:
-            topic: The topic name (e.g. ``"run.started"``).
-            event: The event payload. Must expose a ``metadata`` field
-                with at least ``event_id`` (see :mod:`intelliqx_core.events`).
-
-        Returns:
-            The event id, for correlation by the caller.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def subscribe(
-        self, topic: str, handler: Callable | EventHandler, *, dlq: str | None = None
-    ) -> str:
-        """Register a handler for a topic.
-
-        Args:
-            topic: The topic to subscribe to.
-            handler: Either a plain callable ``(event) -> None`` or a
-                pre-built :class:`EventHandler`. Plain callables are
-                wrapped with the provided ``dlq``; ``EventHandler``
-                instances inherit their existing ``dlq`` unless
-                overridden here.
-            dlq: Optional dead-letter topic. On handler failure the
-                event is published to ``{topic}.dlq`` instead of
-                being raised (in-process) or sent to the cloud's
-                native DLQ.
-
-        Returns:
-            A subscription id (string) that the caller can use to
-            later unsubscribe (adapters that support it).
-        """
-        raise NotImplementedError
-
-    async def start(self) -> None:  # noqa: B027
-        """Start background tasks (cloud adapters only)."""
-
-    async def stop(self) -> None:  # noqa: B027
-        """Stop background tasks and flush pending work."""
 
 
 class InMemoryEventBus(EventBus):
@@ -93,6 +34,7 @@ class InMemoryEventBus(EventBus):
     def __init__(self) -> None:
         # topic -> ordered list of handlers
         self.subscriptions: dict[str, list[EventHandler]] = defaultdict(list)
+        self.subscription_ids: dict[str, tuple[str, EventHandler]] = {}
         self.next_sub_id = 0
         # dlq_name -> list of events that failed handling
         self.dlqs: dict[str, list[BaseModel]] = defaultdict(list)
@@ -116,9 +58,7 @@ class InMemoryEventBus(EventBus):
                     await result
             except Exception:
                 if handler.dlq:
-                    # Re-publish to the DLQ. If the DLQ handler also
-                    # fails, propagate that secondary failure.
-                    self.dlqs[handler.dlq].append(event)
+                    await self.dlq(event, handler.dlq)
                 else:
                     raise
         return str(event_id)
@@ -137,7 +77,28 @@ class InMemoryEventBus(EventBus):
             # Override the handler's DLQ if the caller specified one.
             handler = handler.model_copy(update={"dlq": dlq or handler.dlq})
         self.subscriptions[topic].append(handler)
+        self.subscription_ids[sub_id] = (topic, handler)
         return sub_id
+
+    def unsubscribe(self, subscription_id: str | None = None) -> None:
+        """Remove a subscription, or all subscriptions when no id is provided."""
+        if subscription_id is None:
+            self.subscriptions.clear()
+            self.subscription_ids.clear()
+            return
+        subscription = self.subscription_ids.pop(subscription_id, None)
+        if subscription is None:
+            return
+        topic, handler = subscription
+        self.subscriptions[topic] = [
+            registered for registered in self.subscriptions[topic] if registered is not handler
+        ]
+        if not self.subscriptions[topic]:
+            self.subscriptions.pop(topic, None)
+
+    async def dlq(self, event: BaseModel, topic: str | None = None) -> None:
+        """Park an event in an in-memory dead-letter queue."""
+        self.dlqs[topic or "dlq"].append(event)
 
     def get_dlq(self, dlq_name: str) -> list[BaseModel]:
         """Return the events currently parked in a DLQ.
@@ -154,6 +115,7 @@ class InMemoryEventBus(EventBus):
         Useful in test setup helpers.
         """
         self.subscriptions.clear()
+        self.subscription_ids.clear()
         self.dlqs.clear()
         self.next_sub_id = 0
 
@@ -164,19 +126,37 @@ class InMemoryEventBus(EventBus):
         self.started = False
 
 
+EVENT_BUS_REGISTRY: dict[str, type[EventBus]] = {
+    "memory": InMemoryEventBus,
+}
+
+
+def register_event_bus_backend(name: str, factory: type[EventBus]) -> None:
+    """Register or replace an event bus backend factory."""
+    EVENT_BUS_REGISTRY[name] = factory
+
+
+def list_event_bus_backends() -> tuple[str, ...]:
+    """Return the registered event bus backend names in sorted order."""
+    return tuple(sorted(EVENT_BUS_REGISTRY))
+
+
 SINGLETON: EventBus | None = None
 
 
-def get_event_bus() -> EventBus:
-    """Return the singleton in-process event bus.
-
-    Cloud adapters are selected via the cloud profile at deploy time;
-    in tests we always use the in-memory bus. Use
-    :func:`reset_event_bus` between tests for isolation.
-    """
+def get_event_bus(backend: str | None = None) -> EventBus:
+    """Return the singleton event bus selected from the backend registry."""
     global SINGLETON
     if SINGLETON is None:
-        SINGLETON = InMemoryEventBus()
+        backend_name = backend or os.environ.get("INTELLIQX_EVENT_BUS_BACKEND", "memory")
+        factory = EVENT_BUS_REGISTRY.get(backend_name)
+        if factory is None:
+            available = ", ".join(list_event_bus_backends())
+            raise RuntimeError(
+                f"Event bus backend {backend_name!r} not registered. "
+                f"Available backends: {available}."
+            )
+        SINGLETON = factory()
     return SINGLETON
 
 

@@ -31,7 +31,7 @@ from typing import Any
 
 from intelliqx_core.errors import NotFoundError
 
-from intelliqx_storage.store import ObjectStore
+from intelliqx_storage.base import ObjectStore
 
 
 class ModalVolumeObjectStore(ObjectStore):
@@ -64,15 +64,23 @@ class ModalVolumeObjectStore(ObjectStore):
             key = key[1:]
         return self.mount_path / key
 
-    async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
-        """Write ``data`` to ``key`` in the Modal Volume.
+    async def put(
+        self,
+        key: str,
+        value: bytes,
+        metadata: dict[str, Any] | None = None,
+        *,
+        content_type: str | None = None,
+    ) -> str:
+        """Write ``value`` to ``key`` in the Modal Volume.
 
         Creates parent directories automatically. Commits the volume
         after writing so the persisted snapshot reflects the change.
 
         Args:
             key: The object key.
-            data: The bytes to write.
+            value: The bytes to write.
+            metadata: Accepted for interface compatibility.
             content_type: Accepted for interface compatibility; Modal
                 Volumes don't store MIME types.
 
@@ -87,7 +95,7 @@ class ModalVolumeObjectStore(ObjectStore):
         p = self.path(key)
         # Create parent directories so nested keys work.
         p.parent.mkdir(parents=True, exist_ok=True)
-        await asyncio.to_thread(p.write_bytes, data)
+        await asyncio.to_thread(p.write_bytes, value)
         # Volume commit flushes writes to the persisted snapshot.
         await asyncio.to_thread(self.volume.commit)
         return f"modal://{self.volume_name}/{key}"

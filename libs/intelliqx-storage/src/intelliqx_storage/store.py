@@ -18,7 +18,6 @@ that supports it.
 
 from __future__ import annotations
 
-import abc
 import asyncio
 import os
 from collections.abc import AsyncIterator
@@ -27,71 +26,7 @@ from typing import Any
 
 from intelliqx_core.errors import NotFoundError
 
-
-class ObjectStore(abc.ABC):
-    """Abstract object store (S3 / GCS / Modal Volume / filesystem).
-
-    All methods are coroutines so the same interface works in async
-    code paths. Implementations are free to back the methods with
-    blocking I/O as long as the blocking call is offloaded via
-    ``asyncio.to_thread`` (the filesystem and memory stores already
-    do this).
-    """
-
-    @abc.abstractmethod
-    async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
-        """Store ``data`` at ``key``.
-
-        Args:
-            key: The object key. Leading ``"/"`` is normalised away.
-            data: The bytes to store.
-            content_type: Optional MIME type. Persisted by cloud
-                adapters so ``GET`` responses carry it.
-
-        Returns:
-            An opaque version / ETag identifier.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def get(self, key: str) -> bytes:
-        """Fetch the bytes at ``key``.
-
-        Returns:
-            The stored bytes.
-
-        Raises:
-            NotFoundError: If ``key`` does not exist.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def exists(self, key: str) -> bool:
-        """Return ``True`` if ``key`` is present."""
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def delete(self, key: str) -> None:
-        """Remove ``key``. Idempotent: deleting a missing key is a no-op."""
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def list(self, prefix: str) -> AsyncIterator[str]:
-        """Yield every key with the given prefix.
-
-        Yields:
-            String keys. Order is implementation-defined.
-        """
-        raise NotImplementedError
-
-    async def size(self, key: str) -> int:
-        """Return the size in bytes of ``key``.
-
-        Default implementation: ``len(get(key))``. Cloud adapters
-        override with a HEAD-style call to avoid downloading the body.
-        """
-        data = await self.get(key)
-        return len(data)
+from intelliqx_storage.base import ObjectStore
 
 
 class InMemoryObjectStore(ObjectStore):
@@ -107,19 +42,37 @@ class InMemoryObjectStore(ObjectStore):
         self.store: dict[str, bytes] = {}
         self.meta: dict[str, dict[str, Any]] = {}
 
-    async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
-        self.store[key] = data
-        self.meta[key] = {"content_type": content_type, "size": len(data)}
+    async def put(
+        self,
+        key: str,
+        value: bytes,
+        metadata: dict[str, Any] | None = None,
+        *,
+        content_type: str | None = None,
+    ) -> str:
+        self.store[key] = value
+        self.meta[key] = dict(metadata or {})
+        self.meta[key].setdefault("content_type", content_type)
+        self.meta[key]["size"] = len(value)
         return f"mem-{len(self.store)}"
 
-    def put_sync(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
+    def put_sync(
+        self,
+        key: str,
+        value: bytes,
+        metadata: dict[str, Any] | None = None,
+        *,
+        content_type: str | None = None,
+    ) -> str:
         """Sync version of :meth:`put` for use outside an event loop.
 
         Used during object-store initialisation when the zvec index
         needs to write its initial manifest before any loop runs.
         """
-        self.store[key] = data
-        self.meta[key] = {"content_type": content_type, "size": len(data)}
+        self.store[key] = value
+        self.meta[key] = dict(metadata or {})
+        self.meta[key].setdefault("content_type", content_type)
+        self.meta[key]["size"] = len(value)
         return f"mem-{len(self.store)}"
 
     async def get(self, key: str) -> bytes:
@@ -171,12 +124,19 @@ class LocalFileSystemObjectStore(ObjectStore):
             key = key[1:]
         return self.root / key
 
-    async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
+    async def put(
+        self,
+        key: str,
+        value: bytes,
+        metadata: dict[str, Any] | None = None,
+        *,
+        content_type: str | None = None,
+    ) -> str:
         path = self.path(key)
         path.parent.mkdir(parents=True, exist_ok=True)
         # ``asyncio.to_thread`` keeps the event loop responsive
         # even for large writes.
-        await asyncio.to_thread(path.write_bytes, data)
+        await asyncio.to_thread(path.write_bytes, value)
         return f"local-{path.stat().st_size}"
 
     async def get(self, key: str) -> bytes:
@@ -208,28 +168,40 @@ class LocalFileSystemObjectStore(ObjectStore):
 
 SINGLETON: ObjectStore | None = None
 
+STORAGE_BACKEND_REGISTRY: dict[str, type[ObjectStore]] = {
+    "memory": InMemoryObjectStore,
+}
+
+
+def register_storage_backend(name: str, factory: type[ObjectStore]) -> None:
+    """Register or replace an object storage backend."""
+    STORAGE_BACKEND_REGISTRY[name] = factory
+
+
+def list_storage_backends() -> tuple[str, ...]:
+    """Return registered backend names in sorted order."""
+    return tuple(sorted(STORAGE_BACKEND_REGISTRY))
+
+
+register_storage_backend("fs", LocalFileSystemObjectStore)
+
 
 def get_object_store() -> ObjectStore:
-    """Return the configured object-store singleton.
-
-    Resolution order:
-
-    1. ``INTELLIQX_OBJECT_STORE`` env var — ``memory`` (default) or
-       ``fs:/path/to/dir``.
-    2. Otherwise, the in-memory store.
-
-    Production deployments should set the env var to point at a
-    persistent backend (S3, GCS, Modal Volume) via a cloud adapter
-    in their bootstrap.
-    """
+    """Return the configured object-store singleton."""
     global SINGLETON
     if SINGLETON is not None:
         return SINGLETON
-    override = os.environ.get("INTELLIQX_OBJECT_STORE", "memory")
-    if override.startswith("fs:"):
-        SINGLETON = LocalFileSystemObjectStore(override[3:])
-    else:
-        SINGLETON = InMemoryObjectStore()
+
+    backend_spec = os.environ.get("INTELLIQX_OBJECT_STORE", "memory")
+    backend_name, separator, argument = backend_spec.partition(":")
+    factory = STORAGE_BACKEND_REGISTRY.get(backend_name)
+    if factory is None:
+        available = ", ".join(list_storage_backends())
+        raise RuntimeError(
+            f"Storage backend {backend_name!r} not registered. Available backends: {available}."
+        )
+
+    SINGLETON = factory(argument) if separator else factory()
     return SINGLETON
 
 

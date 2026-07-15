@@ -34,7 +34,7 @@ from typing import Any
 
 from intelliqx_core.errors import NotFoundError
 
-from intelliqx_storage.store import ObjectStore
+from intelliqx_storage.base import ObjectStore
 
 
 class S3ObjectStore(ObjectStore):
@@ -71,8 +71,15 @@ class S3ObjectStore(ObjectStore):
             return f"{self.prefix}/{key}"
         return key
 
-    async def put(self, key: str, data: bytes, *, content_type: str | None = None) -> str:
-        """Upload ``data`` to S3 at ``key``.
+    async def put(
+        self,
+        key: str,
+        value: bytes,
+        metadata: dict[str, Any] | None = None,
+        *,
+        content_type: str | None = None,
+    ) -> str:
+        """Upload ``value`` to S3 at ``key``.
 
         Offloads the blocking ``put_object`` call to a worker thread
         so the event loop is not blocked during large uploads.
@@ -80,7 +87,8 @@ class S3ObjectStore(ObjectStore):
         Args:
             key: The object key. Leading ``"/"`` is stripped; the
                 configured ``prefix`` is prepended.
-            data: The bytes to upload.
+            value: The bytes to upload.
+            metadata: Optional object metadata.
             content_type: Optional MIME type stored on the object.
 
         Returns:
@@ -92,7 +100,9 @@ class S3ObjectStore(ObjectStore):
         """
         if not self.available:
             raise RuntimeError("S3ObjectStore requires boto3 + AWS credentials")
-        kwargs: dict[str, Any] = {"Bucket": self.bucket, "Key": self.key(key), "Body": data}
+        kwargs: dict[str, Any] = {"Bucket": self.bucket, "Key": self.key(key), "Body": value}
+        if metadata:
+            kwargs["Metadata"] = {name: str(item) for name, item in metadata.items()}
         if content_type:
             kwargs["ContentType"] = content_type
         # Offload the synchronous boto3 call to a worker thread.

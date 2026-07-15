@@ -30,7 +30,7 @@ from __future__ import annotations
 from contextlib import suppress
 from typing import Any
 
-from intelliqx_state.store import StateStore
+from intelliqx_state.base import StateStore
 
 
 class ModalDictStateStore(StateStore):
@@ -188,6 +188,11 @@ class ModalDictStateStore(StateStore):
         self.require()
         return dict(self.store.get(key, {}))
 
+    async def hkeys(self, key: str) -> list[str]:
+        """Return all hash field names under ``key``."""
+        self.require()
+        return list(self.store.get(key, {}))
+
     async def lpush(self, key: str, value: str) -> int:
         """Push ``value`` to the head of the list at ``key``.
 
@@ -213,3 +218,7 @@ class ModalDictStateStore(StateStore):
         v = lst.pop()
         self.store[key] = lst
         return v
+
+    def reset(self) -> None:
+        """Leave remote state intact when resetting the local singleton."""
+        return None

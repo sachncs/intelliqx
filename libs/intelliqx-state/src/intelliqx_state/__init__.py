@@ -18,6 +18,21 @@ Adapters:
   support TTL natively.
 """
 
-from intelliqx_state.store import InMemoryStateStore, StateStore, get_state_store
+from intelliqx_state.base import StateBackend, StateStore
+from intelliqx_state.store import (
+    InMemoryStateStore,
+    get_state_store,
+    list_state_backends,
+    register_state_backend,
+    reset_state_store,
+)
 
-__all__ = ["InMemoryStateStore", "StateStore", "get_state_store"]
+__all__ = [
+    "InMemoryStateStore",
+    "StateBackend",
+    "StateStore",
+    "get_state_store",
+    "list_state_backends",
+    "register_state_backend",
+    "reset_state_store",
+]

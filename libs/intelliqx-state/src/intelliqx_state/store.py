@@ -14,103 +14,13 @@ handler — only the small critical sections that touch the dicts.
 
 from __future__ import annotations
 
-import abc
 import asyncio
+import os
 import time
 from collections.abc import AsyncIterator
 
-
-class StateStore(abc.ABC):
-    """Abstract state store.
-
-    All methods are coroutines; the in-memory implementation is fully
-    async-aware. The values stored are opaque ``bytes``; encoding
-    (JSON, msgpack, etc.) is the caller's responsibility.
-    """
-
-    @abc.abstractmethod
-    async def get(self, key: str) -> bytes | None:
-        """Return the value for ``key`` or ``None`` if missing/expired.
-
-        Args:
-            key: Storage key.
-
-        Returns:
-            The bytes value, or ``None``.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def set(self, key: str, value: bytes, *, ttl_seconds: int | None = None) -> None:
-        """Store ``value`` at ``key`` with optional expiry.
-
-        Args:
-            key: Storage key.
-            value: The bytes value to store.
-            ttl_seconds: If set, the entry expires this many seconds
-                after the current time.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def delete(self, key: str) -> None:
-        """Remove the key and any hash/list entries under the same name."""
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def incr(self, key: str, amount: int = 1) -> int:
-        """Atomically increment an integer counter.
-
-        Args:
-            key: Counter key.
-            amount: Increment size (default 1). May be negative.
-
-        Returns:
-            The new value after the increment.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def expire(self, key: str, ttl_seconds: int) -> None:
-        """Set the expiry on an existing key (Redis-style)."""
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def keys(self, prefix: str) -> AsyncIterator[str]:
-        """Yield every non-expired key with the given prefix.
-
-        Note: this is **O(n)** over the entire keyspace; use sparingly
-        (e.g. agent startup) and prefer explicit indexes for hot paths.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def hset(self, key: str, field: str, value: str) -> None:
-        """Set a single hash field under ``key``."""
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def hgetall(self, key: str) -> dict[str, str]:
-        """Return all hash fields under ``key``.
-
-        Returns:
-            An empty dict if the key has no hash fields.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def lpush(self, key: str, value: str) -> int:
-        """Push ``value`` to the head of the list at ``key``.
-
-        Returns:
-            The new list length.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def rpop(self, key: str) -> str | None:
-        """Pop the tail of the list at ``key`` and return it, or ``None``."""
-        raise NotImplementedError
+from intelliqx_state.base import StateBackend as StateBackend
+from intelliqx_state.base import StateStore as StateStore
 
 
 class InMemoryStateStore(StateStore):
@@ -190,6 +100,10 @@ class InMemoryStateStore(StateStore):
         async with self.lock:
             return dict(self.hashes.get(key, {}))
 
+    async def hkeys(self, key: str) -> list[str]:
+        async with self.lock:
+            return list(self.hashes.get(key, {}))
+
     async def lpush(self, key: str, value: str) -> int:
         async with self.lock:
             self.lists.setdefault(key, []).insert(0, value)
@@ -216,20 +130,67 @@ class InMemoryStateStore(StateStore):
 SINGLETON: StateStore | None = None
 
 
-def get_state_store() -> StateStore:
-    """Return the singleton in-memory state store.
+STATE_BACKEND_REGISTRY: dict[str, type[StateStore]] = {
+    "memory": InMemoryStateStore,
+}
 
-    Use :func:`reset_state_store` between tests for isolation.
-    """
+
+def register_state_backend(name: str, factory: type[StateStore]) -> None:
+    """Register or replace a state backend factory."""
+    STATE_BACKEND_REGISTRY[name] = factory
+
+
+def _load_default_state_backends() -> None:
+    """Load built-in cloud backend classes when they are importable."""
+    if "aws" not in STATE_BACKEND_REGISTRY:
+        try:
+            from intelliqx_state.aws import ElastiCacheStateStore
+
+            STATE_BACKEND_REGISTRY["aws"] = ElastiCacheStateStore
+        except ImportError:
+            pass
+    if "gcp" not in STATE_BACKEND_REGISTRY:
+        try:
+            from intelliqx_state.gcp import MemorystoreStateStore
+
+            STATE_BACKEND_REGISTRY["gcp"] = MemorystoreStateStore
+        except ImportError:
+            pass
+    if "modal" not in STATE_BACKEND_REGISTRY:
+        try:
+            from intelliqx_state.modal import ModalDictStateStore
+
+            STATE_BACKEND_REGISTRY["modal"] = ModalDictStateStore
+        except ImportError:
+            pass
+
+
+def list_state_backends() -> tuple[str, ...]:
+    """Return the names of all registered state backends."""
+    return tuple(sorted(STATE_BACKEND_REGISTRY))
+
+
+def get_state_store() -> StateStore:
+    """Return the configured singleton state store."""
     global SINGLETON
     if SINGLETON is None:
-        SINGLETON = InMemoryStateStore()
+        backend = os.environ.get("INTELLIQX_STATE_BACKEND", "memory")
+        _load_default_state_backends()
+        factory = STATE_BACKEND_REGISTRY.get(backend)
+        if factory is None:
+            available = ", ".join(list_state_backends())
+            raise RuntimeError(
+                f"State backend {backend!r} not registered. "
+                f"Available backends: {available}. "
+                "Use INTELLIQX_STATE_BACKEND=memory for tests/dev."
+            )
+        SINGLETON = factory()
     return SINGLETON
 
 
 def reset_state_store() -> None:
-    """Clear the singleton state store (for tests)."""
+    """Reset and clear the singleton state store."""
     global SINGLETON
-    if isinstance(SINGLETON, InMemoryStateStore):
+    if SINGLETON is not None:
         SINGLETON.reset()
     SINGLETON = None
