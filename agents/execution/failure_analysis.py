@@ -91,7 +91,7 @@ class FailureAnalysisAgent(AgentBase):
         elif "500" in err or "AssertionError" in err or "expected" in err:
             # Could be product or flake; if a previous attempt
             # passed we treat it as flake.
-            if retry >= 1 and _history_passes(input.history):
+            if retry >= 1 and history_passes(input.history):
                 classification = "flake"
                 root_cause = "Intermittent failure"
                 action = "Investigate flakiness; consider quarantine"
@@ -115,6 +115,6 @@ class FailureAnalysisAgent(AgentBase):
         )
 
 
-def _history_passes(history: list[dict]) -> bool:
+def history_passes(history: list[dict]) -> bool:
     """Return ``True`` if at least one prior attempt passed (flake signature)."""
     return any(h.get("status") == "passed" for h in history)

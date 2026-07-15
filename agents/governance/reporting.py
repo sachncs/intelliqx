@@ -64,7 +64,7 @@ class ReportingAgent(AgentBase):
     @traced_agent("reporting")
     async def run(self, ctx: AgentContext, input: ReportingInput) -> ReportingOutput:
         metrics_snapshot = get_metrics().snapshot() if input.include_metrics else {}
-        md = _render_markdown(input, metrics_snapshot, max_chars=self.METRICS_SECTION_MAX_CHARS)
+        md = render_markdown(input, metrics_snapshot, max_chars=self.METRICS_SECTION_MAX_CHARS)
         js = {
             "run_id": input.run_id,
             "tenant_id": input.tenant_id,
@@ -75,7 +75,7 @@ class ReportingAgent(AgentBase):
         return ReportingOutput(markdown=md, json_payload=js, summary=input.summary)
 
 
-def _render_markdown(input: ReportingInput, metrics: dict, *, max_chars: int) -> str:
+def render_markdown(input: ReportingInput, metrics: dict, *, max_chars: int) -> str:
     """Render the Markdown report.
 
     Structure:

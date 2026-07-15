@@ -104,7 +104,7 @@ class PromptManagementAgent(AgentBase):
     async def run(self, ctx: AgentContext, input: PromptMgmtInput) -> PromptMgmtOutput:
         state = get_state_store()
         if input.action == "list":
-            return PromptMgmtOutput(prompts=await _list_prompts(state, input.tenant_id))
+            return PromptMgmtOutput(prompts=await list_prompts(state, input.tenant_id))
         if input.action == "register":
             pv = PromptVersion(
                 prompt_id=input.prompt_id or "",
@@ -134,12 +134,12 @@ class PromptManagementAgent(AgentBase):
             return PromptMgmtOutput()
         if input.action == "select":
             return PromptMgmtOutput(
-                selected=await _bandit_select(state, input.tenant_id, input.prompt_id or "")
+                selected=await bandit_select(state, input.tenant_id, input.prompt_id or "")
             )
         return PromptMgmtOutput()
 
 
-async def _list_prompts(state, tenant_id: str) -> list[PromptVersion]:
+async def list_prompts(state, tenant_id: str) -> list[PromptVersion]:
     """Return every registered prompt version for the tenant."""
     out: list[PromptVersion] = []
     async for k in state.keys(f"prompt:{tenant_id}:"):
@@ -154,7 +154,7 @@ async def _list_prompts(state, tenant_id: str) -> list[PromptVersion]:
     return out
 
 
-async def _bandit_select(state, tenant_id: str, prompt_id: str) -> PromptVersion | None:
+async def bandit_select(state, tenant_id: str, prompt_id: str) -> PromptVersion | None:
     """Pick the highest-Thompson-sampled prompt version.
 
     For each version we draw ``Beta(1+p, 1+n-p)`` where ``p`` is

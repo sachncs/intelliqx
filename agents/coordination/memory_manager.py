@@ -111,7 +111,7 @@ class MemoryForget(BaseModel):
     memory_type: str = "working"
 
 
-def _infer_op(payload: dict) -> str:
+def infer_op(payload: dict) -> str:
     """Infer the operation from payload keys when ``operation`` isn't explicit.
 
     Heuristic priority (most specific first):
@@ -218,7 +218,7 @@ class MemoryManagerAgent(AgentBase):
         from intelliqx_core.models import TenantContext
 
         payload = dict(request.input)
-        op = payload.pop("operation", None) or _infer_op(payload)
+        op = payload.pop("operation", None) or infer_op(payload)
         model = _MODEL_BY_OP.get(op, MemoryManagerInput)
         inp = model.model_validate(payload)
         ctx = AgentContext(
@@ -237,18 +237,18 @@ class MemoryManagerAgent(AgentBase):
         # models — we branch on isinstance.
         tenant_id = ctx.tenant.tenant_id
         if isinstance(input, MemoryManagerInput):
-            return await self._put(tenant_id, input)
+            return await self.put(tenant_id, input)
         if isinstance(input, MemoryGet):
-            return await self._get(tenant_id, input)
+            return await self.get(tenant_id, input)
         if isinstance(input, MemorySearch):
-            return await self._search(tenant_id, input)
+            return await self.search(tenant_id, input)
         if isinstance(input, MemorySummarize):
-            return await self._summarize(tenant_id, input)
+            return await self.summarize(tenant_id, input)
         if isinstance(input, MemoryForget):
-            return await self._forget(tenant_id, input)
+            return await self.forget(tenant_id, input)
         return MemoryOutput(operation="unknown", success=False, error="Unknown op")
 
-    async def _put(self, tenant_id: str, op: MemoryManagerInput) -> MemoryOutput:
+    async def put(self, tenant_id: str, op: MemoryManagerInput) -> MemoryOutput:
         """Store ``op.value`` under ``op.key`` in ``op.memory_type``."""
         state = get_state_store()
         store = get_object_store()
@@ -265,7 +265,7 @@ class MemoryManagerAgent(AgentBase):
             )
         return MemoryOutput(operation="put", success=True)
 
-    async def _get(self, tenant_id: str, op: MemoryGet) -> MemoryOutput:
+    async def get(self, tenant_id: str, op: MemoryGet) -> MemoryOutput:
         """Read the value at ``op.key`` in ``op.memory_type``."""
         state = get_state_store()
         store = get_object_store()
@@ -281,7 +281,7 @@ class MemoryManagerAgent(AgentBase):
             operation="get", success=True, value=data.decode("utf-8") if data else None
         )
 
-    async def _search(self, tenant_id: str, op: MemorySearch) -> MemoryOutput:
+    async def search(self, tenant_id: str, op: MemorySearch) -> MemoryOutput:
         """Keyword search over the values in ``op.memory_type``.
 
         Algorithm: linear scan over the object-store listing,
@@ -311,7 +311,7 @@ class MemoryManagerAgent(AgentBase):
         results.sort(key=lambda r: -r["score"])
         return MemoryOutput(operation="search", success=True, results=results[: op.top_k])
 
-    async def _summarize(self, tenant_id: str, op: MemorySummarize) -> MemoryOutput:
+    async def summarize(self, tenant_id: str, op: MemorySummarize) -> MemoryOutput:
         """Build a single summary string from the listed episodic entries.
 
         The summary is a simple concatenation of the first 200
@@ -345,7 +345,7 @@ class MemoryManagerAgent(AgentBase):
             operation="summarize", success=True, value=data.decode("utf-8") if data else None
         )
 
-    async def _forget(self, tenant_id: str, op: MemoryForget) -> MemoryOutput:
+    async def forget(self, tenant_id: str, op: MemoryForget) -> MemoryOutput:
         """Remove ``op.key`` from ``op.memory_type``.
 
         The object-store delete is wrapped in ``suppress`` so a

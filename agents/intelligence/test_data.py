@@ -74,14 +74,14 @@ class TestDataAgent(AgentBase):
     @traced_agent("test_data")
     async def run(self, ctx: AgentContext, input: TestDataInput) -> TestDataAgentOutput:
         items = [
-            _generate_row(input.schema_, idx, privacy_safe=input.privacy_safe)
+            generate_row(input.schema_, idx, privacy_safe=input.privacy_safe)
             for idx in range(input.count)
         ]
-        privacy_safe = _validate_privacy_safe(items)
+        privacy_safe = validate_privacy_safe(items)
         return TestDataAgentOutput(output=TestDataOutput(items=items, privacy_safe=privacy_safe))
 
 
-def _generate_row(schema: dict[str, str], idx: int, *, privacy_safe: bool) -> dict[str, Any]:
+def generate_row(schema: dict[str, str], idx: int, *, privacy_safe: bool) -> dict[str, Any]:
     """Generate a single row following ``schema``.
 
     The per-column rules:
@@ -124,7 +124,7 @@ def _generate_row(schema: dict[str, str], idx: int, *, privacy_safe: bool) -> di
     return out
 
 
-def _validate_privacy_safe(items: list[dict]) -> bool:
+def validate_privacy_safe(items: list[dict]) -> bool:
     """Return ``True`` if every email in ``items`` is a safe-domain address.
 
     A "safe domain" is one of ``example.com``, ``test.com``,

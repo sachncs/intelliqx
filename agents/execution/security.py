@@ -125,7 +125,7 @@ class SecurityAgent(AgentBase):
                         Finding(
                             type="secret",
                             severity="critical",
-                            location=f"{path}:{_line_at(content, m.start())}",
+                            location=f"{path}:{line_at(content, m.start())}",
                             message=f"Potential {name} detected",
                         )
                     )
@@ -138,7 +138,7 @@ class SecurityAgent(AgentBase):
                         Finding(
                             type="sast",
                             severity=sev,
-                            location=f"{path}:{_line_at(content, m.start())}",
+                            location=f"{path}:{line_at(content, m.start())}",
                             message=name,
                         )
                     )
@@ -210,7 +210,7 @@ class SecurityAgent(AgentBase):
         return SecurityOutput(findings=findings, critical=critical, high=high)
 
 
-def _line_at(content: str, offset: int) -> int:
+def line_at(content: str, offset: int) -> int:
     """Return the 1-based line number that contains ``content[offset:]``.
 
     Used to build human-readable locations like ``"foo.py:42"`` for

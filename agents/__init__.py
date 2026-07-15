@@ -38,7 +38,7 @@ from intelliqx_agents.registry import get_agent_registry
 AGENT_CATALOG: list[tuple[str, Any]] = []
 
 
-def _build_catalog() -> list[tuple[str, Any]]:
+def build_catalog() -> list[tuple[str, Any]]:
     """Lazily build the name→class mapping (avoids import-time side effects)."""
     if AGENT_CATALOG:
         return AGENT_CATALOG
@@ -108,7 +108,7 @@ def _build_catalog() -> list[tuple[str, Any]]:
 
 def register_all() -> None:
     """Register every agent with the AgentRegistry."""
-    catalog = _build_catalog()
+    catalog = build_catalog()
     reg = get_agent_registry()
     for name, cls in catalog:
         reg.register(name, lambda _cls=cls: _cls(), meta=cls.META)
@@ -118,7 +118,7 @@ def register_compute_handlers() -> None:
     """Register every agent's ``run`` method with the in-process compute runtime."""
     from intelliqx_compute.runtime import get_compute_runtime
 
-    catalog = _build_catalog()
+    catalog = build_catalog()
     runtime = get_compute_runtime()
     for name, cls in catalog:
         instance = cls()

@@ -82,7 +82,7 @@ class ObservabilityAgent(AgentBase):
         snapshot = metrics.snapshot()
         slas: list[SLARecord] = []
         for name, (kind, target) in DEFAULT_SLAS.items():
-            actual = _extract_metric(snapshot, name, kind)
+            actual = extract_metric(snapshot, name, kind)
             slas.append(
                 SLARecord(
                     name=name,
@@ -96,7 +96,7 @@ class ObservabilityAgent(AgentBase):
         return ObservabilityOutput(snapshot=snapshot, slas=slas)
 
 
-def _extract_metric(snapshot: dict, name: str, kind: str) -> float:
+def extract_metric(snapshot: dict, name: str, kind: str) -> float:
     """Extract a metric value from the snapshot dict.
 
     The counters and histograms snapshot layout is

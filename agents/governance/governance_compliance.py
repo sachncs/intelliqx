@@ -80,17 +80,17 @@ class GovernanceComplianceAgent(AgentBase):
     @traced_agent("governance_compliance")
     async def run(self, ctx: AgentContext, input: GovernanceInput) -> GovernanceOutput:
         if input.action == "check":
-            return _check(input)
+            return check_compliance(input)
         if input.action == "record_audit":
-            return await _record_audit(input)
+            return await record_audit(input)
         if input.action == "request_approval":
-            return await _request_approval(input)
+            return await request_approval(input)
         if input.action == "grant":
-            return await _grant(input)
+            return await grant_access(input)
         return GovernanceOutput(allowed=False, reason=f"unknown action: {input.action}")
 
 
-def _check(input: GovernanceInput) -> GovernanceOutput:
+def check_compliance(input: GovernanceInput) -> GovernanceOutput:
     """Run RBAC + ABAC checks.
 
     RBAC: ``input.actor.roles`` must contain ``required_role`` if set.
@@ -113,7 +113,7 @@ def _check(input: GovernanceInput) -> GovernanceOutput:
     return GovernanceOutput(allowed=allowed, reason="; ".join(reasons) if not allowed else "ok")
 
 
-async def _record_audit(input: GovernanceInput) -> GovernanceOutput:
+async def record_audit(input: GovernanceInput) -> GovernanceOutput:
     """Persist a tamper-evident audit record.
 
     The record is a JSON dict containing the actor, the resource,
@@ -132,12 +132,12 @@ async def _record_audit(input: GovernanceInput) -> GovernanceOutput:
     return GovernanceOutput(allowed=True, audit_id=audit_id)
 
 
-async def _request_approval(input: GovernanceInput) -> GovernanceOutput:
+async def request_approval(input: GovernanceInput) -> GovernanceOutput:
     """Open a pending approval slot.
 
     The slot is identified by ``approval_id`` (caller-supplied) or
     a fresh millisecond-timestamp id. The value is ``"pending"``
-    until :func:`_grant` flips it to ``"approved"``.
+    until :func:`grant_access` flips it to ``"approved"``.
     """
     state = get_state_store()
     approval_id = input.approval_id or f"approval-{int(time.time() * 1000)}"
@@ -147,7 +147,7 @@ async def _request_approval(input: GovernanceInput) -> GovernanceOutput:
     )
 
 
-async def _grant(input: GovernanceInput) -> GovernanceOutput:
+async def grant_access(input: GovernanceInput) -> GovernanceOutput:
     """Close a pending approval slot as approved.
 
     A ``grant`` without a valid ``approval_id`` is rejected.

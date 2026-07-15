@@ -181,7 +181,7 @@ class ExecutionAgent(AgentBase):
             base_url=input.base_url, timeout=self.DEFAULT_TIMEOUT_SECONDS
         ) as client:
             for spec in input.tests:
-                tr = await _run_test(client, spec)
+                tr = await run_test(client, spec)
                 results.append(tr)
         passed = sum(1 for r in results if r.status == "passed")
         failed = sum(1 for r in results if r.status == "failed")
@@ -197,7 +197,7 @@ class ExecutionAgent(AgentBase):
         )
 
 
-async def _run_test(client: httpx.AsyncClient, spec: TestSpec) -> TestResult:
+async def run_test(client: httpx.AsyncClient, spec: TestSpec) -> TestResult:
     """Run a single test spec.
 
     A test is ``"passed"`` iff every step's status is ``"passed"``;
@@ -229,7 +229,7 @@ async def _run_test(client: httpx.AsyncClient, spec: TestSpec) -> TestResult:
                             action=step.action,
                             status="passed",
                             duration_ms=int((time.monotonic() - s_start) * 1000),
-                            response={"status_code": r.status_code, "body": _safe_json(r)},
+                            response={"status_code": r.status_code, "body": safe_json(r)},
                         )
                     )
             elif step.action == "post":
@@ -250,7 +250,7 @@ async def _run_test(client: httpx.AsyncClient, spec: TestSpec) -> TestResult:
                             action=step.action,
                             status="passed",
                             duration_ms=int((time.monotonic() - s_start) * 1000),
-                            response={"status_code": r.status_code, "body": _safe_json(r)},
+                            response={"status_code": r.status_code, "body": safe_json(r)},
                         )
                     )
             elif step.action == "assert_status":
@@ -268,7 +268,7 @@ async def _run_test(client: httpx.AsyncClient, spec: TestSpec) -> TestResult:
                 )
             elif step.action == "assert_json":
                 r = await client.get(step.path or "/")
-                body = _safe_json(r) or {}
+                body = safe_json(r) or {}
                 ok = all(body.get(k) == v for k, v in (step.expected_json or {}).items())
                 if not ok:
                     failed = True
@@ -310,7 +310,7 @@ async def _run_test(client: httpx.AsyncClient, spec: TestSpec) -> TestResult:
     )
 
 
-def _safe_json(r: httpx.Response) -> dict[str, Any] | None:
+def safe_json(r: httpx.Response) -> dict[str, Any] | None:
     """Parse an ``httpx.Response`` body as JSON.
 
     Args:

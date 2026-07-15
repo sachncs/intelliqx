@@ -96,7 +96,7 @@ class EnvironmentAgent(AgentBase):
         # below detects the dead thread and raises ``RuntimeError``.
         thread_error: dict[str, BaseException] = {}
 
-        def _server_target() -> None:
+        def server_target() -> None:
             try:
                 server.run()
             except BaseException as exc:
@@ -112,7 +112,7 @@ class EnvironmentAgent(AgentBase):
                 # threads clean.
                 thread_error["exc"] = exc
 
-        server_thread = threading.Thread(target=_server_target, daemon=True)
+        server_thread = threading.Thread(target=server_target, daemon=True)
         server_thread.start()
 
         # Poll the health endpoint until ready or until the

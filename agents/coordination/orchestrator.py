@@ -234,7 +234,7 @@ class OrchestratorAgent(AgentBase[OrchestratorInput, OrchestratorOutput]):
         # tasks before returning.
         node_futures: dict[str, asyncio.Task[None]] = {}
 
-        async def _run_node(nid: str) -> None:
+        async def run_node(nid: str) -> None:
             """Wrap invoke_node so we can track in_flight + completed
             atomically and update the running totals.
 
@@ -274,7 +274,7 @@ class OrchestratorAgent(AgentBase[OrchestratorInput, OrchestratorOutput]):
                 while ready and len(in_flight) < input.max_parallel:
                     nid = ready.pop(0)
                     in_flight.add(nid)
-                    task = asyncio.create_task(_run_node(nid))
+                    task = asyncio.create_task(run_node(nid))
                     node_futures[nid] = task
 
                 if not in_flight:

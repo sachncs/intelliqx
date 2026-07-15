@@ -54,7 +54,7 @@ class RiskAssessmentOutput(BaseModel):
     score: RiskScore
 
 
-def _priority_to_weight(p: str) -> float:
+def priority_to_weight(p: str) -> float:
     """Map a priority label to its 0..1 weight.
 
     Unknown labels default to ``"medium"`` (0.3) so the score is
@@ -78,7 +78,7 @@ class RiskAssessmentAgent(AgentBase):
         # Component 1: priority-weighted requirements score
         if input.requirements:
             avg_priority = sum(
-                _priority_to_weight(r.get("priority", "medium")) for r in input.requirements
+                priority_to_weight(r.get("priority", "medium")) for r in input.requirements
             ) / len(input.requirements)
         else:
             avg_priority = 0.3

@@ -62,7 +62,7 @@ class ToolManagerOutput(BaseModel):
 # Jira, etc.
 
 
-async def _github_issue(payload: dict[str, Any]) -> dict[str, Any]:
+async def github_issue(payload: dict[str, Any]) -> dict[str, Any]:
     """Mock GitHub issue creation."""
     return {
         "issue_number": payload.get("issue_number", 1),
@@ -72,7 +72,7 @@ async def _github_issue(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _jira_ticket(payload: dict[str, Any]) -> dict[str, Any]:
+async def jira_ticket(payload: dict[str, Any]) -> dict[str, Any]:
     """Mock Jira ticket creation."""
     return {
         "key": payload.get("key", "QA-1"),
@@ -81,7 +81,7 @@ async def _jira_ticket(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _slack_message(payload: dict[str, Any]) -> dict[str, Any]:
+async def slack_message(payload: dict[str, Any]) -> dict[str, Any]:
     """Mock Slack message post."""
     return {
         "channel": payload.get("channel", "#general"),
@@ -90,7 +90,7 @@ async def _slack_message(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _pagerduty_alert(payload: dict[str, Any]) -> dict[str, Any]:
+async def pagerduty_alert(payload: dict[str, Any]) -> dict[str, Any]:
     """Mock PagerDuty alert trigger."""
     return {
         "incident_key": payload.get("incident_key", "INC-1"),
@@ -99,7 +99,7 @@ async def _pagerduty_alert(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _local_shell(payload: dict[str, Any]) -> dict[str, Any]:
+async def local_shell(payload: dict[str, Any]) -> dict[str, Any]:
     """Sandboxed local shell (echo / ls / cat / pwd / whoami only).
 
     Commands outside the whitelist are rejected with exit 126.
@@ -135,7 +135,7 @@ def default_tool_manager() -> ToolManager:
                 capabilities=["vcs", "issue_tracking"],
                 rate_limit_per_minute=60,
             ),
-            _github_issue,
+            github_issue,
         )
         mgr.register_tool(
             ToolDefinition(
@@ -144,7 +144,7 @@ def default_tool_manager() -> ToolManager:
                 capabilities=["ticketing"],
                 rate_limit_per_minute=60,
             ),
-            _jira_ticket,
+            jira_ticket,
         )
         mgr.register_tool(
             ToolDefinition(
@@ -153,7 +153,7 @@ def default_tool_manager() -> ToolManager:
                 capabilities=["messaging"],
                 rate_limit_per_minute=120,
             ),
-            _slack_message,
+            slack_message,
         )
         mgr.register_tool(
             ToolDefinition(
@@ -162,7 +162,7 @@ def default_tool_manager() -> ToolManager:
                 capabilities=["alerting"],
                 rate_limit_per_minute=30,
             ),
-            _pagerduty_alert,
+            pagerduty_alert,
         )
         mgr.register_tool(
             ToolDefinition(
@@ -171,7 +171,7 @@ def default_tool_manager() -> ToolManager:
                 capabilities=["shell"],
                 rate_limit_per_minute=300,
             ),
-            _local_shell,
+            local_shell,
         )
     return mgr
 

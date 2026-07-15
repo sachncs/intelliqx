@@ -178,11 +178,11 @@ def trim_to_cost(nodes: list[PlanNode], ceiling: float) -> list[PlanNode]:
             break
         dropped.add(n.node_id)
         cur -= node_cost(n)
-    _ripple_drop(nodes, dropped)
+    ripple_drop(nodes, dropped)
     return [n for n in nodes if n.node_id not in dropped]
 
 
-def _ripple_drop(nodes: list[PlanNode], dropped: set[str]) -> None:
+def ripple_drop(nodes: list[PlanNode], dropped: set[str]) -> None:
     """Drop any node (required or optional) that depends on a dropped node.
 
     Repeated until stable.
