@@ -27,11 +27,14 @@ from intelliqx_observability.tracing import get_tracer
 from pydantic import BaseModel, ConfigDict, Field
 
 __all__ = [
+    "COMPUTE_RUNTIME_REGISTRY",
     "ComputeRuntime",
     "InProcessComputeRuntime",
     "InvocationRequest",
     "InvocationResponse",
     "get_compute_runtime",
+    "list_compute_runtimes",
+    "register_compute_runtime",
     "reset_compute_runtime",
     "set_compute_runtime",
 ]
@@ -183,6 +186,59 @@ class InProcessComputeRuntime(ComputeRuntime):
 
 
 SINGLETON: ComputeRuntime | None = None
+
+
+COMPUTE_RUNTIME_REGISTRY: dict[str, type[ComputeRuntime]] = {
+    "in_process": InProcessComputeRuntime,
+}
+
+
+def register_compute_runtime(name: str, factory: type[ComputeRuntime]) -> None:
+    """Register or replace a compute runtime factory.
+
+    The factory is a zero-arg callable that returns a
+    :class:`ComputeRuntime` instance (typically the adapter class
+    itself). Use this to plug in a cloud adapter without modifying
+    the call site of :func:`get_compute_runtime`.
+    """
+    COMPUTE_RUNTIME_REGISTRY[name] = factory
+
+
+def _load_default_compute_runtimes() -> None:
+    """Load built-in cloud adapters when their SDKs are importable.
+
+    Mirrors the lazy-load pattern used by
+    :mod:`intelliqx_state.store` so importing :mod:`intelliqx_compute`
+    stays lightweight for environments that only use the in-process
+    runtime (tests, local dev).
+    """
+    if "aws" not in COMPUTE_RUNTIME_REGISTRY:
+        try:
+            from intelliqx_compute.aws import AWSLambdaComputeRuntime
+
+            COMPUTE_RUNTIME_REGISTRY["aws"] = AWSLambdaComputeRuntime
+        except ImportError:
+            pass
+    if "gcp" not in COMPUTE_RUNTIME_REGISTRY:
+        try:
+            from intelliqx_compute.gcp import GCPFunctionsComputeRuntime
+
+            COMPUTE_RUNTIME_REGISTRY["gcp"] = GCPFunctionsComputeRuntime
+        except ImportError:
+            pass
+    if "modal" not in COMPUTE_RUNTIME_REGISTRY:
+        try:
+            from intelliqx_compute.modal import ModalComputeRuntime
+
+            COMPUTE_RUNTIME_REGISTRY["modal"] = ModalComputeRuntime
+        except ImportError:
+            pass
+
+
+def list_compute_runtimes() -> tuple[str, ...]:
+    """Return the names of all registered compute runtimes."""
+    _load_default_compute_runtimes()
+    return tuple(sorted(COMPUTE_RUNTIME_REGISTRY))
 
 
 def get_compute_runtime() -> ComputeRuntime:

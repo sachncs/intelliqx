@@ -8,6 +8,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from intelliqx_graph.models import GraphLayer
 from intelliqx_graph.query import GraphIndex
 
+MAX_FALLBACK_ENTRY_POINTS: int = 5
+MAX_EXECUTION_PATHS: int = 100
+MIN_BOTTLENECK_SCORE: int = 8
+BOTTLENECK_HIGH_FAN_IN: int = 10
+BOTTLENECK_HIGH_FAN_OUT: int = 10
+BOTTLENECK_CRITICAL_FAN_OUT: int = 5
+DEFAULT_EDGE_WEIGHT: float = 1.0
+
 
 class ExecutionPath(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -97,7 +105,7 @@ class FlowAnalysisAgent:
             sccs = list(nx.strongly_connected_components(call_graph))
             if sccs:
                 largest_scc = max(sccs, key=len)
-                entry_points = list(largest_scc)[:5]
+                entry_points = list(largest_scc)[:MAX_FALLBACK_ENTRY_POINTS]
         return entry_points
 
     def find_execution_paths(
@@ -111,7 +119,7 @@ class FlowAnalysisAgent:
                 try:
                     path = nx.shortest_path(call_graph, ep, target)
                     weight = sum(
-                        call_graph[u][v].get("weight", 1.0)
+                        call_graph[u][v].get("weight", DEFAULT_EDGE_WEIGHT)
                         for u, v in pairwise(path)
                     )
                     paths.append(ExecutionPath(
@@ -123,7 +131,7 @@ class FlowAnalysisAgent:
                     continue
 
         paths.sort(key=lambda p: p.total_weight, reverse=True)
-        return paths[:100]
+        return paths[:MAX_EXECUTION_PATHS]
 
     def find_dead_code(self, entry_points: list[str]) -> list[DeadCodeNode]:
         unreachable_ids = self.index.find_dead_nodes(entry_points, layer=GraphLayer.CALL)
@@ -154,14 +162,14 @@ class FlowAnalysisAgent:
             fi = call_graph.in_degree(node_id)
             fo = call_graph.out_degree(node_id)
             score = fi + fo
-            if score < 8:
+            if score < MIN_BOTTLENECK_SCORE:
                 continue
 
-            if fi > 10 and fo > 5:
+            if fi > BOTTLENECK_HIGH_FAN_IN and fo > BOTTLENECK_CRITICAL_FAN_OUT:
                 impact = "Critical: high fan-in and fan-out indicate a central hub"
-            elif fi > 10:
+            elif fi > BOTTLENECK_HIGH_FAN_IN:
                 impact = "High fan-in: many components depend on this node"
-            elif fo > 10:
+            elif fo > BOTTLENECK_HIGH_FAN_OUT:
                 impact = "High fan-out: this node depends on many others"
             else:
                 impact = "Moderate bottleneck"

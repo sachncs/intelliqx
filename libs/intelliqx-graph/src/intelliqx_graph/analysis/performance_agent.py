@@ -9,6 +9,16 @@ from pydantic import BaseModel, ConfigDict, Field
 from intelliqx_graph.models import ComplexityEstimate, GraphLayer
 from intelliqx_graph.query import GraphIndex
 
+MAX_ENTRY_POINTS: int = 10
+MAX_EXIT_POINTS: int = 10
+MAX_CRITICAL_PATHS: int = 20
+MIN_CACHE_FAN_IN: int = 3
+HIGH_CACHE_FAN_IN: int = 5
+HIGH_CACHE_SPEEDUP_FAN_IN: int = 8
+MIN_PARALLEL_SUCCESSORS: int = 3
+FAN_IN_COST_WEIGHT: float = 0.1
+DEFAULT_EDGE_WEIGHT: float = 1.0
+
 
 class CriticalPathInfo(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -120,8 +130,8 @@ class PerformanceAgent:
         ]
 
         paths: list[CriticalPathInfo] = []
-        for source in entry_points[:10]:
-            for target in exit_points[:10]:
+        for source in entry_points[:MAX_ENTRY_POINTS]:
+            for target in exit_points[:MAX_EXIT_POINTS]:
                 if source == target:
                     continue
                 path = self.index.critical_path(source, target, layer=GraphLayer.CALL)
@@ -129,7 +139,7 @@ class PerformanceAgent:
                     continue
 
                 weight = sum(
-                    call_graph[u][v].get("weight", 1.0)
+                    call_graph[u][v].get("weight", DEFAULT_EDGE_WEIGHT)
                     for u, v in pairwise(path)
                 )
                 paths.append(CriticalPathInfo(
@@ -141,7 +151,7 @@ class PerformanceAgent:
                 ))
 
         paths.sort(key=lambda p: p.total_weight, reverse=True)
-        return paths[:20]
+        return paths[:MAX_CRITICAL_PATHS]
 
     def find_expensive_computations(self, call_graph: nx.DiGraph) -> list[ExpensiveComputation]:
         expensive: list[ExpensiveComputation] = []
@@ -160,7 +170,7 @@ class PerformanceAgent:
 
             callers = list(call_graph.predecessors(node_id))
 
-            cost_score = self.COMPLEXITY_COSTS.get(node.complexity.value, 1.0) * (1 + fi * 0.1)
+            cost_score = self.COMPLEXITY_COSTS.get(node.complexity.value, 1.0) * (1 + fi * FAN_IN_COST_WEIGHT)
 
             expensive.append(ExpensiveComputation(
                 node_id=node_id,
@@ -181,7 +191,7 @@ class PerformanceAgent:
 
         for node_id in call_graph.nodes:
             fi = self.index.fan_in(node_id, layer=GraphLayer.CALL)
-            if fi < 3:
+            if fi < MIN_CACHE_FAN_IN:
                 continue
 
             node = sg.find_node(node_id)
@@ -191,8 +201,8 @@ class PerformanceAgent:
             has_side_effects = len(node.side_effects) > 0
             is_pure = not has_side_effects and not node.failure_modes
 
-            if is_pure and fi >= 3:
-                estimated = "moderate" if fi < 8 else "significant"
+            if is_pure and fi >= MIN_CACHE_FAN_IN:
+                estimated = "moderate" if fi < HIGH_CACHE_SPEEDUP_FAN_IN else "significant"
                 opportunities.append(CachingOpportunity(
                     node_id=node_id,
                     node_name=node.name,
@@ -200,7 +210,7 @@ class PerformanceAgent:
                     estimated_speedup=f"{estimated} speedup by caching results",
                     fan_in=fi,
                 ))
-            elif fi >= 5:
+            elif fi >= HIGH_CACHE_FAN_IN:
                 opportunities.append(CachingOpportunity(
                     node_id=node_id,
                     node_name=node.name,
@@ -219,7 +229,7 @@ class PerformanceAgent:
 
         for node_id in call_graph.nodes:
             successors = list(call_graph.successors(node_id))
-            if len(successors) < 3:
+            if len(successors) < MIN_PARALLEL_SUCCESSORS:
                 continue
 
             independent = []
@@ -231,7 +241,7 @@ class PerformanceAgent:
                 if not has_cross_dep:
                     independent.append(s)
 
-            if len(independent) >= 3:
+            if len(independent) >= MIN_PARALLEL_SUCCESSORS:
                 opportunities.append(ParallelizationOpportunity(
                     node_ids=[node_id] + independent,
                     reason=f"Node {node_id} fans out to {len(independent)} independent successors",

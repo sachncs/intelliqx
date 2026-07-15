@@ -18,6 +18,12 @@ def node_text(node, source_bytes: bytes) -> str:
     return source_bytes[node.start_byte:node.end_byte].decode("utf-8", errors="ignore")
 
 
+COMPLEXITY_CONSTANT_MAX: int = 1
+COMPLEXITY_LINEAR_MAX: int = 3
+COMPLEXITY_LINEARITHMIC_MAX: int = 6
+COMPLEXITY_QUADRATIC_MAX: int = 10
+
+
 def estimate_complexity(node) -> str:
     complexity = 1
     stack = [node]
@@ -33,13 +39,13 @@ def estimate_complexity(node) -> str:
         for child in current.children:
             stack.append(child)
 
-    if complexity <= 1:
+    if complexity <= COMPLEXITY_CONSTANT_MAX:
         return "O(1)"
-    elif complexity <= 3:
+    elif complexity <= COMPLEXITY_LINEAR_MAX:
         return "O(n)"
-    elif complexity <= 6:
+    elif complexity <= COMPLEXITY_LINEARITHMIC_MAX:
         return "O(n log n)"
-    elif complexity <= 10:
+    elif complexity <= COMPLEXITY_QUADRATIC_MAX:
         return "O(n^2)"
     else:
         return "O(n^3)"

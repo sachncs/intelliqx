@@ -37,6 +37,12 @@ IMPORT_PATTERNS = [
     re.compile(r'^(?:use|from)\s+(\w+(?:::\w+)*)', re.MULTILINE),
 ]
 
+COMPLEXITY_CONSTANT_MAX: int = 1
+COMPLEXITY_LINEAR_MAX: int = 3
+COMPLEXITY_LINEARITHMIC_MAX: int = 6
+COMPLEXITY_QUADRATIC_MAX: int = 10
+MAX_LOOKAHEAD_LINES: int = 500
+
 
 def estimate_complexity_from_text(source: str) -> str:
     complexity = 1
@@ -44,13 +50,13 @@ def estimate_complexity_from_text(source: str) -> str:
     for keyword in keywords:
         complexity += len(re.findall(rf"\b{keyword}\b", source))
 
-    if complexity <= 1:
+    if complexity <= COMPLEXITY_CONSTANT_MAX:
         return "O(1)"
-    elif complexity <= 3:
+    elif complexity <= COMPLEXITY_LINEAR_MAX:
         return "O(n)"
-    elif complexity <= 6:
+    elif complexity <= COMPLEXITY_LINEARITHMIC_MAX:
         return "O(n log n)"
-    elif complexity <= 10:
+    elif complexity <= COMPLEXITY_QUADRATIC_MAX:
         return "O(n^2)"
     else:
         return "O(n^3)"
@@ -85,7 +91,7 @@ class FallbackParser(BaseParser):
                 end_line = line_num
                 brace_count = 0
                 found_open = False
-                for i in range(line_num - 1, min(line_num + 500, len(lines))):
+                for i in range(line_num - 1, min(line_num + MAX_LOOKAHEAD_LINES, len(lines))):
                     for ch in lines[i]:
                         if ch == "{":
                             brace_count += 1
@@ -117,7 +123,7 @@ class FallbackParser(BaseParser):
                 end_line = line_num
                 brace_count = 0
                 found_open = False
-                for i in range(line_num - 1, min(line_num + 500, len(lines))):
+                for i in range(line_num - 1, min(line_num + MAX_LOOKAHEAD_LINES, len(lines))):
                     for ch in lines[i]:
                         if ch == "{":
                             brace_count += 1

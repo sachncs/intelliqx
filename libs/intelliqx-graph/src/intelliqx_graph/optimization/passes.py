@@ -26,6 +26,13 @@ COMPLEXITY_ORDER: dict[str, int] = {
     "unknown": 7,
 }
 
+DEFAULT_INLINE_THRESHOLD: int = 5
+MIN_PARALLEL_BRANCH_SIZE: int = 2
+MIN_CYCLE_SCC_SIZE: int = 2
+MIN_DUPLICATE_COMPONENT_SIZE: int = 2
+DEFAULT_SPLIT_PARTS: int = 2
+COMPLEXITY_SPLIT_THRESHOLD: frozenset[str] = frozenset({"O(n^3)", "O(2^n)"})
+
 
 def rebuild_graph(
     graph: SGIRGraph,
@@ -117,7 +124,7 @@ def detect_duplicates(
             if node.id in visited:
                 continue
             component = bfs_component(node.id, adjacency)
-            if len(component) < 2:
+            if len(component) < MIN_DUPLICATE_COMPONENT_SIZE:
                 visited.update(component)
                 continue
             component_frozen = frozenset(component)
@@ -153,7 +160,7 @@ def bfs_component(start: str, adjacency: dict[str, set[str]]) -> set[str]:
 def inline_trivial_nodes(
     graph: SoftwareGraph,
     graph_index: GraphIndex,
-    threshold: int = 5,
+    threshold: int = DEFAULT_INLINE_THRESHOLD,
 ) -> SoftwareGraph:
     working = copy.deepcopy(graph)
 
@@ -212,7 +219,7 @@ def inline_trivial_nodes(
 
 
 def is_simple_node(node: SGIRNode, threshold: int) -> bool:
-    if COMPLEXITY_ORDER.get(node.complexity.value, 7) > threshold:
+    if COMPLEXITY_ORDER.get(node.complexity.value, COMPLEXITY_ORDER["unknown"]) > threshold:
         return False
     return not (node.side_effects or node.failure_modes)
 
@@ -240,7 +247,7 @@ def parallelize_independent_branches(
         if nx.is_directed_acyclic_graph(nx_graph):
             levels = parallel_levels(nx_graph)
             for level in levels:
-                if len(level) > 1:
+                if len(level) >= MIN_PARALLEL_BRANCH_SIZE:
                     key = frozenset(level)
                     if key not in seen_branches:
                         seen_branches.add(key)
@@ -248,7 +255,7 @@ def parallelize_independent_branches(
 
         sccs = list(nx.strongly_connected_components(nx_graph))
         for scc in sccs:
-            if len(scc) > 1:
+            if len(scc) >= MIN_PARALLEL_BRANCH_SIZE:
                 key = frozenset(scc)
                 if key not in seen_branches:
                     seen_branches.add(key)
@@ -299,7 +306,7 @@ def clean_dependency_cycles(
         edges_to_remove: set[tuple[str, str]] = set()
 
         for scc in sccs:
-            if len(scc) <= 1:
+            if len(scc) < MIN_CYCLE_SCC_SIZE:
                 continue
             subgraph = nx_graph.subgraph(scc)
             cycle_edges = list(nx.simple_cycles(subgraph))
@@ -333,10 +340,9 @@ def select_cycle_break_edge(
         node = nm.get(src)
         if node is None:
             continue
-        complexity_val = {
-            "O(1)": 0, "O(log n)": 1, "O(n)": 2, "O(n log n)": 3,
-            "O(n^2)": 4, "O(n^3)": 5, "O(2^n)": 6, "unknown": 7,
-        }.get(node.complexity.value, 7)
+        complexity_val = COMPLEXITY_ORDER.get(
+            node.complexity.value, COMPLEXITY_ORDER["unknown"],
+        )
         if complexity_val > worst_complexity:
             worst_complexity = complexity_val
             worst_edge = (src, tgt)
@@ -347,8 +353,6 @@ def select_cycle_break_edge(
 # ------------------------------------------------------------------
 # reduce_complexity
 # ------------------------------------------------------------------
-
-COMPLEXITY_SPLIT_THRESHOLD = {"O(n^3)", "O(2^n)"}
 
 
 def reduce_complexity(
@@ -408,7 +412,7 @@ def reduce_complexity(
     return working
 
 
-def split_node(node: SGIRNode, num_parts: int = 2) -> list[SGIRNode]:
+def split_node(node: SGIRNode, num_parts: int = DEFAULT_SPLIT_PARTS) -> list[SGIRNode]:
     parts: list[SGIRNode] = []
     for i in range(num_parts):
         part_id = f"{node.id}__part{i}"

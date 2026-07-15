@@ -16,6 +16,7 @@ from intelliqx_graph.optimization.passes import (
     remove_dead_nodes,
 )
 from intelliqx_graph.optimization.verification import (
+    DEFAULT_RISK_LEVEL,
     VerificationAgent,
     VerificationReport,
 )
@@ -128,7 +129,7 @@ class OptimizationPipeline:
             ),
             "max_risk_level": max(
                 (r.risk_level for r in self.reports),
-                default="low",
+                default=DEFAULT_RISK_LEVEL,
             ),
             "duplicate_pairs_found": len(self.duplicate_pairs),
             "parallel_branches_found": len(self.parallel_branches),

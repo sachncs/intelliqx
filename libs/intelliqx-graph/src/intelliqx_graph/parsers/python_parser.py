@@ -12,6 +12,11 @@ from pathlib import Path
 
 from intelliqx_graph.parsers import BaseParser, ParsedEntity
 
+COMPLEXITY_CONSTANT_MAX: int = 1
+COMPLEXITY_LINEAR_MAX: int = 3
+COMPLEXITY_LINEARITHMIC_MAX: int = 6
+COMPLEXITY_QUADRATIC_MAX: int = 10
+
 
 def estimate_complexity(node: ast.AST) -> str:
     """Rough cyclomatic complexity estimate from AST nodes."""
@@ -24,13 +29,13 @@ def estimate_complexity(node: ast.AST) -> str:
         elif isinstance(child, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
             complexity += 1
 
-    if complexity <= 1:
+    if complexity <= COMPLEXITY_CONSTANT_MAX:
         return "O(1)"
-    elif complexity <= 3:
+    elif complexity <= COMPLEXITY_LINEAR_MAX:
         return "O(n)"
-    elif complexity <= 6:
+    elif complexity <= COMPLEXITY_LINEARITHMIC_MAX:
         return "O(n log n)"
-    elif complexity <= 10:
+    elif complexity <= COMPLEXITY_QUADRATIC_MAX:
         return "O(n^2)"
     else:
         return "O(n^3)"

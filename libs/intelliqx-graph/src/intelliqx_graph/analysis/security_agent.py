@@ -10,6 +10,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from intelliqx_graph.models import GraphLayer, SecurityBoundary
 from intelliqx_graph.query import GraphIndex
 
+MAX_SENSITIVE_FLOWS: int = 50
+BOUNDARY_CROSSING_WEIGHT: float = 2.0
+
 
 class VulnerabilityType(str, Enum):
     UNSANITIZED_INPUT = "unsanitized_input"
@@ -189,7 +192,7 @@ class SecurityAgent:
                     edge_types=edge_types,
                 ))
 
-        return flows[:50]
+        return flows[:MAX_SENSITIVE_FLOWS]
 
     def detect_trust_boundary_crossings(
         self,
@@ -349,5 +352,5 @@ class SecurityAgent:
 
     def compute_risk_score(self, vulns: list[Vulnerability], crossing_count: int) -> float:
         vuln_score = sum(self.SEVERITY_VALUES.get(v.severity, 0.0) for v in vulns)
-        crossing_score = crossing_count * 2.0
+        crossing_score = crossing_count * BOUNDARY_CROSSING_WEIGHT
         return vuln_score + crossing_score

@@ -24,6 +24,13 @@ RISK_ORDER = {
     RiskLevel.CRITICAL: 3,
 }
 
+DEFAULT_TRACE_MAX_DEPTH: int = 50
+MAX_TRACE_BRANCHING: int = 10
+MAX_FINDING_SAMPLES: int = 5
+RISK_MEDIUM_CHANGE_THRESHOLD: int = 50
+RISK_LOW_CHANGE_THRESHOLD: int = 10
+DEFAULT_RISK_LEVEL: str = RiskLevel.LOW.value
+
 
 class VerificationReport(BaseModel):
     behavior_preserved: bool
@@ -54,7 +61,7 @@ def build_trace_set(
     graph: SoftwareGraph,
     graph_index: GraphIndex,
     entry_points: list[str],
-    max_depth: int = 50,
+    max_depth: int = DEFAULT_TRACE_MAX_DEPTH,
 ) -> set[tuple[str, ...]]:
     traces: set[tuple[str, ...]] = set()
     all_ids = node_ids(graph)
@@ -91,7 +98,7 @@ def dfs_traces(
     if not successors:
         traces.add(tuple(path))
     else:
-        for s in successors[:10]:
+        for s in successors[:MAX_TRACE_BRANCHING]:
             dfs_traces(graph_index, s, path, traces, valid_ids, visited, depth_remaining - 1)
 
     path.pop()
@@ -151,7 +158,7 @@ class VerificationAgent:
             behavior_preserved = False
             findings.append(
                 f"Removed {len(improperly_removed)} reachable nodes: "
-                f"{sorted(improperly_removed)[:5]}"
+                f"{sorted(improperly_removed)[:MAX_FINDING_SAMPLES]}"
             )
 
         risk = self.assess_risk(
@@ -194,8 +201,8 @@ class VerificationAgent:
             return RiskLevel.HIGH
 
         total_changes = nodes_added + nodes_removed + edges_added + edges_removed
-        if total_changes > 50:
+        if total_changes > RISK_MEDIUM_CHANGE_THRESHOLD:
             return RiskLevel.MEDIUM
-        if total_changes > 10:
+        if total_changes > RISK_LOW_CHANGE_THRESHOLD:
             return RiskLevel.LOW
         return RiskLevel.LOW

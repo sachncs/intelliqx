@@ -22,17 +22,23 @@ already exposes invocation duration via the metrics layer.
 """
 
 from intelliqx_compute.runtime import (
+    COMPUTE_RUNTIME_REGISTRY,
     ComputeRuntime,
     InProcessComputeRuntime,
     InvocationRequest,
     InvocationResponse,
     get_compute_runtime,
+    list_compute_runtimes,
+    register_compute_runtime,
 )
 
 __all__ = [
+    "COMPUTE_RUNTIME_REGISTRY",
     "ComputeRuntime",
     "InProcessComputeRuntime",
     "InvocationRequest",
     "InvocationResponse",
     "get_compute_runtime",
+    "list_compute_runtimes",
+    "register_compute_runtime",
 ]
