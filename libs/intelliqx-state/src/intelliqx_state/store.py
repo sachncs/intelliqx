@@ -19,8 +19,7 @@ import os
 import time
 from collections.abc import AsyncIterator
 
-from intelliqx_state.base import StateBackend as StateBackend
-from intelliqx_state.base import StateStore as StateStore
+from intelliqx_state.base import StateStore
 
 __all__ = [
     "STATE_BACKEND_REGISTRY",

@@ -1,0 +1,77 @@
+{
+  "metadata": {
+    "name": "intelliqx",
+    "root_path": "/Users/sachin/repo/intelliqx",
+    "languages": [
+      "python"
+    ],
+    "frameworks": [
+      "django"
+    ],
+    "build_systems": [
+      "make",
+      "python",
+      "docker"
+    ],
+    "architecture_style": "unknown",
+    "total_files": 301,
+    "total_lines": 38313,
+    "analyzed_at": "2026-07-15T13:55:15.994935Z",
+    "extra": {}
+  },
+  "parsed_entity_count": 2848,
+  "layer_node_counts": {
+    "call": 1625,
+    "data_flow": 1299,
+    "control_flow": 1625,
+    "dependency": 586,
+    "state_transition": 378,
+    "resource": 1299,
+    "security": 1625,
+    "deployment": 70
+  },
+  "graph_node_total": 8507,
+  "generated_files": 583,
+  "optimization_summary": {
+    "target_language": "python",
+    "nodes_before": 8507,
+    "nodes_after": 0,
+    "edges_before": 3289,
+    "edges_after": 0,
+    "node_reduction": 8507,
+    "edge_reduction": 3289,
+    "pass_count": 4,
+    "all_behavior_preserved": true,
+    "max_risk_level": "medium",
+    "duplicate_pairs_found": 0,
+    "parallel_branches_found": 10
+  },
+  "duplicate_pairs": 0,
+  "parallel_branches": 10,
+  "auditors": {
+    "underscore": 0,
+    "unused_imports": 0,
+    "long_functions": 61,
+    "bare_except": 0,
+    "silent_except_pass": 0,
+    "missing_all": 5
+  },
+  "auto_fixes": {
+    "underscore": {
+      "findings": 2,
+      "files_touched": 1,
+      "applied": false
+    },
+    "unused_imports": {
+      "removed": 0,
+      "files_touched": 0,
+      "skipped": [],
+      "applied": false
+    }
+  },
+  "errors": [],
+  "warnings": [],
+  "ruff_clean": true,
+  "tests_pass": true,
+  "mode": "DRY-RUN"
+}

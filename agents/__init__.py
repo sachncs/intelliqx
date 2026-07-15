@@ -37,6 +37,13 @@ from intelliqx_agents.registry import get_agent_registry
 
 AGENT_CATALOG: list[tuple[str, Any]] = []
 
+__all__ = [
+    "AGENT_CATALOG",
+    "build_catalog",
+    "register_all",
+    "register_compute_handlers",
+]
+
 
 def build_catalog() -> list[tuple[str, Any]]:
     """Lazily build the name→class mapping (avoids import-time side effects)."""
