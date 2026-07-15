@@ -1,18 +1,7 @@
 """Shared pytest fixtures.
 
-The platform uses a constellation of module-level singletons
-(:class:`intelliqx_state.store.InMemoryStateStore`,
-:class:`intelliqx_storage.store.InMemoryObjectStore`,
-:class:`intelliqx_events.bus.InMemoryEventBus`, the LLM client, the
-metrics registry, the agent registry, the compute runtime, the
-tool manager, the vector index, the knowledge graph, and the
-event registry). All of them have reset helpers; the
-``_reset_singletons`` autouse fixture calls every one before each
-test so the suite is order-independent.
-
-A tiny ``anyio_backend`` fixture is provided for tests that use
-``pytest-anyio``; the platform currently uses ``pytest-asyncio``,
-but having the fixture here makes future migration trivial.
+The ``_reset_singletons`` autouse fixture resets every module-level
+singleton before each test so the suite is order-independent.
 """
 
 from __future__ import annotations
@@ -65,13 +54,3 @@ def _reset_singletons():
     reset_catalog()
     EventRegistry._contracts.clear()
     yield
-
-
-@pytest.fixture
-def anyio_backend():
-    """Stub for future ``pytest-anyio`` migration.
-
-    Currently the platform uses ``pytest-asyncio``; this fixture
-    exists so adding a test that uses ``anyio`` won't fail.
-    """
-    return "asyncio"

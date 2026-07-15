@@ -10,8 +10,7 @@ publishers and subscribers line up under the same prefix. Examples:
 * ``run.started`` / ``run.completed``
 * ``plan.node.started`` / ``plan.node.completed``
 
-The :func:`make_metadata` and :func:`make_run_id` helpers are the
-only call sites most agents need.
+The :func:`make_metadata` helper is the only call site most agents need.
 """
 
 from __future__ import annotations
@@ -19,7 +18,6 @@ from __future__ import annotations
 from typing import Any
 
 from intelliqx_core.events import BaseEvent, EventMetadata
-from intelliqx_core.ids import new_id
 from intelliqx_core.models import RunStatus
 from pydantic import Field
 
@@ -131,11 +129,6 @@ def make_metadata(
     )
 
 
-def make_run_id() -> str:
-    """Return a fresh ULID for a workflow run."""
-    return new_id()
-
-
 __all__ = [
     "AgentInvocationCompleted",
     "AgentInvocationStarted",
@@ -145,5 +138,4 @@ __all__ = [
     "RunCompleted",
     "RunStarted",
     "make_metadata",
-    "make_run_id",
 ]

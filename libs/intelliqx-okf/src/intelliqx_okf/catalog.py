@@ -520,7 +520,6 @@ class OKFCatalog:
             (packed, max(limit, len(eligible_by_rowid))),
         )
         candidates: list[dict[str, Any]] = []
-        import struct as _struct
 
         n = len(query_embedding)
         q_bytes = packed
@@ -528,8 +527,8 @@ class OKFCatalog:
             if vec_rowid not in eligible_by_rowid:
                 continue
             info = eligible_by_rowid[vec_rowid]
-            fb = _struct.unpack(f"<{n}f", emb_blob)
-            fa = _struct.unpack(f"<{n}f", q_bytes)
+            fb = struct.unpack(f"<{n}f", emb_blob)
+            fa = struct.unpack(f"<{n}f", q_bytes)
             dot = sum(x * y for x, y in zip(fa, fb, strict=False))
             na = sum(x * x for x in fa) ** 0.5 + 1e-12
             nb = sum(x * x for x in fb) ** 0.5 + 1e-12

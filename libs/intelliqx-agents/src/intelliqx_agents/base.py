@@ -121,9 +121,6 @@ class AgentBase(abc.ABC, Generic[InputT, OutputT]):
         Agents that need a different input/output mapping (e.g. the
         Memory Manager) override this method.
         """
-        from intelliqx_core.models import TenantContext
-
-        from intelliqx_agents.base import AgentContext
 
         input_model = getattr(self, "INPUT_MODEL", None)
         output_model = getattr(self, "OUTPUT_MODEL", None)
