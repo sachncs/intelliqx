@@ -45,7 +45,7 @@ async def test_state_store_contract():
 @pytest.mark.asyncio
 async def test_vector_index_contract():
     async def check_index(i: VectorIndex) -> None:
-        await i.upsert([_doc("a", [1.0, 0.0, 0.0, 0.0]), _doc("b", [0.0, 1.0, 0.0, 0.0])])
+        await i.upsert([make_doc("a", [1.0, 0.0, 0.0, 0.0]), make_doc("b", [0.0, 1.0, 0.0, 0.0])])
         res = await i.search([1.0, 0.0, 0.0, 0.0], top_k=1)
         assert res[0].id == "a"
         await i.delete(["a", "b"])
@@ -73,7 +73,7 @@ async def test_event_bus_contract():
     await check_bus(InMemoryEventBus())
 
 
-def _doc(id: str, vec: list[float]):
+def make_doc(id: str, vec: list[float]):
     from intelliqx_vector.index import VectorDoc
 
     return VectorDoc(id=id, tenant_id="t1", vector=vec)

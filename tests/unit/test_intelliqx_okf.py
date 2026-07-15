@@ -15,7 +15,7 @@ from intelliqx_okf.validator import (
 )
 
 
-def _write_concept(path: Path, fm: dict, body: str = "Body text.\n") -> None:
+def write_concept(path: Path, fm: dict, body: str = "Body text.\n") -> None:
     import yaml
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -65,7 +65,7 @@ def test_frontmatter_extras_preserved():
 @pytest.mark.unit
 def test_load_concept_minimal(tmp_path: Path):
     p = tmp_path / "test.md"
-    _write_concept(p, {"type": "Endpoint"}, "Some body.\n")
+    write_concept(p, {"type": "Endpoint"}, "Some body.\n")
     c = load_concept(p)
     assert c.frontmatter.type == "Endpoint"
     assert "Some body" in c.body
@@ -138,9 +138,9 @@ def test_load_concept_citations(tmp_path: Path):
 
 @pytest.mark.unit
 def test_bundle_walks_tree(tmp_path: Path):
-    _write_concept(tmp_path / "index.md", {"type": "Index", "okf_version": "0.1"})
-    _write_concept(tmp_path / "users.md", {"type": "Table"}, "Users table.")
-    _write_concept(tmp_path / "sub" / "roles.md", {"type": "Table"}, "Roles.")
+    write_concept(tmp_path / "index.md", {"type": "Index", "okf_version": "0.1"})
+    write_concept(tmp_path / "users.md", {"type": "Table"}, "Users table.")
+    write_concept(tmp_path / "sub" / "roles.md", {"type": "Table"}, "Roles.")
     bundle = load_bundle(tmp_path)
     assert len(bundle) == 3
     assert "index" in bundle.reserved
@@ -152,7 +152,7 @@ def test_bundle_walks_tree(tmp_path: Path):
 def test_bundle_collects_errors(tmp_path: Path):
     p = tmp_path / "bad.md"
     p.write_text("---\ntitle: X\n---\n", encoding="utf-8")
-    _write_concept(tmp_path / "ok.md", {"type": "X"})
+    write_concept(tmp_path / "ok.md", {"type": "X"})
     bundle = load_bundle(tmp_path)
     assert len(bundle.errors) == 1
     assert "bad.md" in str(bundle.errors[0][0])
@@ -160,8 +160,8 @@ def test_bundle_collects_errors(tmp_path: Path):
 
 @pytest.mark.unit
 def test_link_resolver_absolute_and_relative(tmp_path: Path):
-    _write_concept(tmp_path / "a.md", {"type": "X"}, "[link b](/b.md)")
-    _write_concept(tmp_path / "b.md", {"type": "Y"}, "Target.")
+    write_concept(tmp_path / "a.md", {"type": "X"}, "[link b](/b.md)")
+    write_concept(tmp_path / "b.md", {"type": "Y"}, "Target.")
     bundle = load_bundle(tmp_path)
     from intelliqx_okf.bundle import OKFLinkResolver
 
@@ -173,7 +173,7 @@ def test_link_resolver_absolute_and_relative(tmp_path: Path):
 
 @pytest.mark.unit
 def test_link_resolver_skips_external(tmp_path: Path):
-    _write_concept(tmp_path / "a.md", {"type": "X"}, "[ext](https://example.com)")
+    write_concept(tmp_path / "a.md", {"type": "X"}, "[ext](https://example.com)")
     bundle = load_bundle(tmp_path)
     from intelliqx_okf.bundle import OKFLinkResolver
 
@@ -188,7 +188,7 @@ def test_link_resolver_skips_external(tmp_path: Path):
 @pytest.mark.unit
 def test_validate_concept_valid(tmp_path: Path):
     p = tmp_path / "good.md"
-    _write_concept(p, {"type": "Endpoint", "title": "Create"}, "Does something.")
+    write_concept(p, {"type": "Endpoint", "title": "Create"}, "Does something.")
     c = load_concept(p)
     result = validate_concept(c)
     assert result.ok
@@ -198,7 +198,7 @@ def test_validate_concept_valid(tmp_path: Path):
 @pytest.mark.unit
 def test_validate_concept_missing_title(tmp_path: Path):
     p = tmp_path / "no_title.md"
-    _write_concept(p, {"type": "X"}, "Body.")
+    write_concept(p, {"type": "X"}, "Body.")
     c = load_concept(p)
     result = validate_concept(c)
     assert result.ok  # title+description missing is a warning, not error
@@ -216,8 +216,8 @@ def test_validate_concept_empty_body(tmp_path: Path):
 
 @pytest.mark.unit
 def test_validate_bundle_valid(tmp_path: Path):
-    _write_concept(tmp_path / "index.md", {"type": "Index"})
-    _write_concept(tmp_path / "a.md", {"type": "X"}, "Body.")
+    write_concept(tmp_path / "index.md", {"type": "Index"})
+    write_concept(tmp_path / "a.md", {"type": "X"}, "Body.")
     bundle = load_bundle(tmp_path)
     result = validate_bundle(bundle)
     assert result.ok
@@ -225,7 +225,7 @@ def test_validate_bundle_valid(tmp_path: Path):
 
 @pytest.mark.unit
 def test_validate_bundle_missing_index(tmp_path: Path):
-    _write_concept(tmp_path / "a.md", {"type": "X"}, "Body.")
+    write_concept(tmp_path / "a.md", {"type": "X"}, "Body.")
     bundle = load_bundle(tmp_path)
     result = validate_bundle(bundle)
     assert any("index.md" in i.message for i in result.warnings)
@@ -233,7 +233,7 @@ def test_validate_bundle_missing_index(tmp_path: Path):
 
 @pytest.mark.unit
 def test_validate_bundle_broken_links(tmp_path: Path):
-    _write_concept(tmp_path / "a.md", {"type": "X"}, "[missing](/nonexistent.md)")
+    write_concept(tmp_path / "a.md", {"type": "X"}, "[missing](/nonexistent.md)")
     bundle = load_bundle(tmp_path)
     result = validate_bundle(bundle)
     assert any("unresolved" in i.message for i in result.warnings)

@@ -9,11 +9,11 @@ from agents import register_all, register_compute_handlers
 from agents.governance.governance_compliance import GovernanceComplianceAgent
 
 
-def _admin(tid: str = "t1") -> TenantContext:
+def make_admin(tid: str = "t1") -> TenantContext:
     return TenantContext(tenant_id=tid, user_id="u1", roles=("admin",))
 
 
-def _no_role(tid: str = "t1") -> TenantContext:
+def make_no_role(tid: str = "t1") -> TenantContext:
     return TenantContext(tenant_id=tid, user_id="u1", roles=())
 
 
@@ -28,7 +28,7 @@ async def test_check_rbac_allows_when_role_present():
             agent_name="governance_compliance",
             input={
                 "action": "check",
-                "actor": _admin().model_dump(),
+                "actor": make_admin().model_dump(),
                 "resource": "prod",
                 "required_role": "admin",
             },
@@ -49,7 +49,7 @@ async def test_check_rbac_denies_when_role_missing():
             agent_name="governance_compliance",
             input={
                 "action": "check",
-                "actor": _no_role().model_dump(),
+                "actor": make_no_role().model_dump(),
                 "resource": "prod",
                 "required_role": "admin",
             },
@@ -71,7 +71,7 @@ async def test_check_abac_tenant_mismatch_denied():
             agent_name="governance_compliance",
             input={
                 "action": "check",
-                "actor": _admin("tA").model_dump(),
+                "actor": make_admin("tA").model_dump(),
                 "resource": "x",
                 "required_attributes": {"tenant_id": "tB"},
             },
@@ -92,7 +92,7 @@ async def test_record_audit_persists():
             agent_name="governance_compliance",
             input={
                 "action": "record_audit",
-                "actor": _admin().model_dump(),
+                "actor": make_admin().model_dump(),
                 "resource": "release/1.2.3",
                 "audit_payload": {"action": "deploy"},
             },
@@ -117,7 +117,7 @@ async def test_request_approval_returns_pending():
             agent_name="governance_compliance",
             input={
                 "action": "request_approval",
-                "actor": _admin().model_dump(),
+                "actor": make_admin().model_dump(),
                 "resource": "prod-deploy",
             },
             tenant_id="t1",
@@ -138,7 +138,7 @@ async def test_grant_approval_marks_approved():
             agent_name="governance_compliance",
             input={
                 "action": "request_approval",
-                "actor": _admin().model_dump(),
+                "actor": make_admin().model_dump(),
                 "resource": "prod-deploy",
             },
             tenant_id="t1",
@@ -150,7 +150,7 @@ async def test_grant_approval_marks_approved():
             agent_name="governance_compliance",
             input={
                 "action": "grant",
-                "actor": _admin().model_dump(),
+                "actor": make_admin().model_dump(),
                 "resource": "prod-deploy",
                 "approval_id": approval_id,
             },
@@ -172,7 +172,7 @@ async def test_grant_requires_approval_id():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="governance_compliance",
-            input={"action": "grant", "actor": _admin().model_dump(), "resource": "prod-deploy"},
+            input={"action": "grant", "actor": make_admin().model_dump(), "resource": "prod-deploy"},
             tenant_id="t1",
         )
     )
@@ -188,7 +188,7 @@ async def test_unknown_action_denied():
     out = await agent.invoke(
         InvocationRequest(
             agent_name="governance_compliance",
-            input={"action": "frobnicate", "actor": _admin().model_dump(), "resource": "x"},
+            input={"action": "frobnicate", "actor": make_admin().model_dump(), "resource": "x"},
             tenant_id="t1",
         )
     )

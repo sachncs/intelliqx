@@ -37,7 +37,7 @@ from intelliqx_storage.store import get_object_store
 from intelliqx_vector.index import VectorDoc, get_vector_index
 from pydantic import BaseModel, ConfigDict, Field
 
-_RRF_K = 60
+RRF_K = 60
 
 
 class KnowledgeRAGInput(BaseModel):
@@ -215,7 +215,7 @@ class KnowledgeRAGAgent(AgentBase):
             for rank, doc in enumerate(candidates):
                 if doc.id not in merged:
                     merged[doc.id] = {"doc": doc, "rrf": 0.0}
-                merged[doc.id]["rrf"] += weight / (_RRF_K + rank + 1)
+                merged[doc.id]["rrf"] += weight / (RRF_K + rank + 1)
 
         fused = sorted(merged.values(), key=lambda x: x["rrf"], reverse=True)[: input.top_k]
         docs = [

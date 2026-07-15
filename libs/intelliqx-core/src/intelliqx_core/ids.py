@@ -23,7 +23,7 @@ import ulid
 # ULIDs are 26 characters of Crockford base32. The character class is
 # intentionally restrictive so the regex can be used as a validator
 # without having to spin up the full ulid parser.
-_ULID_RE = re.compile(r"^[0-9A-HJKMNP-TV-Z]{26}$")
+ULID_RE = re.compile(r"^[0-9A-HJKMNP-TV-Z]{26}$")
 
 
 def new_id() -> str:
@@ -53,7 +53,7 @@ def parse_id(value: str) -> ulid.ULID:
             the regex rejects any input that is not exactly 26 characters
             drawn from the Crockford alphabet.
     """
-    if not _ULID_RE.match(value):
+    if not ULID_RE.match(value):
         raise ValueError(f"Invalid ULID: {value!r}")
     return ulid.parse(value)
 
@@ -71,4 +71,4 @@ def is_valid_id(value: str) -> bool:
     Returns:
         ``True`` if ``value`` matches the ULID grammar, ``False`` otherwise.
     """
-    return bool(_ULID_RE.match(value))
+    return bool(ULID_RE.match(value))

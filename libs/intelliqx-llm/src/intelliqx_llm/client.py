@@ -214,7 +214,7 @@ class FakeLLMClient(LLMClient):
         return deterministic_embedding(texts, self.dim)
 
 
-_SINGLETON: LLMClient | None = None
+SINGLETON: LLMClient | None = None
 
 
 def get_llm_client() -> LLMClient:
@@ -233,33 +233,33 @@ def get_llm_client() -> LLMClient:
     the adapter returns a deterministic fallback so the rest of
     the platform keeps working.
     """
-    global _SINGLETON
-    if _SINGLETON is None:
+    global SINGLETON
+    if SINGLETON is None:
         backend = os.environ.get("INTELLIQX_LLM_BACKEND", "fake")
         if backend == "fake":
-            _SINGLETON = FakeLLMClient()
+            SINGLETON = FakeLLMClient()
         elif backend == "bedrock":
             from intelliqx_llm.aws import BedrockLLMClient
 
-            _SINGLETON = BedrockLLMClient()
+            SINGLETON = BedrockLLMClient()
         elif backend == "vertex":
             from intelliqx_llm.gcp import VertexLLMClient
 
-            _SINGLETON = VertexLLMClient()
+            SINGLETON = VertexLLMClient()
         elif backend == "vllm":
             from intelliqx_llm.modal import VLLMModalLLMClient
 
-            _SINGLETON = VLLMModalLLMClient()
+            SINGLETON = VLLMModalLLMClient()
         elif backend == "minimax":
             from intelliqx_llm.minimax import MiniMaxLLMClient
 
-            _SINGLETON = MiniMaxLLMClient()
+            SINGLETON = MiniMaxLLMClient()
         else:
             raise RuntimeError(
                 f"LLM backend {backend!r} not available in this runtime. "
                 "Use INTELLIQX_LLM_BACKEND=fake for tests/dev."
             )
-    return _SINGLETON
+    return SINGLETON
 
 
 def set_llm_client(client: LLMClient) -> None:
@@ -269,11 +269,11 @@ def set_llm_client(client: LLMClient) -> None:
     adapter (Bedrock, Vertex, vLLM, or MiniMax) before the first
     :func:`get_llm_client` call.
     """
-    global _SINGLETON
-    _SINGLETON = client
+    global SINGLETON
+    SINGLETON = client
 
 
 def reset_llm_client() -> None:
     """Clear the singleton LLM client (for tests)."""
-    global _SINGLETON
-    _SINGLETON = None
+    global SINGLETON
+    SINGLETON = None

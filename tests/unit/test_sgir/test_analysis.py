@@ -26,7 +26,7 @@ from intelliqx_graph.models import (
 from intelliqx_graph.query import GraphIndex
 
 
-def _make_test_sg() -> SoftwareGraph:
+def make_test_sg() -> SoftwareGraph:
     repo = RepositoryMetadata(name="test", root_path="/tmp")
     sg = SoftwareGraph(repository=repo)
 
@@ -50,7 +50,7 @@ def _make_test_sg() -> SoftwareGraph:
 
 class TestArchitectureAgent:
     def test_analyze(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         index = GraphIndex(sg)
         agent = ArchitectureAgent(index)
         report = agent.analyze()
@@ -60,7 +60,7 @@ class TestArchitectureAgent:
 
 class TestFlowAnalysisAgent:
     def test_analyze(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         index = GraphIndex(sg)
         agent = FlowAnalysisAgent(index)
         report = agent.analyze()
@@ -69,7 +69,7 @@ class TestFlowAnalysisAgent:
 
 class TestPerformanceAgent:
     def test_analyze(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         index = GraphIndex(sg)
         agent = PerformanceAgent(index)
         report = agent.analyze()
@@ -78,7 +78,7 @@ class TestPerformanceAgent:
 
 class TestSecurityAgent:
     def test_analyze(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         index = GraphIndex(sg)
         agent = SecurityAgent(index)
         report = agent.analyze()

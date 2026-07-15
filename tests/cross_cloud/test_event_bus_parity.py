@@ -11,7 +11,7 @@ from intelliqx_events.gcp import GCPPubSubBus
 from intelliqx_events.modal import ModalQueueBus
 
 
-def _make_bus(profile: str):
+def make_bus(profile: str):
     """Build the event bus for the given cloud profile."""
     if profile == "aws":
         return AWSEventBridgeBus(bus_name="intelliqx.test")
@@ -30,7 +30,7 @@ PROFILES = ["local", "aws", "gcp", "modal"]
 @pytest.mark.parametrize("profile", PROFILES)
 async def test_publish_subscribe_contract(profile):
     """Every cloud profile must satisfy the same publish/subscribe contract."""
-    bus = _make_bus(profile)
+    bus = make_bus(profile)
     received: list[str] = []
 
     def handler(e: BaseEvent) -> None:
@@ -48,7 +48,7 @@ async def test_publish_subscribe_contract(profile):
 @pytest.mark.parametrize("profile", PROFILES)
 async def test_dlq_contract(profile):
     """Every cloud profile must route handler errors to the DLQ topic."""
-    bus = _make_bus(profile)
+    bus = make_bus(profile)
 
     def bad(_e):
         raise RuntimeError("boom")
@@ -63,7 +63,7 @@ async def test_dlq_contract(profile):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("profile", PROFILES)
 async def test_multiple_subscribers_contract(profile):
-    bus = _make_bus(profile)
+    bus = make_bus(profile)
     r1, r2 = [], []
 
     bus.subscribe("topic", lambda e: r1.append(e.detail_type))

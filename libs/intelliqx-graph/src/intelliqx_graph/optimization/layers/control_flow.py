@@ -18,7 +18,7 @@ def make_node_id(file_path: str, name: str) -> str:
     return f"{file_path}::{name}"
 
 
-_CONTROL_FLOW_DECORATORS = {
+CONTROL_FLOW_DECORATORS = {
     "app.route",
     "route",
     "get",
@@ -125,7 +125,7 @@ def detect_side_effects(entity: Any) -> list[str]:
         effects.append("generator")
     for decorator in entity.decorators:
         low = decorator.lower()
-        for pattern in _CONTROL_FLOW_DECORATORS:
+        for pattern in CONTROL_FLOW_DECORATORS:
             if pattern in low:
                 effects.append(f"route:{decorator}")
                 break
@@ -135,7 +135,7 @@ def detect_side_effects(entity: Any) -> list[str]:
 def is_entry_point(entity: Any) -> bool:
     for decorator in entity.decorators:
         low = decorator.lower()
-        for pattern in _CONTROL_FLOW_DECORATORS:
+        for pattern in CONTROL_FLOW_DECORATORS:
             if pattern in low:
                 return True
     return False

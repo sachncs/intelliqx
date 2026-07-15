@@ -13,7 +13,7 @@ from pathlib import Path
 from intelliqx_graph.models import RepositoryMetadata
 
 # Extension-to-language mapping (common file extensions)
-_EXTENSION_MAP: dict[str, str] = {
+EXTENSION_MAP: dict[str, str] = {
     ".py": "python",
     ".pyi": "python",
     ".js": "javascript",
@@ -41,7 +41,7 @@ _EXTENSION_MAP: dict[str, str] = {
 }
 
 # Build system detection files
-_BUILD_SYSTEM_FILES: dict[str, str] = {
+BUILD_SYSTEM_FILES: dict[str, str] = {
     "pyproject.toml": "python",
     "setup.py": "python",
     "setup.cfg": "python",
@@ -59,7 +59,7 @@ _BUILD_SYSTEM_FILES: dict[str, str] = {
 }
 
 # Framework detection patterns
-_FRAMEWORK_MARKERS: dict[str, list[str]] = {
+FRAMEWORK_MARKERS: dict[str, list[str]] = {
     "fastapi": ["fastapi"],
     "django": ["django"],
     "flask": ["flask"],
@@ -75,7 +75,7 @@ _FRAMEWORK_MARKERS: dict[str, list[str]] = {
 }
 
 # Directories to skip during scanning
-_SKIP_DIRS = {
+SKIP_DIRS = {
     ".git",
     ".hg",
     ".svn",
@@ -118,7 +118,7 @@ def scan_repository(root: str | Path) -> RepositoryMetadata:
         dirnames[:] = [
             d
             for d in dirnames
-            if d not in _SKIP_DIRS and not d.endswith(".egg-info")
+            if d not in SKIP_DIRS and not d.endswith(".egg-info")
         ]
 
         for filename in filenames:
@@ -127,13 +127,13 @@ def scan_repository(root: str | Path) -> RepositoryMetadata:
 
             # Detect language by extension
             ext = filepath.suffix.lower()
-            lang = _EXTENSION_MAP.get(ext)
+            lang = EXTENSION_MAP.get(ext)
             if lang:
                 languages[lang] = languages.get(lang, 0) + 1
 
             # Detect build system
-            if filename in _BUILD_SYSTEM_FILES:
-                bs = _BUILD_SYSTEM_FILES[filename]
+            if filename in BUILD_SYSTEM_FILES:
+                bs = BUILD_SYSTEM_FILES[filename]
                 if bs not in build_systems:
                     build_systems.append(bs)
 
@@ -173,7 +173,7 @@ def detect_frameworks(root: Path) -> list[str]:
         dirnames[:] = [
             d
             for d in dirnames
-            if d not in _SKIP_DIRS
+            if d not in SKIP_DIRS
         ]
         for filename in filenames:
             if sample_count >= max_samples:
@@ -187,7 +187,7 @@ def detect_frameworks(root: Path) -> list[str]:
             try:
                 content = filepath.read_text(encoding="utf-8", errors="ignore")[:4096]
                 content_lower = content.lower()
-                for framework, markers in _FRAMEWORK_MARKERS.items():
+                for framework, markers in FRAMEWORK_MARKERS.items():
                     if any(m in content_lower for m in markers) and framework not in frameworks:
                         frameworks.append(framework)
             except OSError:
@@ -201,4 +201,4 @@ def detect_frameworks(root: Path) -> list[str]:
 def get_language_for_file(file_path: str | Path) -> str:
     """Return the language for a single file based on its extension."""
     ext = Path(file_path).suffix.lower()
-    return _EXTENSION_MAP.get(ext, "unknown")
+    return EXTENSION_MAP.get(ext, "unknown")

@@ -7,7 +7,7 @@ from agents import register_all, register_compute_handlers
 from agents.coordination.memory_manager import MemoryManagerAgent
 
 
-def _put(agent, tenant, key, value, mtype="working", **kw):
+def put_op(agent, tenant, key, value, mtype="working", **kw):
     return agent.invoke(
         InvocationRequest(
             agent_name="memory_manager",
@@ -17,7 +17,7 @@ def _put(agent, tenant, key, value, mtype="working", **kw):
     )
 
 
-def _get(agent, tenant, key, mtype="working"):
+def get_op(agent, tenant, key, mtype="working"):
     return agent.invoke(
         InvocationRequest(
             agent_name="memory_manager",
@@ -27,7 +27,7 @@ def _get(agent, tenant, key, mtype="working"):
     )
 
 
-def _search(agent, tenant, query, mtype="episodic", **kw):
+def search_op(agent, tenant, query, mtype="episodic", **kw):
     return agent.invoke(
         InvocationRequest(
             agent_name="memory_manager",
@@ -37,7 +37,7 @@ def _search(agent, tenant, query, mtype="episodic", **kw):
     )
 
 
-def _summarize(agent, tenant, keys, target_key):
+def summarize_op(agent, tenant, keys, target_key):
     return agent.invoke(
         InvocationRequest(
             agent_name="memory_manager",
@@ -47,7 +47,7 @@ def _summarize(agent, tenant, keys, target_key):
     )
 
 
-def _forget(agent, tenant, key, mtype="working"):
+def forget_op(agent, tenant, key, mtype="working"):
     return agent.invoke(
         InvocationRequest(
             agent_name="memory_manager",
@@ -59,12 +59,12 @@ def _forget(agent, tenant, key, mtype="working"):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_memory_put_and_get():
+async def test_memoryput_op_andget_op():
     register_all()
     register_compute_handlers()
     agent = MemoryManagerAgent()
-    await _put(agent, "t1", "k1", "hello", ttl_seconds=60)
-    out = await _get(agent, "t1", "k1")
+    await put_op(agent, "t1", "k1", "hello", ttl_seconds=60)
+    out = await get_op(agent, "t1", "k1")
     assert out["value"] == "hello"
 
 
@@ -74,46 +74,46 @@ async def test_memory_episodic_roundtrip():
     register_all()
     register_compute_handlers()
     agent = MemoryManagerAgent()
-    await _put(agent, "t1", "evt1", "user logged in", mtype="episodic")
-    out = await _get(agent, "t1", "evt1", mtype="episodic")
+    await put_op(agent, "t1", "evt1", "user logged in", mtype="episodic")
+    out = await get_op(agent, "t1", "evt1", mtype="episodic")
     assert out["value"] == "user logged in"
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_memory_search_returns_matches():
+async def test_memorysearch_op_returns_matches():
     register_all()
     register_compute_handlers()
     agent = MemoryManagerAgent()
     for i, body in enumerate(["apple pie recipe", "banana bread", "apple sauce"]):
-        await _put(agent, "t1", f"e{i}", body, mtype="episodic")
-    out = await _search(agent, "t1", "apple")
+        await put_op(agent, "t1", f"e{i}", body, mtype="episodic")
+    out = await search_op(agent, "t1", "apple")
     assert len(out["results"]) >= 2
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_memory_summarize_writes_target():
+async def test_memorysummarize_op_writes_target():
     register_all()
     register_compute_handlers()
     agent = MemoryManagerAgent()
     for i, body in enumerate(["event a happens", "event b happens"]):
-        await _put(agent, "t1", f"e{i}", body, mtype="episodic")
-    out = await _summarize(agent, "t1", ["e0", "e1"], "summary1")
+        await put_op(agent, "t1", f"e{i}", body, mtype="episodic")
+    out = await summarize_op(agent, "t1", ["e0", "e1"], "summary1")
     assert out["success"]
-    target = await _get(agent, "t1", "summary1", mtype="semantic")
+    target = await get_op(agent, "t1", "summary1", mtype="semantic")
     assert "SUMMARY" in (target["value"] or "")
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_memory_forget_removes():
+async def test_memoryforget_op_removes():
     register_all()
     register_compute_handlers()
     agent = MemoryManagerAgent()
-    await _put(agent, "t1", "k", "v")
-    await _forget(agent, "t1", "k")
-    out = await _get(agent, "t1", "k")
+    await put_op(agent, "t1", "k", "v")
+    await forget_op(agent, "t1", "k")
+    out = await get_op(agent, "t1", "k")
     assert out["value"] is None
 
 
@@ -123,20 +123,20 @@ async def test_memory_tenant_isolation():
     register_all()
     register_compute_handlers()
     agent = MemoryManagerAgent()
-    await _put(agent, "tA", "k", "vA")
-    out = await _get(agent, "tB", "k")
+    await put_op(agent, "tA", "k", "vA")
+    out = await get_op(agent, "tB", "k")
     assert out["value"] is None
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_memory_search_top_k():
+async def test_memorysearch_op_top_k():
     register_all()
     register_compute_handlers()
     agent = MemoryManagerAgent()
     for i in range(20):
-        await _put(agent, "t1", f"e{i}", f"apple doc {i}", mtype="episodic")
-    out = await _search(agent, "t1", "apple", top_k=3)
+        await put_op(agent, "t1", f"e{i}", f"apple doc {i}", mtype="episodic")
+    out = await search_op(agent, "t1", "apple", top_k=3)
     assert len(out["results"]) <= 3
 
 
@@ -148,6 +148,6 @@ async def test_memory_unknown_op_returns_error():
     agent = MemoryManagerAgent()
     # Build a payload that has key/memory_type but no value or query -> ambiguous -> defaults to put, but missing 'value'.
     # We test that a deliberately empty get with unknown key returns None.
-    out = await _get(agent, "t1", "never_existed")
+    out = await get_op(agent, "t1", "never_existed")
     assert out["value"] is None
     assert out["success"]

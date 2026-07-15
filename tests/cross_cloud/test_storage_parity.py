@@ -7,7 +7,7 @@ from intelliqx_storage.modal import ModalVolumeObjectStore
 from intelliqx_storage.store import InMemoryObjectStore, LocalFileSystemObjectStore
 
 
-def _make_store(profile: str, tmp_path):
+def make_store(profile: str, tmp_path):
     if profile == "aws":
         return S3ObjectStore(bucket="intelliqx-test")
     if profile == "gcp":
@@ -22,7 +22,7 @@ def _make_store(profile: str, tmp_path):
 @pytest.mark.cross_cloud
 @pytest.mark.parametrize("profile", ["local", "fs"])
 def test_store_constructs_without_error(profile, tmp_path):
-    store = _make_store(profile, tmp_path)
+    store = make_store(profile, tmp_path)
     assert store is not None
 
 
@@ -31,7 +31,7 @@ def test_store_constructs_without_error(profile, tmp_path):
 @pytest.mark.parametrize("profile", ["local", "fs"])
 async def test_store_roundtrip_via_in_memory_or_fs(profile, tmp_path):
     """Cloud stores that lack local creds will skip this; in-memory + fs always run."""
-    store = _make_store(profile, tmp_path)
+    store = make_store(profile, tmp_path)
     await store.put("k", b"hello")
     assert await store.get("k") == b"hello"
     assert await store.exists("k")

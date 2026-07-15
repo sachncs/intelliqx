@@ -19,7 +19,7 @@ def make_node_id(file_path: str, name: str) -> str:
     return f"{file_path}::{name}"
 
 
-_AUTH_PATTERNS = {
+AUTH_PATTERNS = {
     "authenticate",
     "authorization",
     "auth",
@@ -50,7 +50,7 @@ _AUTH_PATTERNS = {
     "passwd",
 }
 
-_SENSITIVE_DATA_PATTERNS = {
+SENSITIVE_DATA_PATTERNS = {
     "password",
     "secret",
     "token",
@@ -163,7 +163,7 @@ def classify_security_boundary(entity: Any) -> SecurityBoundary:
 
     if any(p in all_text for p in {"admin", "superuser", "root"}):
         return SecurityBoundary.ADMIN
-    if any(p in all_text for p in _AUTH_PATTERNS):
+    if any(p in all_text for p in AUTH_PATTERNS):
         return SecurityBoundary.AUTHENTICATED
     if any(p in all_text for p in {"internal", "private"}):
         return SecurityBoundary.INTERNAL
@@ -177,7 +177,7 @@ def detect_auth_patterns(entity: Any) -> list[str]:
     all_names = entity.calls + entity.references + entity.decorators
     for name in all_names:
         name_lower = name.lower()
-        for pattern in _AUTH_PATTERNS:
+        for pattern in AUTH_PATTERNS:
             if pattern in name_lower:
                 if pattern not in found:
                     found.append(pattern)
@@ -187,4 +187,4 @@ def detect_auth_patterns(entity: Any) -> list[str]:
 
 def is_sensitive_data(name: str) -> bool:
     name_lower = name.lower()
-    return any(p in name_lower for p in _SENSITIVE_DATA_PATTERNS)
+    return any(p in name_lower for p in SENSITIVE_DATA_PATTERNS)

@@ -17,7 +17,7 @@ from intelliqx_graph.models import (
 )
 
 
-def _make_test_sg() -> SoftwareGraph:
+def make_test_sg() -> SoftwareGraph:
     repo = RepositoryMetadata(name="test", root_path="/tmp")
     sg = SoftwareGraph(repository=repo)
 
@@ -89,7 +89,7 @@ class TestGetBackend:
 
 class TestPythonBackend:
     def test_generate(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         backend = get_backend("python")
         files = backend.generate(sg)
         assert isinstance(files, dict)
@@ -109,7 +109,7 @@ class TestPythonBackend:
 
 class TestGoBackend:
     def test_generate(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         backend = get_backend("go")
         files = backend.generate(sg)
         assert isinstance(files, dict)
@@ -117,7 +117,7 @@ class TestGoBackend:
 
 class TestRustBackend:
     def test_generate(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         backend = get_backend("rust")
         files = backend.generate(sg)
         assert isinstance(files, dict)
@@ -125,7 +125,7 @@ class TestRustBackend:
 
 class TestTypeScriptBackend:
     def test_generate(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         backend = get_backend("typescript")
         files = backend.generate(sg)
         assert isinstance(files, dict)
@@ -133,7 +133,7 @@ class TestTypeScriptBackend:
 
 class TestJavaBackend:
     def test_generate(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         backend = get_backend("java")
         files = backend.generate(sg)
         assert isinstance(files, dict)

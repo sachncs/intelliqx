@@ -15,7 +15,7 @@ from intelliqx_graph.models import (
 from intelliqx_graph.query import GraphIndex
 
 
-def _build_test_sg() -> SoftwareGraph:
+def build_test_sg() -> SoftwareGraph:
     repo = RepositoryMetadata(name="test", root_path="/tmp")
     sg = SoftwareGraph(repository=repo)
 
@@ -37,12 +37,12 @@ def _build_test_sg() -> SoftwareGraph:
 
 class TestGraphIndex:
     def test_build(self) -> None:
-        sg = _build_test_sg()
+        sg = build_test_sg()
         index = GraphIndex(sg)
         assert index.all_node_ids() == {"entry", "auth", "db", "render", "dead"}
 
     def test_reachable_from(self) -> None:
-        sg = _build_test_sg()
+        sg = build_test_sg()
         index = GraphIndex(sg)
         reachable = index.reachable_from("entry")
         assert "auth" in reachable
@@ -51,13 +51,13 @@ class TestGraphIndex:
         assert "dead" not in reachable
 
     def test_can_reach(self) -> None:
-        sg = _build_test_sg()
+        sg = build_test_sg()
         index = GraphIndex(sg)
         assert index.can_reach("entry", "render")
         assert not index.can_reach("render", "entry")
 
     def test_dead_nodes(self) -> None:
-        sg = _build_test_sg()
+        sg = build_test_sg()
         index = GraphIndex(sg)
         dead = index.find_dead_nodes(["entry"])
         assert "dead" in dead
@@ -65,14 +65,14 @@ class TestGraphIndex:
         assert "auth" not in dead
 
     def test_fan_in_fan_out(self) -> None:
-        sg = _build_test_sg()
+        sg = build_test_sg()
         index = GraphIndex(sg)
         assert index.fan_out("entry") == 1
         assert index.fan_in("auth") == 1
         assert index.fan_in("entry") == 0
 
     def test_topological_order(self) -> None:
-        sg = _build_test_sg()
+        sg = build_test_sg()
         index = GraphIndex(sg)
         order = index.topological_order()
         assert order is not None
@@ -80,13 +80,13 @@ class TestGraphIndex:
         assert order.index("auth") < order.index("db")
 
     def test_detect_communities(self) -> None:
-        sg = _build_test_sg()
+        sg = build_test_sg()
         index = GraphIndex(sg)
         communities = index.detect_communities()
         assert len(communities) > 0
 
     def test_find_cycles_acyclic(self) -> None:
-        sg = _build_test_sg()
+        sg = build_test_sg()
         index = GraphIndex(sg)
         cycles = index.find_cycles()
         assert len(cycles) == 0
@@ -108,7 +108,7 @@ class TestGraphIndex:
         assert len(cycles) > 0
 
     def test_stats(self) -> None:
-        sg = _build_test_sg()
+        sg = build_test_sg()
         index = GraphIndex(sg)
         stats = index.stats()
         assert stats["total_layers"] == 1
@@ -116,7 +116,7 @@ class TestGraphIndex:
         assert stats["layers"]["call"]["nodes"] == 5
 
     def test_critical_path(self) -> None:
-        sg = _build_test_sg()
+        sg = build_test_sg()
         index = GraphIndex(sg)
         path = index.critical_path("entry", "render")
         assert path is not None
@@ -124,7 +124,7 @@ class TestGraphIndex:
         assert path[-1] == "render"
 
     def test_subgraph_isomorphism(self) -> None:
-        sg = _build_test_sg()
+        sg = build_test_sg()
         index = GraphIndex(sg)
 
         pattern = nx.DiGraph()

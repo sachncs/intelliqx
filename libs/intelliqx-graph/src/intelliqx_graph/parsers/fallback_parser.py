@@ -12,7 +12,7 @@ from pathlib import Path
 
 from intelliqx_graph.parsers import BaseParser, ParsedEntity
 
-_FUNCTION_PATTERNS = [
+FUNCTION_PATTERNS = [
     re.compile(r"^(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)", re.MULTILINE),
     re.compile(r"^(?:pub\s+)?(?:async\s+)?fn\s+(\w+)\s*(?:<[^>]*>)?\s*\(([^)]*)\)", re.MULTILINE),
     re.compile(r"^(?:public|private|protected|static|\s)*(?:[\w<>\[\], ?]+)\s+(\w+)\s*\(([^)]*)\)\s*(?:\{|->)", re.MULTILINE),
@@ -22,7 +22,7 @@ _FUNCTION_PATTERNS = [
     re.compile(r"func(?:tion)?\s+(\w+)\s*\(([^)]*)\)", re.MULTILINE),
 ]
 
-_CLASS_PATTERNS = [
+CLASS_PATTERNS = [
     re.compile(r"^(?:export\s+)?class\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w, ]+))?", re.MULTILINE),
     re.compile(r"^(?:pub\s+)?struct\s+(\w+)(?:<[^>]*>)?(?:\s*\{|\s*\()", re.MULTILINE),
     re.compile(r"^(?:pub\s+)?trait\s+(\w+)", re.MULTILINE),
@@ -30,7 +30,7 @@ _CLASS_PATTERNS = [
     re.compile(r"^enum\s+(\w+)", re.MULTILINE),
 ]
 
-_IMPORT_PATTERNS = [
+IMPORT_PATTERNS = [
     re.compile(r"^import\s+(?:\{([^}]+)\}|(\w+))\s+from\s+['\"]([^'\"]+)['\"]", re.MULTILINE),
     re.compile(r"^import\s+['\"]([^'\"]+)['\"]", re.MULTILINE),
     re.compile(r'^require\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)', re.MULTILINE),
@@ -72,7 +72,7 @@ class FallbackParser(BaseParser):
         file_str = str(file_path)
         lines = source.split("\n")
 
-        for pattern in _CLASS_PATTERNS:
+        for pattern in CLASS_PATTERNS:
             for match in pattern.finditer(source):
                 line_num = source[:match.start()].count("\n") + 1
                 name = match.group(1)
@@ -107,7 +107,7 @@ class FallbackParser(BaseParser):
                     complexity=estimate_complexity_from_text("\n".join(lines[line_num - 1:end_line])),
                 ))
 
-        for pattern in _FUNCTION_PATTERNS:
+        for pattern in FUNCTION_PATTERNS:
             for match in pattern.finditer(source):
                 line_num = source[:match.start()].count("\n") + 1
                 name = match.group(1)
@@ -143,14 +143,14 @@ class FallbackParser(BaseParser):
                     complexity=estimate_complexity_from_text(func_source),
                 ))
 
-        for pattern in _IMPORT_PATTERNS:
+        for pattern in IMPORT_PATTERNS:
             for match in pattern.finditer(source):
                 line_num = source[:match.start()].count("\n") + 1
-                if pattern == _IMPORT_PATTERNS[0]:
+                if pattern == IMPORT_PATTERNS[0]:
                     import_source = match.group(3)
                     import_names = [n.strip() for n in match.group(1).split(",")] if match.group(1) else [match.group(2)]
                     is_from = True
-                elif pattern == _IMPORT_PATTERNS[1] or pattern == _IMPORT_PATTERNS[2]:
+                elif pattern == IMPORT_PATTERNS[1] or pattern == IMPORT_PATTERNS[2]:
                     import_source = match.group(1)
                     import_names = [import_source.split("/")[-1].split(".")[-1]]
                     is_from = False

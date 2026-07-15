@@ -14,7 +14,7 @@ from intelliqx_llm.client import (
 from intelliqx_llm.minimax import MiniMaxLLMClient
 
 
-def _request(content: str = "hello") -> CompletionRequest:
+def make_request(content: str = "hello") -> CompletionRequest:
     return CompletionRequest(
         model="minimax/MiniMax-M2.1", messages=[{"role": "user", "content": content}]
     )
@@ -54,7 +54,7 @@ async def test_minimax_complete_fallback_when_unavailable():
     """A missing API key must produce a deterministic fallback response."""
     with patch.dict("os.environ", {}, clear=True):
         client = MiniMaxLLMClient(api_key="")
-    response = await client.complete(_request("hello world"))
+    response = await client.complete(make_request("hello world"))
     assert response.content.startswith("[minimax-fallback:")
     assert response.model == "minimax/MiniMax-M2.1"
     assert response.usage.prompt_tokens == len(["hello", "world"])
@@ -92,7 +92,7 @@ async def test_minimax_complete_calls_litellm_acompletion():
     client.sdk = fake_litellm
     client.available = True
 
-    response = await client.complete(_request("hi"))
+    response = await client.complete(make_request("hi"))
 
     fake_litellm.acompletion.assert_awaited_once()
     kwargs = fake_litellm.acompletion.await_args.kwargs
@@ -116,7 +116,7 @@ async def test_minimax_complete_falls_back_on_litellm_error():
     client.sdk = fake_litellm
     client.available = True
 
-    response = await client.complete(_request("hello"))
+    response = await client.complete(make_request("hello"))
     assert response.content.startswith("[minimax-fallback:")
 
 

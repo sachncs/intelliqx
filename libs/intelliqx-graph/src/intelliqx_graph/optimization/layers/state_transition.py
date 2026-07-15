@@ -18,7 +18,7 @@ def make_node_id(file_path: str, name: str) -> str:
     return f"{file_path}::{name}"
 
 
-_LIFECYCLE_DECORATORS = {
+LIFECYCLE_DECORATORS = {
     "init",
     "__init__",
     "__post_init__",
@@ -34,7 +34,7 @@ _LIFECYCLE_DECORATORS = {
     "on_shutdown",
 }
 
-_EVENT_DECORATORS = {
+EVENT_DECORATORS = {
     "on",
     "event",
     "handler",
@@ -88,9 +88,9 @@ class StateTransitionBuilder(LayerBuilder):
                 method_decorators = {d.lower() for d in method.decorators}
                 method_names = {method.name}
 
-                if method_names & _LIFECYCLE_DECORATORS or method_decorators & _LIFECYCLE_DECORATORS:
+                if method_names & LIFECYCLE_DECORATORS or method_decorators & LIFECYCLE_DECORATORS:
                     lifecycle_methods.append(method)
-                elif method_names & _EVENT_DECORATORS or method_decorators & _EVENT_DECORATORS:
+                elif method_names & EVENT_DECORATORS or method_decorators & EVENT_DECORATORS:
                     event_methods.append(method)
                 else:
                     other_methods.append(method)

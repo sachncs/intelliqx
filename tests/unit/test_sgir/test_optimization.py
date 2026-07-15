@@ -23,7 +23,7 @@ from intelliqx_graph.optimization.verification import VerificationAgent
 from intelliqx_graph.query import GraphIndex
 
 
-def _make_test_sg() -> SoftwareGraph:
+def make_test_sg() -> SoftwareGraph:
     repo = RepositoryMetadata(name="test", root_path="/tmp")
     sg = SoftwareGraph(repository=repo)
 
@@ -46,7 +46,7 @@ def _make_test_sg() -> SoftwareGraph:
 
 class TestRemoveDeadNodes:
     def test_removes_unreachable(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         index = GraphIndex(sg)
         result = remove_dead_nodes(sg, index, ["main"])
         dead_found = any(n.is_dead for n in result.all_nodes())
@@ -55,7 +55,7 @@ class TestRemoveDeadNodes:
 
 class TestDetectDuplicates:
     def test_finds_duplicates(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         index = GraphIndex(sg)
         dupes = detect_duplicates(sg, index)
         assert isinstance(dupes, list)
@@ -63,7 +63,7 @@ class TestDetectDuplicates:
 
 class TestInlineTrivialNodes:
     def test_runs(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         index = GraphIndex(sg)
         result = inline_trivial_nodes(sg, index)
         assert isinstance(result, SoftwareGraph)
@@ -71,7 +71,7 @@ class TestInlineTrivialNodes:
 
 class TestCleanDependencyCycles:
     def test_breaks_cycles(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         index = GraphIndex(sg)
         result = clean_dependency_cycles(sg, index)
         cycles = index.find_cycles(layer=GraphLayer.CALL)
@@ -80,7 +80,7 @@ class TestCleanDependencyCycles:
 
 class TestReduceComplexity:
     def test_runs(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         index = GraphIndex(sg)
         result = reduce_complexity(sg, index)
         assert isinstance(result, SoftwareGraph)
@@ -88,7 +88,7 @@ class TestReduceComplexity:
 
 class TestVerificationAgent:
     def test_same_graph(self) -> None:
-        sg = _make_test_sg()
+        sg = make_test_sg()
         agent = VerificationAgent(sg, sg, ["main"])
         report = agent.verify()
         assert report.behavior_preserved is True
@@ -96,7 +96,7 @@ class TestVerificationAgent:
 
     def test_different_graphs(self) -> None:
         import copy
-        sg1 = _make_test_sg()
+        sg1 = make_test_sg()
         sg2 = copy.deepcopy(sg1)
         sg2.layers[GraphLayer.CALL].nodes = sg2.layers[GraphLayer.CALL].nodes[:3]
         agent = VerificationAgent(sg1, sg2, ["main"])

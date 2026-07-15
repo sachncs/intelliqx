@@ -1,6 +1,6 @@
 """Shared pytest fixtures.
 
-The ``_reset_singletons`` autouse fixture resets every module-level
+The ``reset_singletons`` autouse fixture resets every module-level
 singleton before each test so the suite is order-independent.
 """
 
@@ -19,7 +19,7 @@ os.environ.setdefault("INTELLIQX_OTEL", "0")
 
 
 @pytest.fixture(autouse=True)
-def _reset_singletons():
+def reset_singletons():
     """Reset every module-level singleton to a clean state per test.
 
     Without this, tests that mutate a singleton (e.g. the metrics

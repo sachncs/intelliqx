@@ -10,7 +10,7 @@ from agents import register_all, register_compute_handlers
 from agents.coordination.orchestrator import OrchestratorAgent
 
 
-def _ensure_registered():
+def ensure_registered():
     register_all()
     register_compute_handlers()
 
@@ -18,7 +18,7 @@ def _ensure_registered():
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_orchestrator_runs_single_node():
-    _ensure_registered()
+    ensure_registered()
     agent = OrchestratorAgent()
     req = InvocationRequest(
         agent_name="orchestrator",
@@ -50,7 +50,7 @@ async def test_orchestrator_runs_single_node():
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_orchestrator_parallel_independent_nodes():
-    _ensure_registered()
+    ensure_registered()
     agent = OrchestratorAgent()
     req = InvocationRequest(
         agent_name="orchestrator",
@@ -75,7 +75,7 @@ async def test_orchestrator_parallel_independent_nodes():
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_orchestrator_dependency_order():
-    _ensure_registered()
+    ensure_registered()
     agent = OrchestratorAgent()
     req = InvocationRequest(
         agent_name="orchestrator",
@@ -102,7 +102,7 @@ async def test_orchestrator_dependency_order():
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_orchestrator_emits_events():
-    _ensure_registered()
+    ensure_registered()
     bus = get_event_bus()
     received: list[str] = []
 
@@ -134,7 +134,7 @@ async def test_orchestrator_emits_events():
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_orchestrator_persists_run_status_to_state():
-    _ensure_registered()
+    ensure_registered()
     agent = OrchestratorAgent()
     req = InvocationRequest(
         agent_name="orchestrator",
@@ -156,7 +156,7 @@ async def test_orchestrator_persists_run_status_to_state():
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_orchestrator_retries_on_failure():
-    _ensure_registered()
+    ensure_registered()
     # Register a flaky agent that fails the first time and succeeds on the second.
     from intelliqx_compute.runtime import get_compute_runtime
 
@@ -193,7 +193,7 @@ async def test_orchestrator_retries_on_failure():
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_orchestrator_failed_when_retries_exhausted():
-    _ensure_registered()
+    ensure_registered()
     from intelliqx_compute.runtime import get_compute_runtime
 
     runtime = get_compute_runtime()
@@ -224,7 +224,7 @@ async def test_orchestrator_failed_when_retries_exhausted():
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_orchestrator_summary_counts():
-    _ensure_registered()
+    ensure_registered()
     agent = OrchestratorAgent()
     req = InvocationRequest(
         agent_name="orchestrator",

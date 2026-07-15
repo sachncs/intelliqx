@@ -4,7 +4,7 @@ import pytest
 from intelliqx_vector.index import InMemoryVectorIndex, VectorDoc, get_vector_index
 
 
-def _random_vec(seed: int, dim: int = 8) -> list[float]:
+def random_vec(seed: int, dim: int = 8) -> list[float]:
     import random
 
     rnd = random.Random(seed)
@@ -15,7 +15,7 @@ def _random_vec(seed: int, dim: int = 8) -> list[float]:
 @pytest.mark.asyncio
 async def test_upsert_and_count():
     idx = InMemoryVectorIndex(dim=8)
-    docs = [VectorDoc(id=f"d{i}", tenant_id="t1", vector=_random_vec(i, 8)) for i in range(5)]
+    docs = [VectorDoc(id=f"d{i}", tenant_id="t1", vector=random_vec(i, 8)) for i in range(5)]
     n = await idx.upsert(docs)
     assert n == 5
     assert await idx.count() == 5
@@ -34,10 +34,10 @@ async def test_dim_mismatch_raises():
 @pytest.mark.asyncio
 async def test_search_tenant_isolation():
     idx = InMemoryVectorIndex(dim=8)
-    a = VectorDoc(id="a", tenant_id="t1", vector=_random_vec(1, 8))
-    b = VectorDoc(id="b", tenant_id="t2", vector=_random_vec(1, 8))
+    a = VectorDoc(id="a", tenant_id="t1", vector=random_vec(1, 8))
+    b = VectorDoc(id="b", tenant_id="t2", vector=random_vec(1, 8))
     await idx.upsert([a, b])
-    res = await idx.search(_random_vec(1, 8), top_k=5, tenant_id="t1")
+    res = await idx.search(random_vec(1, 8), top_k=5, tenant_id="t1")
     assert all(r.id == "a" for r in res)
 
 
@@ -45,9 +45,9 @@ async def test_search_tenant_isolation():
 @pytest.mark.asyncio
 async def test_search_returns_top_k():
     idx = InMemoryVectorIndex(dim=8)
-    docs = [VectorDoc(id=f"d{i}", tenant_id="t1", vector=_random_vec(i, 8)) for i in range(20)]
+    docs = [VectorDoc(id=f"d{i}", tenant_id="t1", vector=random_vec(i, 8)) for i in range(20)]
     await idx.upsert(docs)
-    res = await idx.search(_random_vec(0, 8), top_k=5)
+    res = await idx.search(random_vec(0, 8), top_k=5)
     assert len(res) == 5
     # scores descending
     scores = [r.score for r in res]
@@ -58,7 +58,7 @@ async def test_search_returns_top_k():
 @pytest.mark.asyncio
 async def test_delete():
     idx = InMemoryVectorIndex(dim=8)
-    await idx.upsert([VectorDoc(id="d1", tenant_id="t1", vector=_random_vec(1, 8))])
+    await idx.upsert([VectorDoc(id="d1", tenant_id="t1", vector=random_vec(1, 8))])
     n = await idx.delete(["d1"])
     assert n == 1
     assert await idx.count() == 0
@@ -74,10 +74,10 @@ async def test_recall_against_brute_force():
     k = 10
     idx = InMemoryVectorIndex(dim=dim)
     docs = [
-        VectorDoc(id=f"d{i}", tenant_id="t1", vector=_random_vec(i + 1000, dim)) for i in range(n)
+        VectorDoc(id=f"d{i}", tenant_id="t1", vector=random_vec(i + 1000, dim)) for i in range(n)
     ]
     await idx.upsert(docs)
-    query = _random_vec(9999, dim)
+    query = random_vec(9999, dim)
     res_idx = await idx.search(query, top_k=k)
 
     # brute force
@@ -110,10 +110,10 @@ async def test_metadata_filter():
     idx = InMemoryVectorIndex(dim=8)
     await idx.upsert(
         [
-            VectorDoc(id="x", tenant_id="t1", vector=_random_vec(1, 8), metadata={"k": "a"}),
-            VectorDoc(id="y", tenant_id="t1", vector=_random_vec(2, 8), metadata={"k": "b"}),
+            VectorDoc(id="x", tenant_id="t1", vector=random_vec(1, 8), metadata={"k": "a"}),
+            VectorDoc(id="y", tenant_id="t1", vector=random_vec(2, 8), metadata={"k": "b"}),
         ]
     )
-    res = await idx.search(_random_vec(1, 8), top_k=5, filter_metadata={"k": "a"})
+    res = await idx.search(random_vec(1, 8), top_k=5, filter_metadata={"k": "a"})
     assert len(res) == 1
     assert res[0].id == "x"

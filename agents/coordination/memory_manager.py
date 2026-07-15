@@ -136,7 +136,7 @@ def infer_op(payload: dict) -> str:
     return "get"
 
 
-_MODEL_BY_OP: dict[str, type[BaseModel]] = {
+MODEL_BY_OP: dict[str, type[BaseModel]] = {
     "put": MemoryManagerInput,
     "get": MemoryGet,
     "search": MemorySearch,
@@ -219,7 +219,7 @@ class MemoryManagerAgent(AgentBase):
 
         payload = dict(request.input)
         op = payload.pop("operation", None) or infer_op(payload)
-        model = _MODEL_BY_OP.get(op, MemoryManagerInput)
+        model = MODEL_BY_OP.get(op, MemoryManagerInput)
         inp = model.model_validate(payload)
         ctx = AgentContext(
             tenant=TenantContext(

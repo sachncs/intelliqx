@@ -18,7 +18,7 @@ def make_node_id(file_path: str, name: str) -> str:
     return f"{file_path}::{name}"
 
 
-_IO_PATTERNS = {
+IO_PATTERNS = {
     "open",
     "read",
     "write",
@@ -44,7 +44,7 @@ _IO_PATTERNS = {
     "subscribe",
 }
 
-_EXTERNAL_CALL_PATTERNS = {
+EXTERNAL_CALL_PATTERNS = {
     "requests",
     "httpx",
     "urllib",
@@ -134,7 +134,7 @@ def detect_io_operations(entity: Any) -> list[str]:
     all_names = entity.calls + entity.references
     for name in all_names:
         name_lower = name.lower()
-        for pattern in _IO_PATTERNS:
+        for pattern in IO_PATTERNS:
             if pattern in name_lower:
                 if name not in effects:
                     effects.append(name)
@@ -167,4 +167,4 @@ def classify_resource(name: str) -> str:
 
 def is_external(name: str) -> bool:
     name_lower = name.lower()
-    return any(p in name_lower for p in _EXTERNAL_CALL_PATTERNS)
+    return any(p in name_lower for p in EXTERNAL_CALL_PATTERNS)

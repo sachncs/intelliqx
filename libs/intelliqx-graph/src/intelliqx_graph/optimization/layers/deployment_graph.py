@@ -18,7 +18,7 @@ def make_node_id(prefix: str, name: str) -> str:
     return f"{prefix}::{name}"
 
 
-_DOCKER_PATTERNS = {
+DOCKER_PATTERNS = {
     "dockerfile",
     "docker-compose",
     "docker",
@@ -27,7 +27,7 @@ _DOCKER_PATTERNS = {
     "expose",
 }
 
-_INFRA_PATTERNS = {
+INFRA_PATTERNS = {
     "terraform",
     "cloudformation",
     "kubernetes",
@@ -52,7 +52,7 @@ _INFRA_PATTERNS = {
     "route53",
 }
 
-_CONFIG_FILE_PATTERNS = {
+CONFIG_FILE_PATTERNS = {
     "config",
     "settings",
     "env",
@@ -203,7 +203,7 @@ class DeploymentGraphBuilder(LayerBuilder):
 
 def is_config_entity(entity: Any) -> bool:
     name_lower = entity.name.lower()
-    return any(p in name_lower for p in _CONFIG_FILE_PATTERNS)
+    return any(p in name_lower for p in CONFIG_FILE_PATTERNS)
 
 
 def detect_infra_components(repository: Any | None) -> list[tuple[str, str]]:
@@ -217,12 +217,12 @@ def detect_infra_components(repository: Any | None) -> list[tuple[str, str]]:
     for bs in build_systems:
         if bs == "docker":
             components.append(("docker", "container"))
-        for pattern in _INFRA_PATTERNS:
+        for pattern in INFRA_PATTERNS:
             if pattern in bs:
                 components.append((bs, "cloud"))
 
     for fw in frameworks:
-        for pattern in _INFRA_PATTERNS:
+        for pattern in INFRA_PATTERNS:
             if pattern in fw:
                 components.append((fw, "cloud"))
 

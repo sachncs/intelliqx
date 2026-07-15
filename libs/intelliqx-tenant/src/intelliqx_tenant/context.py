@@ -22,7 +22,7 @@ from intelliqx_core.models import TenantContext
 
 # Single, package-wide ContextVar. The default of ``None`` is intentional:
 # code that needs a tenant must either receive one or set one explicitly.
-_CTX: contextvars.ContextVar[TenantContext | None] = contextvars.ContextVar(
+CTX: contextvars.ContextVar[TenantContext | None] = contextvars.ContextVar(
     "intelliqx_tenant_ctx", default=None
 )
 
@@ -34,7 +34,7 @@ def current_tenant() -> TenantContext | None:
         The current tenant context for the running task, or ``None`` if
         no context has been bound.
     """
-    return _CTX.get()
+    return CTX.get()
 
 
 @contextmanager
@@ -54,11 +54,11 @@ def with_tenant(tenant: TenantContext) -> Iterator[TenantContext]:
         >>> with with_tenant(TenantContext(tenant_id="t1")):
         ...     assert current_tenant().tenant_id == "t1"
     """
-    token = _CTX.set(tenant)
+    token = CTX.set(tenant)
     try:
         yield tenant
     finally:
-        _CTX.reset(token)
+        CTX.reset(token)
 
 
 class TenantResolver:

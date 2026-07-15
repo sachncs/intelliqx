@@ -14,7 +14,7 @@ from intelliqx_vector.index import set_vector_index
 from intelliqx_vector.sqlite_vec_index import SqliteVecIndex
 
 
-def _write_concept(path: Path, fm: dict, body: str = "Body text.\n") -> None:
+def write_concept(path: Path, fm: dict, body: str = "Body text.\n") -> None:
     import yaml
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -23,7 +23,7 @@ def _write_concept(path: Path, fm: dict, body: str = "Body text.\n") -> None:
 
 
 @pytest.fixture(autouse=True)
-def _setup_singletons(tmp_path):
+def setup_singletons(tmp_path):
     """Set up LLM, vector index, and OKF catalog singletons."""
     llm = FakeLLMClient(dim=128)
     set_llm_client(llm)
@@ -44,7 +44,7 @@ def _setup_singletons(tmp_path):
 def test_bootstrap_single_tenant(tmp_path):
     """Bootstrap a single tenant's bundle and search for concepts."""
     bundle_dir = tmp_path / "alpha"
-    _write_concept(
+    write_concept(
         bundle_dir / "auth" / "login.md",
         {
             "type": "API Endpoint",
@@ -54,7 +54,7 @@ def test_bootstrap_single_tenant(tmp_path):
         },
         body="The login endpoint accepts a POST request with email and password fields.\n",
     )
-    _write_concept(
+    write_concept(
         bundle_dir / "auth" / "logout.md",
         {
             "type": "API Endpoint",
@@ -84,7 +84,7 @@ def test_bootstrap_multi_tenant(tmp_path):
     """Bootstrap two tenants and verify isolation."""
     for tenant, concept_name in [("alpha", "alpha-concept"), ("beta", "beta-concept")]:
         bundle_dir = tmp_path / tenant
-        _write_concept(
+        write_concept(
             bundle_dir / f"{concept_name}.md",
             {
                 "type": "Data Model",
@@ -116,7 +116,7 @@ def test_bootstrap_multi_tenant(tmp_path):
 async def test_bootstrap_and_search(tmp_path):
     """Full bootstrap + search round-trip."""
     bundle_dir = tmp_path / "tenant1"
-    _write_concept(
+    write_concept(
         bundle_dir / "config" / "timeout.md",
         {
             "type": "Config Key",
@@ -142,7 +142,7 @@ async def test_bootstrap_and_search(tmp_path):
 def test_type_filter_integration(tmp_path):
     """Search with type filter."""
     bundle_dir = tmp_path / "mixed"
-    _write_concept(
+    write_concept(
         bundle_dir / "endpoint.md",
         {
             "type": "API Endpoint",
@@ -151,7 +151,7 @@ def test_type_filter_integration(tmp_path):
             "tags": ["orders"],
         },
     )
-    _write_concept(
+    write_concept(
         bundle_dir / "model.md",
         {
             "type": "Data Model",
@@ -179,7 +179,7 @@ def test_type_filter_integration(tmp_path):
 def test_tag_filter_integration(tmp_path):
     """Search with tag filter."""
     bundle_dir = tmp_path / "tags"
-    _write_concept(
+    write_concept(
         bundle_dir / "a.md",
         {
             "type": "Config Key",
@@ -188,7 +188,7 @@ def test_tag_filter_integration(tmp_path):
             "tags": ["feature-flags", "experimental"],
         },
     )
-    _write_concept(
+    write_concept(
         bundle_dir / "b.md",
         {
             "type": "Config Key",
@@ -211,7 +211,7 @@ def test_tag_filter_integration(tmp_path):
 def test_fts_punctuation_in_search(tmp_path):
     """FTS search with punctuation in query."""
     bundle_dir = tmp_path / "punct"
-    _write_concept(
+    write_concept(
         bundle_dir / "api.md",
         {
             "type": "API Endpoint",
@@ -238,7 +238,7 @@ def test_fts_punctuation_in_search(tmp_path):
 def test_structured_where_alias(tmp_path):
     """Structured filters use table alias to avoid ambiguous columns."""
     bundle_dir = tmp_path / "alias"
-    _write_concept(
+    write_concept(
         bundle_dir / "x.md",
         {
             "type": "Event",
@@ -247,7 +247,7 @@ def test_structured_where_alias(tmp_path):
             "tags": ["events", "orders"],
         },
     )
-    _write_concept(
+    write_concept(
         bundle_dir / "y.md",
         {
             "type": "Event",
@@ -272,7 +272,7 @@ def test_structured_where_alias(tmp_path):
 def test_empty_query_with_type_filter(tmp_path):
     """Empty query with type filter returns all matching concepts."""
     bundle_dir = tmp_path / "empty"
-    _write_concept(
+    write_concept(
         bundle_dir / "a.md",
         {
             "type": "Guide",
@@ -281,7 +281,7 @@ def test_empty_query_with_type_filter(tmp_path):
             "tags": ["docs"],
         },
     )
-    _write_concept(
+    write_concept(
         bundle_dir / "b.md",
         {
             "type": "API Endpoint",
@@ -304,10 +304,10 @@ def test_empty_query_with_type_filter(tmp_path):
 def test_empty_query_no_filter_returns_all(tmp_path):
     """Empty query with no filter returns all non-reserved concepts."""
     bundle_dir = tmp_path / "all"
-    _write_concept(
+    write_concept(
         bundle_dir / "a.md", {"type": "Guide", "title": "A", "description": "A.", "tags": []}
     )
-    _write_concept(
+    write_concept(
         bundle_dir / "b.md", {"type": "Guide", "title": "B", "description": "B.", "tags": []}
     )
 

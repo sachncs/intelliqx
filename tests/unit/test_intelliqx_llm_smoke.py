@@ -11,7 +11,7 @@ from intelliqx_llm.client import FakeLLMClient, reset_llm_client, set_llm_client
 
 
 @pytest.fixture(autouse=True)
-def _reset_singleton():
+def reset_singleton_fixture():
     """Each test starts with no cached client so the backend env var wins."""
     reset_llm_client()
     yield

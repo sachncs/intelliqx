@@ -8,28 +8,28 @@ from intelliqx_core.models import AgentCategory
 from pydantic import BaseModel
 
 
-class _Input(BaseModel):
+class DemoInput(BaseModel):
     x: int
 
 
-class _Output(BaseModel):
+class DemoOutput(BaseModel):
     y: int
 
 
-class _DemoAgent(AgentBase[_Input, _Output]):
+class DemoAgent(AgentBase[DemoInput, DemoOutput]):
     META = AgentMeta(name="demo", category=AgentCategory.COORDINATION, description="demos")
-    INPUT_MODEL = _Input
-    OUTPUT_MODEL = _Output
+    INPUT_MODEL = DemoInput
+    OUTPUT_MODEL = DemoOutput
 
     @traced_agent("demo")
-    async def run(self, ctx: AgentContext, input: _Input) -> _Output:
-        return _Output(y=input.x * 2)
+    async def run(self, ctx: AgentContext, input: DemoInput) -> DemoOutput:
+        return DemoOutput(y=input.x * 2)
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_agent_invoke():
-    agent = _DemoAgent()
+    agent = DemoAgent()
     from intelliqx_compute.runtime import InvocationRequest
 
     req = InvocationRequest(
@@ -42,11 +42,11 @@ async def test_agent_invoke():
 @pytest.mark.unit
 def test_agent_registry_register_and_create():
     reset_agent_registry()
-    register_agent("demo", lambda: _DemoAgent(), meta=_DemoAgent.META)
+    register_agent("demo", lambda: DemoAgent(), meta=DemoAgent.META)
     reg = get_agent_registry()
     assert "demo" in reg.list()
     inst = reg.create("demo")
-    assert isinstance(inst, _DemoAgent)
+    assert isinstance(inst, DemoAgent)
 
 
 @pytest.mark.unit
@@ -60,14 +60,14 @@ def test_agent_registry_create_missing():
 @pytest.mark.unit
 def test_agent_registry_get_meta():
     reset_agent_registry()
-    register_agent("demo", lambda: _DemoAgent(), meta=_DemoAgent.META)
+    register_agent("demo", lambda: DemoAgent(), meta=DemoAgent.META)
     reg = get_agent_registry()
     assert reg.get_meta("demo").name == "demo"
 
 
 @pytest.mark.unit
 def test_agent_capability():
-    cap = _DemoAgent.capability()
+    cap = DemoAgent.capability()
     assert cap.name == "demo"
 
 

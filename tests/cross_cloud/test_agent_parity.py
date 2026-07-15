@@ -12,7 +12,7 @@ from agents.coordination.planner import PlannerAgent
 from agents.coordination.smoke import SmokeAgent
 
 
-def _setup_test_world(profile: str):
+def setup_test_world(profile: str):
     """Reset singletons for an isolated test world."""
     reset_object_store()
     reset_vector_index()
@@ -21,7 +21,7 @@ def _setup_test_world(profile: str):
     register_compute_handlers()
 
 
-def _swap_cloud_profile(monkeypatch, profile: str):
+def swap_cloud_profile(monkeypatch, profile: str):
     """Set INTELLIQX_CLOUD and force adapter re-resolution."""
     monkeypatch.setenv("INTELLIQX_CLOUD", profile)
 
@@ -30,8 +30,8 @@ def _swap_cloud_profile(monkeypatch, profile: str):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("profile", ["local", "aws", "gcp", "modal"])
 async def test_smoke_agent_identical_output_across_profiles(monkeypatch, profile):
-    _swap_cloud_profile(monkeypatch, profile)
-    _setup_test_world(profile)
+    swap_cloud_profile(monkeypatch, profile)
+    setup_test_world(profile)
 
     agent = SmokeAgent()
     req = InvocationRequest(agent_name="smoke", input={"marker": "cross_cloud"}, tenant_id="t1")
@@ -44,8 +44,8 @@ async def test_smoke_agent_identical_output_across_profiles(monkeypatch, profile
 @pytest.mark.asyncio
 @pytest.mark.parametrize("profile", ["local", "aws", "gcp", "modal"])
 async def test_planner_identical_plan_across_profiles(monkeypatch, profile):
-    _swap_cloud_profile(monkeypatch, profile)
-    _setup_test_world(profile)
+    swap_cloud_profile(monkeypatch, profile)
+    setup_test_world(profile)
 
     agent = PlannerAgent()
     req = InvocationRequest(
@@ -68,8 +68,8 @@ async def test_planner_identical_plan_across_profiles(monkeypatch, profile):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("profile", ["local", "aws", "gcp", "modal"])
 async def test_compute_runtime_invokes_agent_across_profiles(monkeypatch, profile):
-    _swap_cloud_profile(monkeypatch, profile)
-    _setup_test_world(profile)
+    swap_cloud_profile(monkeypatch, profile)
+    setup_test_world(profile)
     runtime = get_compute_runtime()
     req = InvocationRequest(
         agent_name="smoke", input={"marker": f"profile-{profile}"}, tenant_id="t1"
