@@ -31,11 +31,17 @@ Phase status:
 
 from __future__ import annotations
 
+from typing import Any
+
 from intelliqx_agents.registry import get_agent_registry
 
+AGENT_CATALOG: list[tuple[str, Any]] = []
 
-def register_all() -> None:
-    """Register every agent with the AgentRegistry."""
+
+def _build_catalog() -> list[tuple[str, Any]]:
+    """Lazily build the name→class mapping (avoids import-time side effects)."""
+    if AGENT_CATALOG:
+        return AGENT_CATALOG
     from agents.coordination.knowledge_rag import KnowledgeRAGAgent
     from agents.coordination.memory_manager import MemoryManagerAgent
     from agents.coordination.orchestrator import OrchestratorAgent
@@ -66,97 +72,7 @@ def register_all() -> None:
     from agents.intelligence.test_data import TestDataAgent
     from agents.intelligence.test_design import TestDesignAgent
 
-    reg = get_agent_registry()
-    reg.register("planner", lambda: PlannerAgent(), meta=PlannerAgent.META)
-    reg.register("orchestrator", lambda: OrchestratorAgent(), meta=OrchestratorAgent.META)
-    reg.register("memory_manager", lambda: MemoryManagerAgent(), meta=MemoryManagerAgent.META)
-    reg.register("knowledge_rag", lambda: KnowledgeRAGAgent(), meta=KnowledgeRAGAgent.META)
-    reg.register("tool_manager", lambda: ToolManagerAgent(), meta=ToolManagerAgent.META)
-    reg.register("smoke", lambda: SmokeAgent(), meta=SmokeAgent.META)
-
-    reg.register(
-        "requirements_intel", lambda: RequirementsIntelAgent(), meta=RequirementsIntelAgent.META
-    )
-    reg.register("code_intel", lambda: CodeIntelAgent(), meta=CodeIntelAgent.META)
-    reg.register("risk_assessment", lambda: RiskAssessmentAgent(), meta=RiskAssessmentAgent.META)
-    reg.register("test_design", lambda: TestDesignAgent(), meta=TestDesignAgent.META)
-    reg.register("test_data", lambda: TestDataAgent(), meta=TestDataAgent.META)
-    reg.register(
-        "coverage_analysis", lambda: CoverageAnalysisAgent(), meta=CoverageAnalysisAgent.META
-    )
-    reg.register("critic", lambda: CriticAgent(), meta=CriticAgent.META)
-    reg.register("learning", lambda: LearningAgent(), meta=LearningAgent.META)
-    reg.register(
-        "prompt_management", lambda: PromptManagementAgent(), meta=PromptManagementAgent.META
-    )
-
-    reg.register("environment", lambda: EnvironmentAgent(), meta=EnvironmentAgent.META)
-    reg.register("design_intel", lambda: DesignIntelAgent(), meta=DesignIntelAgent.META)
-    reg.register("execution", lambda: ExecutionAgent(), meta=ExecutionAgent.META)
-    reg.register("self_healing", lambda: SelfHealingAgent(), meta=SelfHealingAgent.META)
-    reg.register("failure_analysis", lambda: FailureAnalysisAgent(), meta=FailureAnalysisAgent.META)
-    reg.register(
-        "visual_regression", lambda: VisualRegressionAgent(), meta=VisualRegressionAgent.META
-    )
-    reg.register("accessibility", lambda: AccessibilityAgent(), meta=AccessibilityAgent.META)
-    reg.register("performance", lambda: PerformanceAgent(), meta=PerformanceAgent.META)
-    reg.register("security", lambda: SecurityAgent(), meta=SecurityAgent.META)
-    reg.register(
-        "cost_optimization", lambda: CostOptimizationAgent(), meta=CostOptimizationAgent.META
-    )
-
-    reg.register("observability", lambda: ObservabilityAgent(), meta=ObservabilityAgent.META)
-    reg.register("reporting", lambda: ReportingAgent(), meta=ReportingAgent.META)
-    reg.register(
-        "governance_compliance",
-        lambda: GovernanceComplianceAgent(),
-        meta=GovernanceComplianceAgent.META,
-    )
-    reg.register(
-        "release_readiness", lambda: ReleaseReadinessAgent(), meta=ReleaseReadinessAgent.META
-    )
-
-
-def register_compute_handlers() -> None:
-    """Register every agent's ``run`` method with the in-process compute runtime.
-
-    The handler closure captures the agent instance so each
-    invocation produces a fresh :class:`intelliqx_compute.runtime.InvocationResponse`.
-    """
-    from intelliqx_compute.runtime import get_compute_runtime
-
-    from agents.coordination.knowledge_rag import KnowledgeRAGAgent
-    from agents.coordination.memory_manager import MemoryManagerAgent
-    from agents.coordination.orchestrator import OrchestratorAgent
-    from agents.coordination.planner import PlannerAgent
-    from agents.coordination.smoke import SmokeAgent
-    from agents.coordination.tool_manager import ToolManagerAgent
-    from agents.execution.accessibility import AccessibilityAgent
-    from agents.execution.cost_optimization import CostOptimizationAgent
-    from agents.execution.design_intel import DesignIntelAgent
-    from agents.execution.environment import EnvironmentAgent
-    from agents.execution.execution import ExecutionAgent
-    from agents.execution.failure_analysis import FailureAnalysisAgent
-    from agents.execution.performance import PerformanceAgent
-    from agents.execution.security import SecurityAgent
-    from agents.execution.self_healing import SelfHealingAgent
-    from agents.execution.visual_regression import VisualRegressionAgent
-    from agents.governance.governance_compliance import GovernanceComplianceAgent
-    from agents.governance.observability import ObservabilityAgent
-    from agents.governance.release_readiness import ReleaseReadinessAgent
-    from agents.governance.reporting import ReportingAgent
-    from agents.intelligence.code_intel import CodeIntelAgent
-    from agents.intelligence.coverage_analysis import CoverageAnalysisAgent
-    from agents.intelligence.critic import CriticAgent
-    from agents.intelligence.learning import LearningAgent
-    from agents.intelligence.prompt_management import PromptManagementAgent
-    from agents.intelligence.requirements_intel import RequirementsIntelAgent
-    from agents.intelligence.risk_assessment import RiskAssessmentAgent
-    from agents.intelligence.test_data import TestDataAgent
-    from agents.intelligence.test_design import TestDesignAgent
-
-    runtime = get_compute_runtime()
-    for name, cls in [
+    AGENT_CATALOG.extend([
         ("planner", PlannerAgent),
         ("orchestrator", OrchestratorAgent),
         ("memory_manager", MemoryManagerAgent),
@@ -186,7 +102,25 @@ def register_compute_handlers() -> None:
         ("reporting", ReportingAgent),
         ("governance_compliance", GovernanceComplianceAgent),
         ("release_readiness", ReleaseReadinessAgent),
-    ]:
+    ])
+    return AGENT_CATALOG
+
+
+def register_all() -> None:
+    """Register every agent with the AgentRegistry."""
+    catalog = _build_catalog()
+    reg = get_agent_registry()
+    for name, cls in catalog:
+        reg.register(name, lambda _cls=cls: _cls(), meta=cls.META)
+
+
+def register_compute_handlers() -> None:
+    """Register every agent's ``run`` method with the in-process compute runtime."""
+    from intelliqx_compute.runtime import get_compute_runtime
+
+    catalog = _build_catalog()
+    runtime = get_compute_runtime()
+    for name, cls in catalog:
         instance = cls()
 
         async def handler(req, _instance=instance):

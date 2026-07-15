@@ -39,7 +39,9 @@ def plan_for(goal: dict[str, Any], *, available_agents: list[str]) -> list[PlanN
     budget is tight.
     """
     kind = goal.get("kind", "")
-    nid = lambda: new_id()  # noqa: E731
+
+    def nid() -> str:
+        return new_id()
 
     if kind == "analyze_prd":
         n1 = nid()

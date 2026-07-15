@@ -67,13 +67,13 @@ class VLLMModalLLMClient(LLMClient):
     ) -> None:
         self.endpoint_url = endpoint_url or os.environ.get("INTELLIQX_VLLM_URL", "")
         self.model = model
-        self.__client = None
+        self._client = None
         # "Available" here means a real endpoint is configured; the
         # fallback path is always reachable for tests.
-        self.__available = bool(self.endpoint_url)
+        self._available = bool(self.endpoint_url)
 
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
-        if not self.__available:
+        if not self._available:
             last_user = next(
                 (m["content"] for m in reversed(request.messages) if m.get("role") == "user"), ""
             )
@@ -111,7 +111,7 @@ class VLLMModalLLMClient(LLMClient):
         )
 
     async def embed(self, texts: Sequence[str], *, model: str = "auto") -> list[list[float]]:
-        if not self.__available:
+        if not self._available:
             return deterministic_embedding(texts, 768)
         # Real vLLM /v1/embeddings call.
         try:

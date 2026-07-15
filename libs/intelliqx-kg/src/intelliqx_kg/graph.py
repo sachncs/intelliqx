@@ -119,16 +119,16 @@ class KnowledgeGraph:
         con: duckdb.DuckDBPyConnection | None = None,
     ) -> None:
         self.collection = collection
-        self.__storage = storage or get_object_store()
+        self._storage = storage or get_object_store()
         # In-memory DuckDB instance per KnowledgeGraph. Cheap; one
         # per process is the typical setup.
-        self.__con = con or duckdb.connect(":memory:")
+        self._con = con or duckdb.connect(":memory:")
         # Buffers used to build the next Parquet partition.
-        self.__nodes_arrow: list[dict[str, Any]] = []
-        self.__edges_arrow: list[dict[str, Any]] = []
+        self._nodes_arrow: list[dict[str, Any]] = []
+        self._edges_arrow: list[dict[str, Any]] = []
         # In-memory snapshot for fast query in tests.
-        self.__nodes_table: list[Node] = []
-        self.__edges_table: list[Edge] = []
+        self._nodes_table: list[Node] = []
+        self._edges_table: list[Edge] = []
 
     async def add_nodes(self, nodes: Iterable[Node]) -> int:
         """Add ``nodes`` to the graph.
@@ -140,8 +140,8 @@ class KnowledgeGraph:
         """
         added = 0
         for n in nodes:
-            self.__nodes_table.append(n)
-            self.__nodes_arrow.append(
+            self._nodes_table.append(n)
+            self._nodes_arrow.append(
                 {
                     "id": n.id,
                     "type": n.type,
@@ -162,8 +162,8 @@ class KnowledgeGraph:
         """
         added = 0
         for e in edges:
-            self.__edges_table.append(e)
-            self.__edges_arrow.append(
+            self._edges_table.append(e)
+            self._edges_arrow.append(
                 {
                     "src": e.src,
                     "dst": e.dst,
@@ -184,7 +184,7 @@ class KnowledgeGraph:
         Snappy compression is used because it gives a 3-5x ratio on
         our typical JSON-payload schemas with negligible CPU cost.
         """
-        rows = self.__nodes_arrow if kind == "nodes" else self.__edges_arrow
+        rows = self._nodes_arrow if kind == "nodes" else self._edges_arrow
         if not rows:
             return
         if kind == "nodes":
@@ -213,8 +213,8 @@ class KnowledgeGraph:
         pq.write_table(table, buf, compression="snappy")
         # The key embeds the current node-table size so successive
         # partitions get strictly increasing numbers.
-        key = f"{self.collection}/{kind}/part-{len(self.__nodes_table):08d}.parquet"
-        await self.__storage.put(key, buf.getvalue(), content_type="application/octet-stream")
+        key = f"{self.collection}/{kind}/part-{len(self._nodes_table):08d}.parquet"
+        await self._storage.put(key, buf.getvalue(), content_type="application/octet-stream")
         rows.clear()
 
     def register_views(self) -> None:
@@ -225,9 +225,9 @@ class KnowledgeGraph:
         creates a one-row ``WHERE FALSE`` view so that ``SELECT *
         FROM kg_nodes`` is well-typed even when the graph is empty.
         """
-        self.__con.execute("DROP VIEW IF EXISTS kg_nodes")
-        self.__con.execute("DROP VIEW IF EXISTS kg_edges")
-        if self.__nodes_table:
+        self._con.execute("DROP VIEW IF EXISTS kg_nodes")
+        self._con.execute("DROP VIEW IF EXISTS kg_edges")
+        if self._nodes_table:
             nodes_data = [
                 {
                     "id": n.id,
@@ -236,20 +236,20 @@ class KnowledgeGraph:
                     "attrs": json.dumps(n.attrs),
                     "embedding_ref": n.embedding_ref,
                 }
-                for n in self.__nodes_table
+                for n in self._nodes_table
             ]
             nodes_tbl = pa.Table.from_pylist(nodes_data)
-            self.__con.register("kg_nodes_df", nodes_tbl)
-            self.__con.execute("CREATE VIEW kg_nodes AS SELECT * FROM kg_nodes_df")
+            self._con.register("kg_nodes_df", nodes_tbl)
+            self._con.execute("CREATE VIEW kg_nodes AS SELECT * FROM kg_nodes_df")
         else:
             # Typed-but-empty view: ``SELECT * FROM kg_nodes`` returns
             # zero rows but with the expected column types.
-            self.__con.execute(
+            self._con.execute(
                 "CREATE VIEW kg_nodes AS SELECT NULL::VARCHAR AS id, NULL::VARCHAR AS type,"
                 " NULL::VARCHAR AS tenant_id, NULL::VARCHAR AS attrs,"
                 " NULL::VARCHAR AS embedding_ref WHERE FALSE"
             )
-        if self.__edges_table:
+        if self._edges_table:
             edges_data = [
                 {
                     "src": e.src,
@@ -259,13 +259,13 @@ class KnowledgeGraph:
                     "weight": e.weight,
                     "attrs": json.dumps(e.attrs),
                 }
-                for e in self.__edges_table
+                for e in self._edges_table
             ]
             edges_tbl = pa.Table.from_pylist(edges_data)
-            self.__con.register("kg_edges_df", edges_tbl)
-            self.__con.execute("CREATE VIEW kg_edges AS SELECT * FROM kg_edges_df")
+            self._con.register("kg_edges_df", edges_tbl)
+            self._con.execute("CREATE VIEW kg_edges AS SELECT * FROM kg_edges_df")
         else:
-            self.__con.execute(
+            self._con.execute(
                 "CREATE VIEW kg_edges AS SELECT NULL::VARCHAR AS src, NULL::VARCHAR AS dst,"
                 " NULL::VARCHAR AS type, NULL::VARCHAR AS tenant_id, NULL::DOUBLE AS weight,"
                 " NULL::VARCHAR AS attrs WHERE FALSE"
@@ -290,10 +290,10 @@ class KnowledgeGraph:
             row_count populated.
         """
         self.register_views()
-        result = self.__con.execute(sql, params or []).fetchall()
+        result = self._con.execute(sql, params or []).fetchall()
         # ``description`` is None for queries with no rows; guard
         # against that.
-        cols = [d[0] for d in self.__con.description] if self.__con.description else []
+        cols = [d[0] for d in self._con.description] if self._con.description else []
         rows = [dict(zip(cols, r)) for r in result]
         return KGQueryResult(rows=rows, columns=cols, row_count=len(rows))
 
@@ -374,24 +374,24 @@ class KnowledgeGraph:
         process has added.
         """
         if tenant_id is None:
-            return len(self.__nodes_table)
-        return sum(1 for n in self.__nodes_table if n.tenant_id == tenant_id)
+            return len(self._nodes_table)
+        return sum(1 for n in self._nodes_table if n.tenant_id == tenant_id)
 
     def edge_count(self, tenant_id: str | None = None) -> int:
         """Return the number of edges in the in-memory table."""
         if tenant_id is None:
-            return len(self.__edges_table)
-        return sum(1 for e in self.__edges_table if e.tenant_id == tenant_id)
+            return len(self._edges_table)
+        return sum(1 for e in self._edges_table if e.tenant_id == tenant_id)
 
     def reset(self) -> None:
         """Drop every node and edge from the in-memory mirror.
 
         Tests use this for isolation; production should not.
         """
-        self.__nodes_table.clear()
-        self.__edges_table.clear()
-        self.__nodes_arrow.clear()
-        self.__edges_arrow.clear()
+        self._nodes_table.clear()
+        self._edges_table.clear()
+        self._nodes_arrow.clear()
+        self._edges_arrow.clear()
 
 
 _SINGLETON: KnowledgeGraph | None = None

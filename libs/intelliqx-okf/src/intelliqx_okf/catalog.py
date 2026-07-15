@@ -136,42 +136,42 @@ class OKFCatalog:
     """
 
     def __init__(self, db_path: str | None = None, *, dim: int | None = None) -> None:
-        self.__db_path = db_path or ":memory:"
-        self.__dim = dim
-        self.__sqlite_vec = None
-        self.__conn = sqlite3.connect(self.__db_path, check_same_thread=False)
+        self._db_path = db_path or ":memory:"
+        self._dim = dim
+        self._sqlite_vec = None
+        self._conn = sqlite3.connect(self._db_path, check_same_thread=False)
         try:
-            self.__conn.execute("CREATE VIRTUAL TABLE IF NOT EXISTS _fts5_probe USING fts5(x)")
-            self.__conn.execute("DROP TABLE _fts5_probe")
+            self._conn.execute("CREATE VIRTUAL TABLE IF NOT EXISTS _fts5_probe USING fts5(x)")
+            self._conn.execute("DROP TABLE _fts5_probe")
             self._has_fts5 = True
         except sqlite3.OperationalError:
             self._has_fts5 = False
-        if self.__dim is not None:
+        if self._dim is not None:
             try:
                 import os
 
                 import sqlite_vec  # type: ignore[import-untyped]
 
-                self.__sqlite_vec = sqlite_vec
-                self.__conn.enable_load_extension(True)
+                self._sqlite_vec = sqlite_vec
+                self._conn.enable_load_extension(True)
                 for candidate in (
                     sqlite_vec.loadable_path(),
                     sqlite_vec.loadable_path() + ".dylib",
                     sqlite_vec.loadable_path() + ".so",
                 ):
                     if os.path.exists(candidate):
-                        self.__conn.load_extension(candidate)
+                        self._conn.load_extension(candidate)
                         break
-                self.__conn.execute(
-                    f"CREATE VIRTUAL TABLE IF NOT EXISTS concepts_ai USING vec0(embedding float[{self.__dim}])"
+                self._conn.execute(
+                    f"CREATE VIRTUAL TABLE IF NOT EXISTS concepts_ai USING vec0(embedding float[{self._dim}])"
                 )
             except Exception:
-                self.__sqlite_vec = None
+                self._sqlite_vec = None
         self._ensure_schema()
 
     def _ensure_schema(self) -> None:
         """Create the catalog tables if they don't exist."""
-        self.__conn.execute("""
+        self._conn.execute("""
             CREATE TABLE IF NOT EXISTS concepts (
                 concept_id TEXT NOT NULL,
                 tenant_id TEXT NOT NULL DEFAULT '_global',
@@ -187,13 +187,13 @@ class OKFCatalog:
                 PRIMARY KEY (concept_id, tenant_id)
             )
             """)
-        self.__conn.execute("CREATE INDEX IF NOT EXISTS idx_concepts_type ON concepts(type)")
-        self.__conn.execute(
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_concepts_type ON concepts(type)")
+        self._conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_concepts_timestamp ON concepts(timestamp)"
         )
-        self.__conn.execute("CREATE INDEX IF NOT EXISTS idx_concepts_tenant ON concepts(tenant_id)")
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_concepts_tenant ON concepts(tenant_id)")
         if self._has_fts5:
-            self.__conn.execute("""
+            self._conn.execute("""
                 CREATE VIRTUAL TABLE IF NOT EXISTS concepts_fts USING fts5(
                     concept_id,
                     tenant_id,
@@ -203,7 +203,7 @@ class OKFCatalog:
                     tokenize = 'porter unicode61'
                 )
                 """)
-        self.__conn.commit()
+        self._conn.commit()
 
     def build_catalog(
         self, bundle: OKFBundle, *, tenant_id: str = "_global", reserve_reserved: bool = False
@@ -222,11 +222,11 @@ class OKFCatalog:
         Returns:
             The number of concepts ingested.
         """
-        self.__conn.execute("DELETE FROM concepts WHERE tenant_id = ?", (tenant_id,))
+        self._conn.execute("DELETE FROM concepts WHERE tenant_id = ?", (tenant_id,))
         if self._has_fts5:
-            self.__conn.execute("DELETE FROM concepts_fts WHERE tenant_id = ?", (tenant_id,))
-        if self.__sqlite_vec is not None:
-            self.__conn.execute(
+            self._conn.execute("DELETE FROM concepts_fts WHERE tenant_id = ?", (tenant_id,))
+        if self._sqlite_vec is not None:
+            self._conn.execute(
                 """
                 DELETE FROM concepts_ai WHERE rowid IN (
                     SELECT rowid FROM concepts WHERE tenant_id = ?
@@ -234,7 +234,7 @@ class OKFCatalog:
                 """,
                 (tenant_id,),
             )
-        cur = self.__conn.cursor()
+        cur = self._conn.cursor()
         count = 0
         for concept in bundle.concepts.values():
             if not reserve_reserved and concept.concept_id in bundle.reserved:
@@ -279,18 +279,18 @@ class OKFCatalog:
                     ),
                 )
             count += 1
-        self.__conn.commit()
+        self._conn.commit()
         return count
 
     def store_embedding(
         self, concept_id: str, vector: list[float], *, tenant_id: str = "_global"
     ) -> None:
         """Upsert an embedding for ``concept_id`` within a tenant scope."""
-        if self.__sqlite_vec is None:
+        if self._sqlite_vec is None:
             return
-        if self.__dim is not None and len(vector) != self.__dim:
-            raise ValueError(f"Vector dim mismatch: expected {self.__dim}, got {len(vector)}")
-        cur = self.__conn.cursor()
+        if self._dim is not None and len(vector) != self._dim:
+            raise ValueError(f"Vector dim mismatch: expected {self._dim}, got {len(vector)}")
+        cur = self._conn.cursor()
         cur.execute(
             "SELECT rowid FROM concepts WHERE concept_id = ? AND tenant_id = ?",
             (concept_id, tenant_id),
@@ -304,11 +304,11 @@ class OKFCatalog:
             "INSERT INTO concepts_ai (rowid, embedding) VALUES (?, ?)",
             (rowid, _pack_floats(vector)),
         )
-        self.__conn.commit()
+        self._conn.commit()
 
     def list_types(self, *, tenant_id: str | None = None) -> list[str]:
         """Return the distinct ``type`` values present in the catalog."""
-        cur = self.__conn.cursor()
+        cur = self._conn.cursor()
         if tenant_id is not None:
             return [
                 row[0]
@@ -321,7 +321,7 @@ class OKFCatalog:
 
     def list_tags(self, *, tenant_id: str | None = None) -> list[str]:
         """Return the distinct tag values present in the catalog."""
-        cur = self.__conn.cursor()
+        cur = self._conn.cursor()
         out: set[str] = set()
         if tenant_id is not None:
             rows = cur.execute("SELECT tags_json FROM concepts WHERE tenant_id = ?", (tenant_id,))
@@ -377,7 +377,7 @@ class OKFCatalog:
         fts_expr = _tokenize_fts5(query)
         if not fts_expr:
             return []
-        cur = self.__conn.cursor()
+        cur = self._conn.cursor()
         conditions, params = self._structured_where(
             table_alias="c", tenant_id=tenant_id, type_filter=type_filter, tag_filter=tag_filter
         )
@@ -436,7 +436,7 @@ class OKFCatalog:
         limit: int = 50,
     ) -> list[dict[str, Any]]:
         """Retrieve all concepts matching structured filters (no FTS)."""
-        cur = self.__conn.cursor()
+        cur = self._conn.cursor()
         conditions, params = self._structured_where(
             table_alias="c", tenant_id=tenant_id, type_filter=type_filter, tag_filter=tag_filter
         )
@@ -488,9 +488,9 @@ class OKFCatalog:
         Collects eligible rowids first, then queries vec0 against
         those rowids.  Computes cosine similarity in Python.
         """
-        if self.__sqlite_vec is None:
+        if self._sqlite_vec is None:
             return []
-        cur = self.__conn.cursor()
+        cur = self._conn.cursor()
         conditions, params = self._structured_where(
             table_alias="c", tenant_id=tenant_id, type_filter=type_filter, tag_filter=tag_filter
         )
@@ -605,7 +605,7 @@ class OKFCatalog:
 
         # Stage 2: Collect vector candidates independently.
         vec_candidates: list[dict[str, Any]] = []
-        if query_embedding is not None and self.__sqlite_vec is not None:
+        if query_embedding is not None and self._sqlite_vec is not None:
             vec_candidates = self._fetch_vector_candidates(
                 query_embedding,
                 tenant_id=tenant_id,
@@ -673,7 +673,7 @@ class OKFCatalog:
         return out
 
     def close(self) -> None:
-        self.__conn.close()
+        self._conn.close()
 
 
 # --- Singleton -----------------------------------------------------------

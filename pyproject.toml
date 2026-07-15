@@ -20,6 +20,7 @@ dependencies = [
     "intelliqx-tenant",
     "intelliqx-sdk",
     "intelliqx-okf",
+    "intelliqx-graph",
 ]
 
 [tool.uv.sources]
@@ -39,6 +40,7 @@ intelliqx-tenant = { workspace = true }
 intelliqx-sdk = { workspace = true }
 agents = { workspace = true }
 intelliqx-okf = { workspace = true }
+intelliqx-graph = { workspace = true }
 
 [tool.uv.workspace]
 members = [
@@ -58,6 +60,7 @@ members = [
     "libs/intelliqx-sdk",
     "agents",
     "libs/intelliqx-okf",
+    "libs/intelliqx-graph",
     "tests",
 ]
 

@@ -159,11 +159,10 @@ class FakeLLMClient(LLMClient):
     """
 
     def __init__(self, *, dim: int = 768, latency_ms: int = 1) -> None:
-        self.__responses: dict[str, str] = {}
-        self.__dim = dim
-        self.__latency_ms = latency_ms
-        # Every request is appended so tests can assert call shape.
-        self.__call_log: list[CompletionRequest] = []
+        self._responses: dict[str, str] = {}
+        self._dim = dim
+        self._latency_ms = latency_ms
+        self._call_log: list[CompletionRequest] = []
 
     def register_response(self, marker: str, response: str) -> None:
         """Register a deterministic response for a marker substring.
@@ -173,7 +172,7 @@ class FakeLLMClient(LLMClient):
             response: The literal response to return when the marker
                 is found.
         """
-        self.__responses[marker] = response
+        self._responses[marker] = response
 
     @property
     def call_log(self) -> list[CompletionRequest]:
@@ -182,7 +181,7 @@ class FakeLLMClient(LLMClient):
         Tests use this to assert that an agent made the expected
         number of LLM calls with the expected shape.
         """
-        return list(self.__call_log)
+        return list(self._call_log)
 
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
         """Produce a deterministic response.
@@ -190,14 +189,14 @@ class FakeLLMClient(LLMClient):
         Sleeps for ``latency_ms`` milliseconds so tests can exercise
         ordering without needing real network I/O.
         """
-        await asyncio.sleep(self.__latency_ms / 1000.0)
-        self.__call_log.append(request)
+        await asyncio.sleep(self._latency_ms / 1000.0)
+        self._call_log.append(request)
         last_user = next(
             (m["content"] for m in reversed(request.messages) if m.get("role") == "user"), ""
         )
         # ``for ... else`` runs the ``else`` block only if the loop
         # completes without ``break`` — i.e. no marker matched.
-        for marker, response in self.__responses.items():
+        for marker, response in self._responses.items():
             if marker in last_user:
                 content = response
                 break
@@ -220,8 +219,8 @@ class FakeLLMClient(LLMClient):
         repeated and scaled to ``[-1, 1]`` until it reaches ``self.dim``
         entries.  The result is bounded but **not** semantically meaningful.
         """
-        await asyncio.sleep(self.__latency_ms / 1000.0)
-        return deterministic_embedding(texts, self.__dim)
+        await asyncio.sleep(self._latency_ms / 1000.0)
+        return deterministic_embedding(texts, self._dim)
 
 
 _SINGLETON: LLMClient | None = None

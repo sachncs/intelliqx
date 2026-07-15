@@ -14,7 +14,7 @@ from agents.intelligence.requirements_intel import (
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def testextract_requirements_from_numbered_list():
+async def test_extract_requirements_from_numbered_list():
     text = """
 1. Users can log in with email and password [high]
 2. Users can reset their password [medium]
@@ -28,7 +28,7 @@ async def testextract_requirements_from_numbered_list():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def testextract_requirements_from_bullets():
+async def test_extract_requirements_from_bullets():
     text = """
 - Search by keyword
 - Filter by date

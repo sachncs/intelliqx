@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from collections.abc import Sequence
 from typing import Any
 
@@ -112,7 +113,7 @@ class SqliteVecIndex:
             raise RuntimeError(
                 f"sqlite-vec extension not found at {self.__sqlite_vec.loadable_path()}"
             )
-        self.__write_lock = __import__("threading").Lock()
+        self._write_lock = threading.Lock()
         self._ensure_schema()
 
     @property
@@ -127,7 +128,7 @@ class SqliteVecIndex:
         metadata updates don't require deleting+re-inserting the
         vector row.
         """
-        with self.__write_lock:
+        with self._write_lock:
             self.__conn.execute("""
                 CREATE TABLE IF NOT EXISTS documents (
                     id TEXT PRIMARY KEY,
@@ -171,7 +172,7 @@ class SqliteVecIndex:
         """
         if not docs:
             return 0
-        with self.__write_lock:
+        with self._write_lock:
             cur = self.__conn.cursor()
             added = 0
             for d in docs:
@@ -213,7 +214,7 @@ class SqliteVecIndex:
         """
         if not ids:
             return 0
-        with self.__write_lock:
+        with self._write_lock:
             cur = self.__conn.cursor()
             removed = 0
             for i in ids:

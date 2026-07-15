@@ -5,7 +5,12 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from intelliqx_llm.client import CompletionRequest, LLMUsage, deterministic_embedding
+from intelliqx_llm.client import (
+    CompletionRequest,
+    LLMUsage,
+    deterministic_embedding,
+    reset_llm_client,
+)
 from intelliqx_llm.minimax import MiniMaxLLMClient
 
 
@@ -22,7 +27,7 @@ def test_minimax_init_without_api_key_is_unavailable():
         client = MiniMaxLLMClient(api_key="")
     assert client.api_key == ""
     # No key -> _try_init returns False -> __available is False.
-    assert client._MiniMaxLLMClient__available is False  # type: ignore[attr-defined]
+    assert client._available is False  # type: ignore[attr-defined]
 
 
 @pytest.mark.unit
@@ -30,7 +35,7 @@ def test_minimax_init_with_api_key_is_available():
     """A populated API key (real or fake) makes the adapter available."""
     client = MiniMaxLLMClient(api_key="sk-fake-test")
     assert client.api_key == "sk-fake-test"
-    assert client._MiniMaxLLMClient__available is True  # type: ignore[attr-defined]
+    assert client._available is True  # type: ignore[attr-defined]
 
 
 @pytest.mark.unit
@@ -84,8 +89,8 @@ async def test_minimax_complete_calls_litellm_acompletion():
     client = MiniMaxLLMClient(api_key="sk-test")
     # Bypass _try_init so the test does not depend on the installed
     # litellm version; inject our own client explicitly.
-    client._MiniMaxLLMClient__client = fake_litellm  # type: ignore[attr-defined]
-    client._MiniMaxLLMClient__available = True  # type: ignore[attr-defined]
+    client._client = fake_litellm  # type: ignore[attr-defined]
+    client._available = True  # type: ignore[attr-defined]
 
     response = await client.complete(_request("hi"))
 
@@ -108,8 +113,8 @@ async def test_minimax_complete_falls_back_on_litellm_error():
     fake_litellm.aembedding = AsyncMock()
 
     client = MiniMaxLLMClient(api_key="sk-test")
-    client._MiniMaxLLMClient__client = fake_litellm  # type: ignore[attr-defined]
-    client._MiniMaxLLMClient__available = True  # type: ignore[attr-defined]
+    client._client = fake_litellm  # type: ignore[attr-defined]
+    client._available = True  # type: ignore[attr-defined]
 
     response = await client.complete(_request("hello"))
     assert response.content.startswith("[minimax-fallback:")
@@ -147,8 +152,8 @@ async def test_minimax_embed_calls_litellm_aembedding():
     fake_litellm.aembedding = AsyncMock(return_value=_FakeResponse())
 
     client = MiniMaxLLMClient(api_key="sk-test")
-    client._MiniMaxLLMClient__client = fake_litellm  # type: ignore[attr-defined]
-    client._MiniMaxLLMClient__available = True  # type: ignore[attr-defined]
+    client._client = fake_litellm  # type: ignore[attr-defined]
+    client._available = True  # type: ignore[attr-defined]
 
     out = await client.embed(["x", "y"], model="minimax/text-embedding-01")
 
@@ -168,8 +173,8 @@ async def test_minimax_embed_falls_back_on_litellm_error():
     fake_litellm.acompletion = AsyncMock()
 
     client = MiniMaxLLMClient(api_key="sk-test", embed_dim=8)
-    client._MiniMaxLLMClient__client = fake_litellm  # type: ignore[attr-defined]
-    client._MiniMaxLLMClient__available = True  # type: ignore[attr-defined]
+    client._client = fake_litellm  # type: ignore[attr-defined]
+    client._available = True  # type: ignore[attr-defined]
 
     out = await client.embed(["foo"])
     assert len(out) == 1
@@ -182,7 +187,7 @@ def test_minimax_factory_wires_minimax_backend(monkeypatch: pytest.MonkeyPatch):
     """``get_llm_client`` must return a MiniMaxLLMClient when configured."""
     from intelliqx_llm import client as client_mod
 
-    monkeypatch.setattr(client_mod, "_SINGLETON", None)
+    reset_llm_client()
     monkeypatch.setenv("INTELLIQX_LLM_BACKEND", "minimax")
     monkeypatch.setenv("MINIMAX_API_KEY", "sk-factory-test")
 
@@ -191,7 +196,7 @@ def test_minimax_factory_wires_minimax_backend(monkeypatch: pytest.MonkeyPatch):
     assert backend.api_key == "sk-factory-test"
 
     # Reset so the next test starts clean.
-    monkeypatch.setattr(client_mod, "_SINGLETON", None)
+    reset_llm_client()
 
 
 @pytest.mark.unit
@@ -199,7 +204,7 @@ def test_minimax_factory_unknown_backend_raises(monkeypatch: pytest.MonkeyPatch)
     """An unknown backend name must raise a clear RuntimeError."""
     from intelliqx_llm import client as client_mod
 
-    monkeypatch.setattr(client_mod, "_SINGLETON", None)
+    reset_llm_client()
     monkeypatch.setenv("INTELLIQX_LLM_BACKEND", "not-a-real-backend")
 
     with pytest.raises(RuntimeError, match="not-a-real-backend"):

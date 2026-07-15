@@ -71,8 +71,8 @@ def _print_env(client: Any, args: argparse.Namespace) -> None:
     backend = os.environ.get("INTELLIQX_LLM_BACKEND", "fake")
     model = args.model or getattr(client, "model", None) or getattr(client, "DEFAULT_MODEL", "?")
     embed_model = getattr(client, "embed_model", None) or "?"
-    dim = getattr(client, "embed_dim", getattr(client, "_FakeLLMClient__dim", "?"))
-    available = getattr(client, "_MiniMaxLLMClient__available", None)
+    dim = getattr(client, "embed_dim", getattr(client, "_dim", "?"))
+    available = getattr(client, "_available", None)
     if available is None:
         available = "<not-applicable>"
     print(

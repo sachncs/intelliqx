@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://intelliqx.dev/schemas/sgir/sgir-graph.v1.json",
+  "title": "Software Graph IR",
+  "description": "The Software Graph Intermediate Representation — a language-independent graph of software computations.",
+  "type": "object",
+  "required": ["repository", "layers"],
+  "properties": {
+    "repository": {
+      "type": "object",
+      "required": ["name", "root_path"],
+      "properties": {
+        "name": { "type": "string" },
+        "root_path": { "type": "string" },
+        "languages": { "type": "array", "items": { "type": "string" } },
+        "frameworks": { "type": "array", "items": { "type": "string" } },
+        "build_systems": { "type": "array", "items": { "type": "string" } },
+        "architecture_style": { "type": "string" },
+        "total_files": { "type": "integer" },
+        "total_lines": { "type": "integer" }
+      }
+    },
+    "layers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["layer", "nodes", "edges"],
+        "properties": {
+          "layer": {
+            "type": "string",
+            "enum": ["call", "data_flow", "control_flow", "dependency", "state_transition", "resource", "security", "deployment"]
+          },
+          "nodes": { "type": "array", "$ref": "#/$defs/SGIRNode" },
+          "edges": { "type": "array", "$ref": "#/$defs/SGIREdge" },
+          "metadata": { "type": "object" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "SGIRNode": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "purpose": { "type": "string" },
+        "node_type": {
+          "type": "string",
+          "enum": ["function", "method", "class", "module", "package", "service", "endpoint", "event_handler", "middleware", "datamodel", "config", "infrastructure", "unknown"]
+        },
+        "language": { "type": "string" },
+        "inputs": { "type": "array", "items": { "type": "string" } },
+        "outputs": { "type": "array", "items": { "type": "string" } },
+        "complexity": {
+          "type": "string",
+          "enum": ["O(1)", "O(log n)", "O(n)", "O(n log n)", "O(n^2)", "O(n^3)", "O(2^n)", "unknown"]
+        },
+        "is_dead": { "type": "boolean" },
+        "is_duplicate": { "type": "boolean" },
+        "security_boundary": {
+          "type": "string",
+          "enum": ["none", "authenticated", "authorized", "admin", "internal", "external", "sandboxed"]
+        },
+        "test_coverage": { "type": "number" }
+      }
+    },
+    "SGIREdge": {
+      "type": "object",
+      "required": ["source", "target", "edge_type"],
+      "properties": {
+        "source": { "type": "string" },
+        "target": { "type": "string" },
+        "edge_type": {
+          "type": "string",
+          "enum": ["call", "data", "control", "dependency", "event", "network", "database", "message", "state_transition", "import", "inherit", "implement", "compose"]
+        },
+        "weight": { "type": "number" },
+        "label": { "type": "string" }
+      }
+    }
+  }
+}

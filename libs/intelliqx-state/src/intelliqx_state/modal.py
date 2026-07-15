@@ -42,8 +42,8 @@ class ModalDictStateStore(StateStore):
 
     def __init__(self, name: str = "intelliqx-state") -> None:
         self.name = name
-        self.__dict: Any = None
-        self.__available = self._try_init()
+        self._dict: Any = None
+        self._available = self._try_init()
 
     def _try_init(self) -> bool:
         """Try to look up (or implicitly create) the Modal Dict."""
@@ -52,14 +52,14 @@ class ModalDictStateStore(StateStore):
 
             # ``from_name`` returns a handle; the dict is provisioned
             # on first read/write.
-            self.__dict = modal.Dict.from_name(self.name, create_if_missing=True)
+            self._dict = modal.Dict.from_name(self.name, create_if_missing=True)
             return True
         except Exception:
             return False
 
     def _require(self) -> None:
         """Raise a clear error when the adapter cannot reach Modal."""
-        if not self.__available:
+        if not self._available:
             raise RuntimeError("ModalDict requires modal SDK + token")
 
     async def get(self, key: str):
@@ -76,7 +76,7 @@ class ModalDictStateStore(StateStore):
                 token is missing.
         """
         self._require()
-        return self.__dict.get(key)
+        return self._dict.get(key)
 
     async def set(self, key: str, value, *, ttl_seconds: int | None = None) -> None:
         """Store ``value`` at ``key`` in the Modal Dict.
@@ -95,7 +95,7 @@ class ModalDictStateStore(StateStore):
                 token is missing.
         """
         self._require()
-        self.__dict[key] = value
+        self._dict[key] = value
 
     async def delete(self, key: str) -> None:
         """Remove ``key`` from the Modal Dict.
@@ -111,7 +111,7 @@ class ModalDictStateStore(StateStore):
         """
         self._require()
         with suppress(KeyError):
-            del self.__dict[key]
+            del self._dict[key]
 
     async def incr(self, key: str, amount: int = 1) -> int:
         """Atomically increment an integer counter at ``key``.
@@ -132,9 +132,9 @@ class ModalDictStateStore(StateStore):
                 token is missing.
         """
         self._require()
-        cur = int(self.__dict.get(key, 0))
+        cur = int(self._dict.get(key, 0))
         cur += amount
-        self.__dict[key] = cur
+        self._dict[key] = cur
         return cur
 
     async def expire(self, key: str, ttl_seconds: int) -> None:
@@ -158,7 +158,7 @@ class ModalDictStateStore(StateStore):
             Matching key strings.
         """
         self._require()
-        for k in list(self.__dict.keys()):
+        for k in list(self._dict.keys()):
             if k.startswith(prefix):
                 yield k
 
@@ -175,9 +175,9 @@ class ModalDictStateStore(StateStore):
             value: The string value to store.
         """
         self._require()
-        h = self.__dict.get(key, {})
+        h = self._dict.get(key, {})
         h[field] = value
-        self.__dict[key] = h
+        self._dict[key] = h
 
     async def hgetall(self, key: str) -> dict:
         """Return all hash fields and values under ``key``.
@@ -186,7 +186,7 @@ class ModalDictStateStore(StateStore):
             A ``dict[str, str]``; empty if the key has no hash fields.
         """
         self._require()
-        return dict(self.__dict.get(key, {}))
+        return dict(self._dict.get(key, {}))
 
     async def lpush(self, key: str, value: str) -> int:
         """Push ``value`` to the head of the list at ``key``.
@@ -195,9 +195,9 @@ class ModalDictStateStore(StateStore):
             The new list length.
         """
         self._require()
-        lst = list(self.__dict.get(key, []))
+        lst = list(self._dict.get(key, []))
         lst.insert(0, value)
-        self.__dict[key] = lst
+        self._dict[key] = lst
         return len(lst)
 
     async def rpop(self, key: str):
@@ -207,9 +207,9 @@ class ModalDictStateStore(StateStore):
             The popped value, or ``None`` if the list is empty.
         """
         self._require()
-        lst = list(self.__dict.get(key, []))
+        lst = list(self._dict.get(key, []))
         if not lst:
             return None
         v = lst.pop()
-        self.__dict[key] = lst
+        self._dict[key] = lst
         return v

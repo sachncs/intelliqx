@@ -58,20 +58,20 @@ class VertexLLMClient(LLMClient):
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
         self.region = region or os.environ.get("INTELLIQX_GCP_REGION", "us-central1")
         self.model = model or self.DEFAULT_MODEL
-        self.__client: Any = None
-        self.__available = self._try_init()
+        self._client: Any = None
+        self._available = self._try_init()
 
     def _try_init(self) -> bool:
         try:
             from vertexai.generative_models import GenerativeModel  # type: ignore
 
-            self.__client = GenerativeModel(self.model)
+            self._client = GenerativeModel(self.model)
             return True
         except (ImportError, OSError):
             return False
 
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
-        if not self.__available:
+        if not self._available:
             last_user = next(
                 (m["content"] for m in reversed(request.messages) if m.get("role") == "user"), ""
             )
@@ -98,7 +98,7 @@ class VertexLLMClient(LLMClient):
             gen_kwargs: dict[str, Any] = {"generation_config": gen_config}
             if system_msg:
                 gen_kwargs["system_instruction"] = system_msg
-            response = await self.__client.generate_content_async(contents=contents, **gen_kwargs)
+            response = await self._client.generate_content_async(contents=contents, **gen_kwargs)
             text = response.text or ""
             usage = LLMUsage()
             if response.usage_metadata:
@@ -120,7 +120,7 @@ class VertexLLMClient(LLMClient):
             )
 
     async def embed(self, texts: Sequence[str], *, model: str = "auto") -> list[list[float]]:
-        if not self.__available:
+        if not self._available:
             return deterministic_embedding(texts, 768)
         try:
             import asyncio

@@ -6,17 +6,16 @@ import subprocess
 import sys
 
 import pytest
-from intelliqx_llm import client as client_mod
 from intelliqx_llm._smoke import _parse_args, main
-from intelliqx_llm.client import FakeLLMClient, set_llm_client
+from intelliqx_llm.client import FakeLLMClient, reset_llm_client, set_llm_client
 
 
 @pytest.fixture(autouse=True)
 def _reset_singleton():
     """Each test starts with no cached client so the backend env var wins."""
-    client_mod._SINGLETON = None
+    reset_llm_client()
     yield
-    client_mod._SINGLETON = None
+    reset_llm_client()
 
 
 def test_parse_args_defaults():

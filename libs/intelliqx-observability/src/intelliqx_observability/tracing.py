@@ -1,7 +1,7 @@
 """Tracing for IntelliqX.
 
 The platform uses OpenTelemetry for distributed tracing and provides a
-thin Pythonic wrapper (:class:`Tracer` / :class:`_SpanProxy`) so agent
+thin Pythonic wrapper (:class:`Tracer` / :class:`SpanProxy`) so agent
 code never imports ``opentelemetry.*`` types directly. The wrapper
 exposes only two operations on a span — ``set_attribute`` and
 ``add_event`` — which covers the vast majority of use cases.
@@ -69,7 +69,7 @@ class Tracer:
     """
 
     def __init__(self) -> None:
-        self.__tracer = trace.get_tracer("intelliqx")
+        self._tracer = trace.get_tracer("intelliqx")
 
     @contextmanager
     def span(self, name: str, **attrs: Any):
@@ -82,13 +82,13 @@ class Tracer:
             **attrs: Attributes attached to the span at open time.
 
         Yields:
-            An :class:`_SpanProxy` for setting additional attributes
+            A :class:`SpanProxy` for setting additional attributes
             and adding events.
         """
-        span = self.__tracer.start_span(name, attributes=_to_otel_attrs(attrs))
+        span = self._tracer.start_span(name, attributes=_to_otel_attrs(attrs))
         start = time.monotonic()
         try:
-            yield _SpanProxy(span)
+            yield SpanProxy(span)
         except Exception as e:
             # Mark the span as failed so backends render it red.
             span.record_exception(e)
@@ -100,7 +100,7 @@ class Tracer:
             span.end()
 
 
-class _SpanProxy:
+class SpanProxy:
     """Proxy that lets callers set attributes/events without importing OTel.
 
     The proxy is intentionally tiny: a span has many more methods in
@@ -109,7 +109,7 @@ class _SpanProxy:
     """
 
     def __init__(self, span: Any) -> None:
-        self.__span = span
+        self._span = span
 
     def set_attribute(self, key: str, value: Any) -> None:
         """Attach a typed attribute to the span.
@@ -118,7 +118,7 @@ class _SpanProxy:
             key: Attribute name (e.g. ``"tenant_id"``).
             value: Value; non-trivial types are stringified.
         """
-        self.__span.set_attribute(key, _to_otel_value(value))
+        self._span.set_attribute(key, _to_otel_value(value))
 
     def add_event(self, name: str, **attrs: Any) -> None:
         """Add a timestamped event to the span.
@@ -127,7 +127,7 @@ class _SpanProxy:
             name: Event name (e.g. ``"node_failed"``).
             **attrs: Event attributes.
         """
-        self.__span.add_event(name, attributes=_to_otel_attrs(attrs))
+        self._span.add_event(name, attributes=_to_otel_attrs(attrs))
 
 
 def _to_otel_attrs(attrs: dict[str, Any]) -> dict[str, Any]:

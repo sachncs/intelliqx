@@ -108,8 +108,8 @@ class MiniMaxLLMClient(LLMClient):
         self.model = model or self.DEFAULT_MODEL
         self.embed_model = embed_model or self.DEFAULT_EMBED_MODEL
         self.embed_dim = embed_dim or self.DEFAULT_EMBED_DIM
-        self.__client: Any = None
-        self.__available = self._try_init()
+        self._client: Any = None
+        self._available = self._try_init()
 
     def _try_init(self) -> bool:
         """Probe the litellm SDK and the credentials.
@@ -129,7 +129,7 @@ class MiniMaxLLMClient(LLMClient):
             return False
         # Touch the attribute so mypy sees the import. litellm is
         # lazy; we don't pay its import cost on cold start.
-        self.__client = litellm
+        self._client = litellm
         return True
 
     @staticmethod
@@ -158,7 +158,7 @@ class MiniMaxLLMClient(LLMClient):
             provider. Falls back to ``[minimax-fallback:<digest>]``
             when the API is unreachable.
         """
-        if not self.__available:
+        if not self._available:
             return self._fallback_complete(request)
 
         try:
@@ -167,7 +167,7 @@ class MiniMaxLLMClient(LLMClient):
             # (``/anthropic/v1/messages``) is also supported by
             # litellm but adds an ``anthropic_version`` requirement
             # that we don't currently use.
-            response = await self.__client.acompletion(
+            response = await self._client.acompletion(
                 model=request.model,
                 messages=request.messages,
                 temperature=request.temperature,
@@ -220,7 +220,7 @@ class MiniMaxLLMClient(LLMClient):
             the API is unreachable or the upstream model is
             misconfigured.
         """
-        if not self.__available:
+        if not self._available:
             return deterministic_embedding(list(texts), self.embed_dim)
 
         embed_model = model or self.embed_model
@@ -228,7 +228,7 @@ class MiniMaxLLMClient(LLMClient):
             embed_model = self.embed_model
 
         try:
-            response = await self.__client.aembedding(
+            response = await self._client.aembedding(
                 model=embed_model, input=list(texts), api_key=self.api_key, api_base=self.api_base
             )
         except Exception:
