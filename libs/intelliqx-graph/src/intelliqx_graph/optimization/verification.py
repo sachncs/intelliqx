@@ -43,6 +43,11 @@ class VerificationReport(BaseModel):
 
 
 def node_ids(graph: SoftwareGraph) -> set[str]:
+    """Return every node id present in every layer of ``graph``.
+
+    A convenience that flattens ``graph.layers[*].node_ids`` into
+    a single set so callers can ask "is this id anywhere?".
+    """
     ids: set[str] = set()
     for lg in graph.layers.values():
         ids.update(lg.node_ids)
@@ -50,6 +55,11 @@ def node_ids(graph: SoftwareGraph) -> set[str]:
 
 
 def edge_keys(graph: SoftwareGraph) -> set[tuple[str, str]]:
+    """Return every ``(source, target)`` pair across all layers.
+
+    Edge type and weight are intentionally ignored — callers
+    that care about those should iterate ``graph.layers`` directly.
+    """
     keys: set[tuple[str, str]] = set()
     for lg in graph.layers.values():
         for e in lg.edges:
@@ -63,6 +73,12 @@ def build_trace_set(
     entry_points: list[str],
     max_depth: int = DEFAULT_TRACE_MAX_DEPTH,
 ) -> set[tuple[str, ...]]:
+    """Enumerate execution traces up to ``max_depth`` from each entry point.
+
+    Returns the union (as a set so duplicate traces from different
+    entry points dedupe). Each trace is a tuple of node ids; the
+    same trace taken from two entry points counts as one.
+    """
     traces: set[tuple[str, ...]] = set()
     all_ids = node_ids(graph)
 
@@ -83,6 +99,12 @@ def dfs_traces(
     visited: set[str],
     depth_remaining: int,
 ) -> None:
+    """Recursive DFS used by :func:`build_trace_set`.
+
+    Records the partial path at every step so a downstream
+    verifier can compare exact-before/after trace sets without
+    needing to walk the graph again.
+    """
     if depth_remaining <= 0 or current in visited:
         traces.add(tuple(path + [current]))
         return

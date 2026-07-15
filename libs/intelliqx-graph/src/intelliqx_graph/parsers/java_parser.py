@@ -15,6 +15,7 @@ from intelliqx_graph.parsers import BaseParser, ParsedEntity
 
 
 def node_text(node, source_bytes: bytes) -> str:
+    """Extract the UTF-8 source slice covered by node."""
     return source_bytes[node.start_byte:node.end_byte].decode("utf-8", errors="ignore")
 
 
@@ -25,6 +26,13 @@ COMPLEXITY_QUADRATIC_MAX: int = 10
 
 
 def estimate_complexity(node) -> str:
+    """Rough big-O estimate from tree-sitter node types.
+
+    Counts branches (if, while, for, switch_case,
+    catch_clause) and short-circuit operators (&&, ||),
+    then buckets the score into O(1) / O(n) / O(n log n) / O(n^2) /
+    O(n^3) using the COMPLEXITY_*_MAX thresholds.
+    """
     complexity = 1
     stack = [node]
     while stack:

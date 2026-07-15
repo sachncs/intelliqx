@@ -15,31 +15,31 @@
     ],
     "architecture_style": "unknown",
     "total_files": 301,
-    "total_lines": 38397,
-    "analyzed_at": "2026-07-15T14:09:42.010362Z",
+    "total_lines": 38676,
+    "analyzed_at": "2026-07-15T18:31:46.972098Z",
     "extra": {}
   },
-  "parsed_entity_count": 2853,
+  "parsed_entity_count": 2858,
   "layer_node_counts": {
-    "call": 1629,
-    "data_flow": 1303,
-    "control_flow": 1629,
+    "call": 1634,
+    "data_flow": 1308,
+    "control_flow": 1634,
     "dependency": 586,
     "state_transition": 378,
-    "resource": 1303,
-    "security": 1629,
+    "resource": 1308,
+    "security": 1634,
     "deployment": 70
   },
-  "graph_node_total": 8527,
+  "graph_node_total": 8552,
   "generated_files": 583,
   "optimization_summary": {
     "target_language": "python",
-    "nodes_before": 8527,
+    "nodes_before": 8552,
     "nodes_after": 0,
-    "edges_before": 3297,
+    "edges_before": 3296,
     "edges_after": 0,
-    "node_reduction": 8527,
-    "edge_reduction": 3297,
+    "node_reduction": 8552,
+    "edge_reduction": 3296,
     "pass_count": 4,
     "all_behavior_preserved": true,
     "max_risk_level": "medium",
@@ -51,10 +51,14 @@
   "auditors": {
     "underscore": 0,
     "unused_imports": 0,
-    "long_functions": 61,
+    "long_functions": 63,
     "bare_except": 0,
     "silent_except_pass": 0,
-    "missing_all": 5
+    "missing_all": 0,
+    "print_leaks": 10,
+    "todo_fixme": 0,
+    "id_based_caches": 0,
+    "missing_docstrings": 55
   },
   "auto_fixes": {
     "underscore": {
@@ -66,6 +70,11 @@
       "removed": 0,
       "files_touched": 0,
       "skipped": [],
+      "applied": false
+    },
+    "add_all": {
+      "added": 0,
+      "files_touched": 0,
       "applied": false
     }
   },

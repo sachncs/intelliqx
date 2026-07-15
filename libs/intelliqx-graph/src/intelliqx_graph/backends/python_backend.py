@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from textwrap import indent
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING
 
 from intelliqx_graph.backends.base import CodeBackend
 from intelliqx_graph.models import (
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class _GenerateHelper:
-    """Cached indexes over a :class:`SoftwareGraph` for code generation.
+    """Pre-built indexes over a :class:`SoftwareGraph` for code generation.
 
     Code generation repeatedly asks ``is_child_of`` and
     ``graph.find_node`` style queries. The naive implementations
@@ -34,8 +34,12 @@ class _GenerateHelper:
       O(1) average case.
     * ``import_edges`` — pre-filtered list of import-typed edges.
 
-    The class is keyed per ``SoftwareGraph`` so two generation
-    passes over the same graph share indexes.
+    Construction is O(nodes + edges); the helper itself is
+    stateless and safe to discard after the codegen pass. The
+    earlier ``id(graph)``-keyed cache was removed because it
+    pinned graph objects forever (memory leak) for negligible
+    gain — building the indexes takes microseconds against any
+    realistic graph.
     """
 
     __slots__ = (
@@ -46,13 +50,8 @@ class _GenerateHelper:
         "parents_of_child",
     )
 
-    _CACHE: ClassVar[dict[int, _GenerateHelper]] = {}
-
     @classmethod
     def build(cls, graph: SoftwareGraph) -> _GenerateHelper:
-        cached = cls._CACHE.get(id(graph))
-        if cached is not None:
-            return cached
         helper = cls.__new__(cls)
         nodes_by_type: dict[NodeType, list[SGIRNode]] = {}
         node_by_id: dict[str, SGIRNode] = {}
@@ -79,7 +78,6 @@ class _GenerateHelper:
         helper.children_of_parent = children_of_parent
         helper.parents_of_child = parents_of_child
         helper.import_edges = import_edges
-        cls._CACHE[id(graph)] = helper
         return helper
 
     def find_node(self, node_id: str) -> SGIRNode | None:

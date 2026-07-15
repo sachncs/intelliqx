@@ -7,7 +7,7 @@ This proves the platform works end-to-end. The driver:
    optimize -> codegen) against the repo root.
 2. Surfaces every SGIR finding (architecture, flow, perf, security,
    duplicates, dead code, parallel branches, generated files).
-3. Runs 6 heuristic auditors that complement the SGIR findings:
+3. Runs 10 heuristic auditors that complement the SGIR findings:
 
    * lingering __ name-mangling (regression safety net)
    * unused imports
@@ -15,9 +15,13 @@ This proves the platform works end-to-end. The driver:
    * missing module __all__
    * bare ``except`` clauses
    * silent ``except: pass`` blocks
+   * print() leaks in libs (excluding docstring examples)
+   * TODO/FIXME/HACK markers
+   * id()-based caches (memory leak risk)
+   * public functions missing docstrings
 
-4. Applies safe, mechanical fixes (only the underscore + unused-
-   import auditors apply automatic patches).
+4. Applies safe, mechanical fixes (the underscore + unused-import +
+   __all__ auditors apply automatic patches).
 5. Verifies the result by running ruff + pytest.
 6. Saves a JSON report at scripts/self_improve_report.json.
 
@@ -354,7 +358,9 @@ def find_missing_all(py_files: list[Path]) -> list[Path]:
     control ``from foo import *`` and to document the public
     surface. We only flag library ``__init__.py`` files (under
     ``libs/`` and ``agents/``) — test conftests and scripts are
-    exempt.
+    exempt. Pure-docstring ``__init__.py`` files (only the module
+    docstring, no imports / classes / functions) are also exempt
+    because there's nothing to expose.
     """
     findings: list[Path] = []
     for fp in py_files:
@@ -368,16 +374,258 @@ def find_missing_all(py_files: list[Path]) -> list[Path]:
             source = fp.read_text(encoding="utf-8")
         except (OSError, UnicodeError):
             continue
-        if "from __future__" in source:
-            stripped = source.split('"""', 2)[2] if '"""' in source else source
-        else:
-            stripped = source
-        if "\n__all__" in source or re.search(r"^__all__\s*=", source, re.MULTILINE):
+        try:
+            tree = ast.parse(source)
+        except SyntaxError:
             continue
-        if len(stripped.strip()) < 5:
+
+        if any(
+            isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name) and target.id == "__all__"
+                for target in node.targets
+            )
+            for node in tree.body
+        ):
+            continue
+
+        # If the file has nothing but the module docstring, it's
+        # a documentation placeholder, not an importable module.
+        non_docstring = [
+            n for n in tree.body
+            if not (
+                isinstance(n, ast.Expr)
+                and isinstance(n.value, ast.Constant)
+                and isinstance(n.value.value, str)
+            )
+        ]
+        if not non_docstring:
             continue
         findings.append(fp)
     return findings
+
+
+def find_print_leaks(py_files: list[Path]) -> list[tuple[Path, int, str]]:
+    """Find executable ``print()`` calls left in production libs code.
+
+    Production libraries should report via a logger or raise;
+    ``print()`` goes directly to stderr/stdout and is invisible
+    to callers. The auditor counts only top-level ``print()`` and
+    ``print()`` calls inside function bodies, never docstring
+    examples. CLI entry points (``_smoke.py``, ``__main__.py``)
+    are explicitly exempt — they exist to write to stdout.
+    """
+    findings: list[tuple[Path, int, str]] = []
+    cli_files = {"_smoke.py", "__main__.py"}
+    for fp in py_files:
+        if "scripts" in fp.parts or "tests" in fp.parts:
+            continue
+        if fp.name in cli_files:
+            continue
+        try:
+            source = fp.read_text(encoding="utf-8", errors="ignore")
+        except (OSError, UnicodeError):
+            continue
+        try:
+            tree = ast.parse(source)
+        except SyntaxError:
+            continue
+
+        def is_in_docstring(lineno: int, _tree: ast.Module = tree) -> bool:
+            for node in ast.walk(_tree):
+                if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef,
+                                      ast.ClassDef)):
+                    docstring_node = node.body[0] if node.body else None
+                    if (
+                        isinstance(docstring_node, ast.Expr)
+                        and isinstance(docstring_node.value, ast.Constant)
+                        and isinstance(docstring_node.value.value, str)
+                    ):
+                        start = docstring_node.lineno
+                        end = getattr(docstring_node, "end_lineno", start) or start
+                        if start <= lineno <= end:
+                            return True
+            return False
+
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "print"
+            ):
+                src = ast.unparse(node)
+                if is_in_docstring(node.lineno):
+                    continue
+                findings.append((fp, node.lineno, src))
+    return findings
+
+
+def find_todo_fixme_markers(py_files: list[Path]) -> list[tuple[Path, int, str, str]]:
+    """Find TODO / FIXME / HACK markers in library and agent code.
+
+    Real action items left in production code are tech debt. The
+    auditor picks up exact-word markers (``# TODO`` rather than
+    ``# TODOList``) and skips ones already in CHANGELOG / docs.
+    """
+    findings: list[tuple[Path, int, str, str]] = []
+    pattern = re.compile(r"#\s*(TODO|FIXME|HACK|XXX)\b(?:\s*\(([^)]*)\))?\s*:?(.*)")
+    skip_dirs = {"tests", "scripts", "docs", "node_modules", ".venv"}
+    for fp in py_files:
+        if any(p in fp.parts for p in skip_dirs):
+            continue
+        try:
+            text = fp.read_text(encoding="utf-8", errors="ignore")
+        except (OSError, UnicodeError):
+            continue
+        for i, line in enumerate(text.splitlines(), start=1):
+            m = pattern.search(line)
+            if m:
+                findings.append((fp, i, line.rstrip(), m.group(1)))
+    return findings
+
+
+def find_id_based_caches(py_files: list[Path]) -> list[tuple[Path, int, str, str]]:
+    """Find ``dict[id(x)]`` and ``{id(x): ...}`` patterns — memory leak risk.
+
+    Using ``id()`` as a dict key pins the object forever, even
+    after the original goes out of scope, because the dict
+    outlives the object's reference count. The safe pattern is
+    ``weakref.WeakValueDictionary`` / ``WeakKeyDictionary`` —
+    or simply don't cache at all if the build is cheap.
+    """
+    findings: list[tuple[Path, int, str, str]] = []
+    pattern = re.compile(r"\b(?:id|hash)\s*\(\s*[a-zA-Z_]\w*\s*\)")
+    skip_dirs = {"scripts", "tests", "docs"}
+    for fp in py_files:
+        if any(p in fp.parts for p in skip_dirs):
+            continue
+        try:
+            text = fp.read_text(encoding="utf-8", errors="ignore")
+        except (OSError, UnicodeError):
+            continue
+        for i, line in enumerate(text.splitlines(), start=1):
+            if pattern.search(line) and ("_cache" in line.lower() or "_CACHE" in line):
+                findings.append((fp, i, line.rstrip(), "id()-based cache"))
+    return findings
+
+
+def find_missing_public_func_docstrings(py_files: list[Path]) -> list[tuple[Path, str, int]]:
+    """Find public module-level functions without a docstring.
+
+    Pydantic ``BaseModel`` subclasses inherit a class-level
+    docstring (the body is one), so we only flag plain functions
+    and classes whose first statement is not a string literal.
+    """
+    findings: list[tuple[Path, str, int]] = []
+    skip_dirs = {"tests", "scripts", "infra"}
+    for fp in py_files:
+        if any(p in fp.parts for p in skip_dirs):
+            continue
+        try:
+            tree = ast.parse(fp.read_text(encoding="utf-8", errors="ignore"))
+        except SyntaxError:
+            continue
+        for node in tree.body:
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if node.name.startswith("_"):
+                continue
+            if ast.get_docstring(node):
+                continue
+            findings.append((fp, node.name, node.lineno))
+    return findings
+
+
+def auto_fix_add_all(py_files: list[Path], apply: bool) -> dict[str, Any]:
+    """Auto-derive ``__all__`` for ``__init__.py`` files that lack one.
+
+    The derivation rule is: take every public name at module level
+    that isn't imported via ``from ... import *`` and isn't itself
+    another ``__init__`` marker. Names that come from
+    ``from X import Y`` are preferred because they document the
+    public surface as the author actually wrote it.
+    """
+    files_touched: set[Path] = set()
+    added = 0
+    for fp in py_files:
+        if fp.name != "__init__.py":
+            continue
+        if any(p in fp.parts for p in ("tests", "scripts")):
+            continue
+        try:
+            source = fp.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue
+        try:
+            tree = ast.parse(source)
+        except SyntaxError:
+            continue
+        if any(
+            isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name) and target.id == "__all__"
+                for target in node.targets
+            )
+            for node in tree.body
+        ):
+            continue
+
+        public_names: list[str] = []
+        seen: set[str] = set()
+        for node in tree.body:
+            names: list[str] = []
+            if isinstance(node, ast.ImportFrom):
+                for alias in node.names:
+                    if alias.name == "*":
+                        continue
+                    names.append(alias.asname or alias.name)
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    names.append(alias.asname or alias.name.split(".")[0])
+            elif (
+                isinstance(node, (ast.FunctionDef, ast.ClassDef))
+                and not node.name.startswith("_")
+            ):
+                names.append(node.name)
+            elif isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name) and not target.id.startswith("_"):
+                        names.append(target.id)
+            elif (
+                isinstance(node, ast.AnnAssign)
+                and isinstance(node.target, ast.Name)
+                and not node.target.id.startswith("_")
+            ):
+                names.append(node.target.id)
+
+            for name in names:
+                if name and name not in seen and name not in {"annotations"}:
+                    seen.add(name)
+                    public_names.append(name)
+
+        if not public_names:
+            continue
+
+        # Build the __all__ block using the same indentation as
+        # the surrounding code (4 spaces — module-level).
+        all_lines = ["__all__ = ["]
+        for name in sorted(public_names):
+            all_lines.append(f'    "{name}",')
+        all_lines.append("]")
+        block = "\n".join(all_lines) + "\n"
+
+        # Place __all__ at the very end so it doesn't break docstrings
+        # or imports that reference it.
+        new_source = source.rstrip() + "\n\n\n" + block
+        if apply:
+            fp.write_text(new_source, encoding="utf-8")
+            files_touched.add(fp)
+        added += 1
+    return {
+        "added": added,
+        "files_touched": len(files_touched),
+        "applied": apply,
+    }
 
 
 def auto_fix_underscore(py_files: list[Path], apply: bool) -> dict[str, Any]:
@@ -589,6 +837,26 @@ def main() -> int:
     for fp in missing_all[:10]:
         print(f"    {fp.relative_to(REPO_ROOT)}")
 
+    print_leaks = find_print_leaks(py_files)
+    print(f"  print() leaks in libs/: {len(print_leaks)}")
+    for fp, ln, line in print_leaks[:10]:
+        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  {line[:80]}")
+
+    todo = find_todo_fixme_markers(py_files)
+    print(f"  TODO/FIXME/HACK markers: {len(todo)}")
+    for fp, ln, line, marker in todo[:10]:
+        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  [{marker}] {line[:80]}")
+
+    id_caches = find_id_based_caches(py_files)
+    print(f"  id()-based caches: {len(id_caches)}")
+    for fp, ln, line, kind in id_caches[:10]:
+        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  {kind}: {line[:80]}")
+
+    missing_docs = find_missing_public_func_docstrings(py_files)
+    print(f"  public funcs missing docstrings: {len(missing_docs)}")
+    for fp, name, ln in missing_docs[:10]:
+        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  def {name}()")
+
     section("Step 3 — Auto-fixes" + (" (APPLIED)" if args.apply else " (dry-run)"))
 
     scorecard: dict[str, Any] = {}
@@ -601,6 +869,10 @@ def main() -> int:
     if unused_fix["skipped"]:
         print(f"  skipped: {unused_fix['skipped']}")
     scorecard["unused_imports"] = unused_fix
+
+    all_fix = auto_fix_add_all(py_files, apply=args.apply)
+    print(f"  __all__ added: {all_fix['added']} files ({all_fix['files_touched']} touched)")
+    scorecard["add_all"] = all_fix
 
     section("Step 4 — Pipeline errors discovered")
     if pipeline_result["errors"]:
@@ -635,6 +907,10 @@ def main() -> int:
             "bare_except": len(bare),
             "silent_except_pass": len(silent),
             "missing_all": len(missing_all),
+            "print_leaks": len(print_leaks),
+            "todo_fixme": len(todo),
+            "id_based_caches": len(id_caches),
+            "missing_docstrings": len(missing_docs),
         },
         "auto_fixes": scorecard,
         "errors": pipeline_result["errors"],
