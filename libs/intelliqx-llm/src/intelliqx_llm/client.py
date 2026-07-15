@@ -26,7 +26,9 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import os
+from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from functools import lru_cache
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -88,14 +90,17 @@ class CompletionResponse(BaseModel):
     usage: LLMUsage = Field(default_factory=LLMUsage)
 
 
-class LLMClient:
+class LLMClient(ABC):
     """Abstract LLM client.
 
-    Subclasses implement ``complete`` and ``embed``. The platform
-    consumes the abstract type so agent code is portable across cloud
-    providers.
+    Subclasses implement :meth:`complete` and :meth:`embed`. The
+    platform consumes the abstract type so agent code is portable
+    across cloud providers. Declared as a real :class:`ABC` so the
+    runtime blocks attempts to instantiate it directly and to
+    document the contract for IDE auto-complete.
     """
 
+    @abstractmethod
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
         """Run a chat completion.
 
@@ -105,9 +110,11 @@ class LLMClient:
         Returns:
             The provider's response.
         """
-        raise NotImplementedError
 
-    async def embed(self, texts: Sequence[str], *, model: str = "auto") -> list[list[float]]:
+    @abstractmethod
+    async def embed(
+        self, texts: Sequence[str], *, model: str = "auto"
+    ) -> list[list[float]]:
         """Embed a batch of strings.
 
         Args:
@@ -118,7 +125,24 @@ class LLMClient:
             One vector per input string, each of length
             ``self.dim`` (or the model's declared dim).
         """
-        raise NotImplementedError
+
+
+@lru_cache(maxsize=2048)
+def _hash_embedding(text: str, dim: int) -> tuple[float, ...]:
+    """Cached SHA-256-derived embedding for ``text`` at ``dim`` length.
+
+    ``lru_cache`` is safe here because the function is a pure
+    function of its arguments. The whole-vector tuple is the cache
+    value so callers can index it without list construction.
+    """
+    digest = hashlib.sha256(text.encode("utf-8")).digest()
+    vals: list[float] = []
+    while len(vals) < dim:
+        for b in digest:
+            vals.append((b / 255.0) * 2 - 1)
+            if len(vals) >= dim:
+                break
+    return tuple(vals[:dim])
 
 
 def deterministic_embedding(texts: Sequence[str], dim: int) -> list[list[float]]:
@@ -127,19 +151,10 @@ def deterministic_embedding(texts: Sequence[str], dim: int) -> list[list[float]]
     Each output vector is derived from the SHA-256 of the input text,
     repeated and scaled to ``[-1, 1]`` until it reaches ``dim`` entries.
     The result is **not** semantically meaningful but is deterministic
-    and bounded, which is sufficient for RAG pipeline tests.
+    and bounded, which is sufficient for RAG pipeline tests. Per-text
+    embeddings are cached so a batch of duplicates only hashes once.
     """
-    out: list[list[float]] = []
-    for t in texts:
-        digest = hashlib.sha256(t.encode("utf-8")).digest()
-        vals: list[float] = []
-        while len(vals) < dim:
-            for b in digest:
-                vals.append((b / 255.0) * 2 - 1)
-                if len(vals) >= dim:
-                    break
-        out.append(vals[:dim])
-    return out
+    return [list(_hash_embedding(t, dim)) for t in texts]
 
 
 class FakeLLMClient(LLMClient):
@@ -217,6 +232,66 @@ class FakeLLMClient(LLMClient):
 SINGLETON: LLMClient | None = None
 
 
+LLM_BACKEND_REGISTRY: dict[str, type[LLMClient]] = {
+    "fake": FakeLLMClient,
+}
+
+
+def register_llm_backend(name: str, factory: type[LLMClient]) -> None:
+    """Register a backend under ``name``.
+
+    The factory class is captured at registration time and used by
+    :func:`get_llm_client` whenever ``INTELLIQX_LLM_BACKEND=name``.
+    Registering an existing name replaces the previous factory, which
+    is the intended escape hatch for tests.
+
+    Backend name lookup is exact-match; the convention is lowercase
+    short codes (``"fake"``, ``"bedrock"``, ``"vertex"``, ``"vllm"``,
+    ``"minimax"``).
+    """
+    LLM_BACKEND_REGISTRY[name] = factory
+
+
+def _load_default_backends() -> None:
+    """Populate the registry with built-in backend classes.
+
+    Lazy + best-effort: classes whose SDK is missing get skipped so
+    the platform still boots. The ``fake`` backend is registered at
+    module-import time above; the cloud backends are imported here.
+    """
+    if "bedrock" in LLM_BACKEND_REGISTRY:
+        return
+    try:
+        from intelliqx_llm.aws import BedrockLLMClient
+
+        LLM_BACKEND_REGISTRY["bedrock"] = BedrockLLMClient
+    except ImportError:
+        pass
+    try:
+        from intelliqx_llm.gcp import VertexLLMClient
+
+        LLM_BACKEND_REGISTRY["vertex"] = VertexLLMClient
+    except ImportError:
+        pass
+    try:
+        from intelliqx_llm.modal import VLLMModalLLMClient
+
+        LLM_BACKEND_REGISTRY["vllm"] = VLLMModalLLMClient
+    except ImportError:
+        pass
+    try:
+        from intelliqx_llm.minimax import MiniMaxLLMClient
+
+        LLM_BACKEND_REGISTRY["minimax"] = MiniMaxLLMClient
+    except ImportError:
+        pass
+
+
+def list_llm_backends() -> tuple[str, ...]:
+    """Return the names of every registered backend (sorted)."""
+    return tuple(sorted(LLM_BACKEND_REGISTRY))
+
+
 def get_llm_client() -> LLMClient:
     """Return the configured LLM client.
 
@@ -236,29 +311,16 @@ def get_llm_client() -> LLMClient:
     global SINGLETON
     if SINGLETON is None:
         backend = os.environ.get("INTELLIQX_LLM_BACKEND", "fake")
-        if backend == "fake":
-            SINGLETON = FakeLLMClient()
-        elif backend == "bedrock":
-            from intelliqx_llm.aws import BedrockLLMClient
-
-            SINGLETON = BedrockLLMClient()
-        elif backend == "vertex":
-            from intelliqx_llm.gcp import VertexLLMClient
-
-            SINGLETON = VertexLLMClient()
-        elif backend == "vllm":
-            from intelliqx_llm.modal import VLLMModalLLMClient
-
-            SINGLETON = VLLMModalLLMClient()
-        elif backend == "minimax":
-            from intelliqx_llm.minimax import MiniMaxLLMClient
-
-            SINGLETON = MiniMaxLLMClient()
-        else:
+        _load_default_backends()
+        factory = LLM_BACKEND_REGISTRY.get(backend)
+        if factory is None:
+            available = ", ".join(list_llm_backends())
             raise RuntimeError(
-                f"LLM backend {backend!r} not available in this runtime. "
+                f"LLM backend {backend!r} not registered. "
+                f"Available backends: {available}. "
                 "Use INTELLIQX_LLM_BACKEND=fake for tests/dev."
             )
+        SINGLETON = factory()
     return SINGLETON
 
 
