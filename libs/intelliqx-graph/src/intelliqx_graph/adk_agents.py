@@ -158,6 +158,12 @@ def build_software_graph_tool(
     """Build a SoftwareGraph from parsed entities.
 
     Constructs all 8 graph layers and returns the serialized graph.
+
+    The layer builders consume ``ParsedEntity`` model objects rather
+    than raw dicts (they access attributes like ``entity.entity_type``
+    which only exist on the model). The dict form is convenient for
+    serialisation across the ADK tool boundary, so we deserialize
+    once here into the model objects the builders expect.
     """
     from intelliqx_graph.models import RepositoryMetadata, SGIRGraph
 
@@ -165,8 +171,8 @@ def build_software_graph_tool(
     entities = [ParsedEntity.model_validate(e) for e in parsed_entities]
 
     parsed_data: dict[str, Any] = {
-        "entities": [e.model_dump(mode="json") for e in entities],
-        "repository": repository_metadata,
+        "entities": entities,
+        "repository": repo,
     }
 
     sg = SoftwareGraph(repository=repo)
@@ -245,12 +251,13 @@ def optimize_graph_tool(
     """
     sg = graph_from_json(software_graph_json)
     index = GraphIndex(sg)
-    pipeline = OptimizationPipeline()
-    result = pipeline.run(
-        sg, index,
+    pipeline = OptimizationPipeline(
+        graph=sg,
+        graph_index=index,
         entry_points=entry_points or [],
         target_language=target_language,
     )
+    result = pipeline.run()
     return result.model_dump(mode="json")
 
 

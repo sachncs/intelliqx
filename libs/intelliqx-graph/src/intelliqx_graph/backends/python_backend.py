@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from textwrap import indent
+from typing import TYPE_CHECKING, ClassVar
 
 from intelliqx_graph.backends.base import CodeBackend
 from intelliqx_graph.models import (
@@ -8,6 +9,110 @@ from intelliqx_graph.models import (
     SGIRNode,
     SoftwareGraph,
 )
+
+if TYPE_CHECKING:
+    from intelliqx_graph.models import SGIREdge
+
+
+class _GenerateHelper:
+    """Cached indexes over a :class:`SoftwareGraph` for code generation.
+
+    Code generation repeatedly asks ``is_child_of`` and
+    ``graph.find_node`` style queries. The naive implementations
+    walk every node and every edge per call which, against a
+    non-trivial source repo, makes code generation time cubic in
+    the number of nodes (~5M ops for 1600-node graph) and was
+    timing out the self-improvement run.
+
+    This helper pre-builds:
+
+    * ``nodes_by_type`` — group nodes by their ``NodeType`` so the
+      per-module gather is O(1) per candidate.
+    * ``node_by_id`` — O(1) ``id → SGIRNode`` lookup.
+    * ``children_of_parent`` and ``parents_of_child`` — adjacency
+      lists inverted from the edge layer, so ``is_child_of`` is
+      O(1) average case.
+    * ``import_edges`` — pre-filtered list of import-typed edges.
+
+    The class is keyed per ``SoftwareGraph`` so two generation
+    passes over the same graph share indexes.
+    """
+
+    __slots__ = (
+        "children_of_parent",
+        "import_edges",
+        "node_by_id",
+        "nodes_by_type",
+        "parents_of_child",
+    )
+
+    _CACHE: ClassVar[dict[int, _GenerateHelper]] = {}
+
+    @classmethod
+    def build(cls, graph: SoftwareGraph) -> _GenerateHelper:
+        cached = cls._CACHE.get(id(graph))
+        if cached is not None:
+            return cached
+        helper = cls.__new__(cls)
+        nodes_by_type: dict[NodeType, list[SGIRNode]] = {}
+        node_by_id: dict[str, SGIRNode] = {}
+        for layer_graph in graph.layers.values():
+            for node in layer_graph.nodes:
+                nodes_by_type.setdefault(node.node_type, []).append(node)
+                node_by_id[node.id] = node
+        children_of_parent: dict[str, list[SGIRNode]] = {}
+        parents_of_child: dict[str, list[SGIRNode]] = {}
+        import_edges: list[SGIREdge] = []
+        for layer_graph in graph.layers.values():
+            for edge in layer_graph.edges:
+                target = node_by_id.get(edge.target)
+                source = node_by_id.get(edge.source)
+                if source is not None and target is not None:
+                    children_of_parent.setdefault(edge.source, []).append(target)
+                    parents_of_child.setdefault(edge.target, []).append(source)
+                # ``edge.edge_type`` is an enum; the value comparison is
+                # cheap and avoids importing the full enum at module scope.
+                if edge.edge_type.value == "import":
+                    import_edges.append(edge)
+        helper.nodes_by_type = nodes_by_type
+        helper.node_by_id = node_by_id
+        helper.children_of_parent = children_of_parent
+        helper.parents_of_child = parents_of_child
+        helper.import_edges = import_edges
+        cls._CACHE[id(graph)] = helper
+        return helper
+
+    def find_node(self, node_id: str) -> SGIRNode | None:
+        return self.node_by_id.get(node_id)
+
+    def children_of(
+        self, parent: SGIRNode, candidates: list[SGIRNode]
+    ) -> list[SGIRNode]:
+        child_ids = {c.id for c in self.children_of_parent.get(parent.id, ())}
+        return [c for c in candidates if c.id in child_ids]
+
+    def is_child_of(self, child: SGIRNode, parent: SGIRNode) -> bool:
+        return any(
+            p.id == parent.id for p in self.parents_of_child.get(child.id, ())
+        )
+
+    def parents_of(self, child: SGIRNode) -> list[SGIRNode]:
+        return self.parents_of_child.get(child.id, ())
+
+    def is_under_modules(
+        self, node: SGIRNode, modules: list[SGIRNode]
+    ) -> bool:
+        module_ids = {m.id for m in modules}
+        for parent in self.parents_of(node):
+            if parent.id in module_ids:
+                return True
+        # Fall back to source-location containment (matches the
+        # original ``is_child_of`` semantics).
+        if node.source_location and node.source_location.file_path:
+            for module in modules:
+                if module.source_location and module.source_location.file_path == node.source_location.file_path:
+                    return True
+        return False
 
 
 class PythonBackend(CodeBackend):
@@ -17,7 +122,12 @@ class PythonBackend(CodeBackend):
 
     def generate(self, graph: SoftwareGraph) -> dict[str, str]:
         files: dict[str, str] = {}
-        nodes_by_type = self.classify_nodes(graph)
+        # Pre-compute the helper indexes used by every child-emit pass
+        # below. The previous implementation re-walked all layers and
+        # all edges on every ``is_child_of`` call, which turned code
+        # generation into a class x edges x layers double-loop.
+        helper = _GenerateHelper.build(graph)
+        nodes_by_type = helper.nodes_by_type
 
         module_nodes = nodes_by_type.get(NodeType.MODULE, [])
         package_nodes = nodes_by_type.get(NodeType.PACKAGE, [])
@@ -35,18 +145,10 @@ class PythonBackend(CodeBackend):
 
         for module in module_nodes:
             file_path = self.node_to_file_path(module)
-            module_classes = [
-                c for c in class_nodes if self.is_child_of(c, module, graph)
-            ]
-            module_functions = [
-                f for f in function_nodes if self.is_child_of(f, module, graph)
-            ]
-            module_methods = [
-                m for m in method_nodes if self.is_child_of(m, module, graph)
-            ]
-            module_datamodels = [
-                d for d in datamodel_nodes if self.is_child_of(d, module, graph)
-            ]
+            module_classes = helper.children_of(module, class_nodes)
+            module_functions = helper.children_of(module, function_nodes)
+            module_methods = helper.children_of(module, method_nodes)
+            module_datamodels = helper.children_of(module, datamodel_nodes)
             files[file_path] = self.generate_module_file(
                 graph, module, module_classes, module_functions, module_methods, module_datamodels
             )
@@ -59,9 +161,7 @@ class PythonBackend(CodeBackend):
 
         orphans = [
             n for n in class_nodes + function_nodes + datamodel_nodes
-            if not any(
-                self.is_child_of(n, m, graph) for m in module_nodes
-            )
+            if not helper.is_under_modules(n, module_nodes)
         ]
         if orphans:
             file_path = f"{graph.repository.name.replace(' ', '_').lower()}.py"
@@ -73,24 +173,10 @@ class PythonBackend(CodeBackend):
         return files
 
     def classify_nodes(self, graph: SoftwareGraph) -> dict[NodeType, list[SGIRNode]]:
-        classified: dict[NodeType, list[SGIRNode]] = {}
-        for layer_graph in graph.layers.values():
-            for node in layer_graph.nodes:
-                classified.setdefault(node.node_type, []).append(node)
-        return classified
+        return _GenerateHelper.build(graph).nodes_by_type
 
     def is_child_of(self, child: SGIRNode, parent: SGIRNode, graph: SoftwareGraph) -> bool:
-        for layer_graph in graph.layers.values():
-            for edge in layer_graph.edges:
-                if edge.source == parent.id and edge.target == child.id:
-                    return True
-        if child.source_location and parent.source_location:
-            return (
-                child.source_location.file_path == parent.source_location.file_path
-                and child.source_location.line_start >= parent.source_location.line_start
-                and child.source_location.line_end <= parent.source_location.line_end
-            )
-        return False
+        return _GenerateHelper.build(graph).is_child_of(child, parent)
 
     def node_to_file_path(self, node: SGIRNode) -> str:
         if node.source_location:
@@ -159,14 +245,13 @@ class PythonBackend(CodeBackend):
     def generate_class(
         self, cls: SGIRNode, all_methods: list[SGIRNode], graph: SoftwareGraph
     ) -> str:
-        bases = self.get_inheritance(cls, graph)
+        helper = _GenerateHelper.build(graph)
+        bases = self.get_inheritance(cls, helper)
         base_str = f"({', '.join(bases)})" if bases else ""
         parts = [f"class {self.safe_name(cls.name)}{base_str}:"]
         if cls.purpose:
             parts.append(indent(f'"""{cls.purpose}"""', "    "))
-        class_methods = [
-            m for m in all_methods if self.is_child_of(m, cls, graph)
-        ]
+        class_methods = helper.children_of(cls, all_methods)
         if not class_methods:
             parts.append(indent("pass", "    "))
         else:
@@ -236,28 +321,24 @@ class PythonBackend(CodeBackend):
         types = ", ".join(o.strip() for o in node.outputs)
         return f" -> tuple[{types}]"
 
-    def get_inheritance(self, cls: SGIRNode, graph: SoftwareGraph) -> list[str]:
+    def get_inheritance(
+        self, cls: SGIRNode, helper: _GenerateHelper
+    ) -> list[str]:
         bases: list[str] = []
-        for layer_graph in graph.layers.values():
-            for edge in layer_graph.edges:
-                if edge.target == cls.id and edge.source in (
-                    e.source for e in layer_graph.edges if e.target == cls.id
-                ):
-                    source_node = graph.find_node(edge.source)
-                    if source_node and source_node.node_type == NodeType.CLASS:
-                        bases.append(self.safe_name(source_node.name))
+        for source in helper.parents_of(cls):
+            if source.node_type == NodeType.CLASS:
+                bases.append(self.safe_name(source.name))
         return bases
 
     def collect_imports(self, graph: SoftwareGraph) -> list[str]:
+        helper = _GenerateHelper.build(graph)
         seen: set[str] = set()
         imports: list[str] = []
-        for layer_graph in graph.layers.values():
-            for edge in layer_graph.edges:
-                if edge.edge_type.value == "import":
-                    source_node = graph.find_node(edge.source)
-                    if source_node and source_node.name not in seen:
-                        seen.add(source_node.name)
-                        imports.append(f"import {source_node.name}")
+        for edge in helper.import_edges:
+            source_node = helper.find_node(edge.source)
+            if source_node and source_node.name not in seen:
+                seen.add(source_node.name)
+                imports.append(f"import {source_node.name}")
         return imports
 
     def collect_imports_for_node(self, node: SGIRNode, graph: SoftwareGraph) -> list[str]:
