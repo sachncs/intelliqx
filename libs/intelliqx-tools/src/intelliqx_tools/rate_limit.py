@@ -30,6 +30,8 @@ class RateLimiter:
     section is just a few arithmetic operations.
     """
 
+    __slots__ = ("buckets", "lock")
+
     def __init__(self) -> None:
         # key -> {"tokens": float, "last_refill": float (monotonic)}
         self.buckets: dict[str, dict[str, float]] = defaultdict(

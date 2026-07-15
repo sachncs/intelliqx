@@ -39,6 +39,8 @@ class ModalComputeRuntime(ComputeRuntime):
         app_name: Modal app name. Defaults to ``"intelliqx"``.
     """
 
+    __slots__ = ("app_name", "available", "functions", "modal_app")
+
     def __init__(self, app_name: str = "intelliqx") -> None:
         self.app_name = app_name
         self.modal_app: Any = None

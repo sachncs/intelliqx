@@ -21,6 +21,15 @@ from pydantic import BaseModel
 from intelliqx_events.base import EventBus
 from intelliqx_events.handler import EventHandler
 
+__all__ = [
+    "EVENT_BUS_REGISTRY",
+    "InMemoryEventBus",
+    "get_event_bus",
+    "list_event_bus_backends",
+    "register_event_bus_backend",
+    "reset_event_bus",
+]
+
 
 class InMemoryEventBus(EventBus):
     """In-process event bus used for tests and local dev.
@@ -30,6 +39,8 @@ class InMemoryEventBus(EventBus):
     Errors are routed to the subscription's DLQ (if any); otherwise
     they propagate.
     """
+
+    __slots__ = ("dlqs", "next_sub_id", "started", "subscription_ids", "subscriptions")
 
     def __init__(self) -> None:
         # topic -> ordered list of handlers

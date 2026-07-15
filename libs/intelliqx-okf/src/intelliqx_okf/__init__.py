@@ -43,8 +43,10 @@ from intelliqx_okf.validator import (
 )
 
 __all__ = [
+    "CatalogHit",
     "Citation",
     "OKFBundle",
+    "OKFCatalog",
     "OKFConcept",
     "OKFEdge",
     "OKFFrontmatter",
@@ -54,9 +56,13 @@ __all__ = [
     "OKFValidationError",
     "ValidationIssue",
     "ValidationResult",
+    "get_catalog",
     "load_bundle",
     "load_concept",
+    "load_okf_catalog_from_bundle",
+    "reset_catalog",
     "save_concept",
+    "set_catalog",
     "validate_bundle",
     "validate_concept",
 ]

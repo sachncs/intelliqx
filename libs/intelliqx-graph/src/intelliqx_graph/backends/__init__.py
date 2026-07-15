@@ -8,6 +8,7 @@ from intelliqx_graph.backends.rust_backend import RustBackend
 from intelliqx_graph.backends.typescript_backend import TypeScriptBackend
 
 __all__ = [
+    "BACKENDS",
     "CodeBackend",
     "GoBackend",
     "JavaBackend",

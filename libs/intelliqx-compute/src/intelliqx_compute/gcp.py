@@ -39,6 +39,8 @@ class GCPFunctionsComputeRuntime(ComputeRuntime):
             ``us-central-1``.
     """
 
+    __slots__ = ("available", "project_id", "region")
+
     def __init__(self, project_id: str | None = None, region: str | None = None) -> None:
         self.project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "intelliqx-local")
         self.region = region or os.environ.get("INTELLIQX_GCP_REGION", "us-central1")

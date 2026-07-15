@@ -15,6 +15,13 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentFactory
 
+__all__ = [
+    "AgentRegistry",
+    "get_agent_registry",
+    "register_agent",
+    "reset_agent_registry",
+]
+
 
 class AgentRegistry:
     """Registry of agent factories.
@@ -23,6 +30,8 @@ class AgentRegistry:
     The registry does not own the agents' lifecycle (that's the
     compute runtime's job); it just maps names to constructors.
     """
+
+    __slots__ = ("factories", "meta")
 
     def __init__(self) -> None:
         self.factories: dict[str, AgentFactory] = {}

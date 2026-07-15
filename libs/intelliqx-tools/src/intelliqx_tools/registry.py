@@ -13,6 +13,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+__all__ = ["ToolDefinition", "ToolRegistry"]
+
 
 class ToolDefinition(BaseModel):
     """Definition of an external tool.

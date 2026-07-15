@@ -26,6 +26,16 @@ from typing import Any
 from intelliqx_observability.tracing import get_tracer
 from pydantic import BaseModel, ConfigDict, Field
 
+__all__ = [
+    "ComputeRuntime",
+    "InProcessComputeRuntime",
+    "InvocationRequest",
+    "InvocationResponse",
+    "get_compute_runtime",
+    "reset_compute_runtime",
+    "set_compute_runtime",
+]
+
 
 class InvocationRequest(BaseModel):
     """An agent invocation.
@@ -116,6 +126,8 @@ class InProcessComputeRuntime(ComputeRuntime):
     raises out of ``invoke``) so the orchestrator can branch on
     ``status`` instead of try/except.
     """
+
+    __slots__ = ("handlers",)
 
     def __init__(self) -> None:
         self.handlers: dict[str, AgentCallable] = {}

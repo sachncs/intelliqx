@@ -33,6 +33,21 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+__all__ = [
+    "LLM_BACKEND_REGISTRY",
+    "CompletionRequest",
+    "CompletionResponse",
+    "FakeLLMClient",
+    "LLMClient",
+    "LLMUsage",
+    "deterministic_embedding",
+    "get_llm_client",
+    "list_llm_backends",
+    "register_llm_backend",
+    "reset_llm_client",
+    "set_llm_client",
+]
+
 
 class LLMUsage(BaseModel):
     """Token usage accounting.

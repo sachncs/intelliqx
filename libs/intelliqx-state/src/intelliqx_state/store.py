@@ -22,6 +22,15 @@ from collections.abc import AsyncIterator
 from intelliqx_state.base import StateBackend as StateBackend
 from intelliqx_state.base import StateStore as StateStore
 
+__all__ = [
+    "STATE_BACKEND_REGISTRY",
+    "InMemoryStateStore",
+    "get_state_store",
+    "list_state_backends",
+    "register_state_backend",
+    "reset_state_store",
+]
+
 
 class InMemoryStateStore(StateStore):
     """In-memory state store used for tests and local dev.

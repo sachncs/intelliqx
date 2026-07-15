@@ -13,6 +13,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+__all__ = ["BaseParser", "ParseResult", "ParsedEntity"]
+
 
 class ParsedEntity(BaseModel):
     """A single parsed code entity (function, class, import, etc.).

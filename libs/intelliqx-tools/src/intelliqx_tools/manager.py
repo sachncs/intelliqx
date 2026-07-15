@@ -26,6 +26,14 @@ from pydantic import BaseModel, ConfigDict
 from intelliqx_tools.rate_limit import RateLimiter
 from intelliqx_tools.registry import ToolDefinition, ToolRegistry
 
+__all__ = [
+    "ToolInvocationResult",
+    "ToolManager",
+    "get_tool_manager",
+    "reset_tool_manager",
+    "set_tool_manager",
+]
+
 
 class ToolInvocationResult(BaseModel):
     """The result of a tool invocation.
@@ -55,6 +63,8 @@ class ToolManager:
         registry: Optional pre-built :class:`ToolRegistry`. A new
             one is created on demand if omitted.
     """
+
+    __slots__ = ("handlers", "rate_limiter", "registry")
 
     def __init__(self, registry: ToolRegistry | None = None) -> None:
         self.registry = registry or ToolRegistry()

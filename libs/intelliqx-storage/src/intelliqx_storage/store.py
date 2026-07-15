@@ -28,6 +28,17 @@ from intelliqx_core.errors import NotFoundError
 
 from intelliqx_storage.base import ObjectStore
 
+__all__ = [
+    "STORAGE_BACKEND_REGISTRY",
+    "InMemoryObjectStore",
+    "LocalFileSystemObjectStore",
+    "get_object_store",
+    "list_storage_backends",
+    "register_storage_backend",
+    "reset_object_store",
+    "set_object_store",
+]
+
 
 class InMemoryObjectStore(ObjectStore):
     """In-memory object store for tests.

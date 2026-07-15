@@ -43,6 +43,8 @@ class AWSLambdaComputeRuntime(ComputeRuntime):
             ``us-east-1``.
     """
 
+    __slots__ = ("available", "client", "region")
+
     def __init__(self, region: str | None = None) -> None:
         self.region = region or os.environ.get("AWS_REGION", "us-east-1")
         self.client: Any = None
