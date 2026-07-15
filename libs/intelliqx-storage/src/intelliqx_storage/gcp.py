@@ -58,7 +58,7 @@ class GCSObjectStore(ObjectStore):
         except (ImportError, OSError):
             return False
 
-    def key(self, key: str) -> str:
+    def resolve_key(self, key: str) -> str:
         if key.startswith("/"):
             key = key[1:]
         if self.prefix:
@@ -93,13 +93,13 @@ class GCSObjectStore(ObjectStore):
         """
         if not self.available:
             raise RuntimeError("GCSObjectStore requires google-cloud-storage + GCP credentials")
-        blob = self.bucket.blob(self.key(key))
+        blob = self.bucket.blob(self.resolve_key(key))
         if metadata:
             blob.metadata = {name: str(item) for name, item in metadata.items()}
         await asyncio.to_thread(
             blob.upload_from_string, value, content_type=content_type or "application/octet-stream"
         )
-        return f"gs://{self.bucket_name}/{self.key(key)}"
+        return f"gs://{self.bucket_name}/{self.resolve_key(key)}"
 
     async def get(self, key: str) -> bytes:
         """Download the bytes stored at ``key``.
@@ -116,7 +116,7 @@ class GCSObjectStore(ObjectStore):
         """
         if not self.available:
             raise RuntimeError("GCSObjectStore requires google-cloud-storage + GCP credentials")
-        blob = self.bucket.blob(self.key(key))
+        blob = self.bucket.blob(self.resolve_key(key))
         try:
             return await asyncio.to_thread(blob.download_as_bytes)
         except Exception as e:
@@ -133,14 +133,14 @@ class GCSObjectStore(ObjectStore):
         """
         if not self.available:
             return False
-        blob = self.bucket.blob(self.key(key))
+        blob = self.bucket.blob(self.resolve_key(key))
         return await asyncio.to_thread(blob.exists)
 
     async def delete(self, key: str) -> None:
         """Delete ``key`` from GCS (no-op when backend unavailable)."""
         if not self.available:
             return
-        blob = self.bucket.blob(self.key(key))
+        blob = self.bucket.blob(self.resolve_key(key))
         await asyncio.to_thread(blob.delete)
 
     async def list(self, prefix: str) -> AsyncIterator[str]:
@@ -154,6 +154,6 @@ class GCSObjectStore(ObjectStore):
         """
         if not self.available:
             return
-        full = self.key(prefix)
+        full = self.resolve_key(prefix)
         for blob in self.client.list_blobs(self.bucket_name, prefix=full):
             yield blob.name

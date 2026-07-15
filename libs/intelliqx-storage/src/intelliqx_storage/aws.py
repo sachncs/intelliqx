@@ -63,7 +63,7 @@ class S3ObjectStore(ObjectStore):
         except (ImportError, OSError):
             return False
 
-    def key(self, key: str) -> str:
+    def resolve_key(self, key: str) -> str:
         """Apply the configured prefix and strip any leading ``"/"``."""
         if key.startswith("/"):
             key = key[1:]
@@ -100,14 +100,14 @@ class S3ObjectStore(ObjectStore):
         """
         if not self.available:
             raise RuntimeError("S3ObjectStore requires boto3 + AWS credentials")
-        kwargs: dict[str, Any] = {"Bucket": self.bucket, "Key": self.key(key), "Body": value}
+        kwargs: dict[str, Any] = {"Bucket": self.bucket, "Key": self.resolve_key(key), "Body": value}
         if metadata:
             kwargs["Metadata"] = {name: str(item) for name, item in metadata.items()}
         if content_type:
             kwargs["ContentType"] = content_type
         # Offload the synchronous boto3 call to a worker thread.
         await asyncio.to_thread(self.client.put_object, **kwargs)
-        return f"s3://{self.bucket}/{self.key(key)}"
+        return f"s3://{self.bucket}/{self.resolve_key(key)}"
 
     async def get(self, key: str) -> bytes:
         """Download the bytes stored at ``key``.
@@ -132,7 +132,7 @@ class S3ObjectStore(ObjectStore):
             # ``get_object`` returns a dict with a streaming ``Body``;
             # we read it fully in a worker thread.
             obj = await asyncio.to_thread(
-                self.client.get_object, Bucket=self.bucket, Key=self.key(key)
+                self.client.get_object, Bucket=self.bucket, Key=self.resolve_key(key)
             )
             return await asyncio.to_thread(obj["Body"].read)
         except Exception as e:
@@ -156,7 +156,7 @@ class S3ObjectStore(ObjectStore):
         try:
             # ``head_object`` is the cheap existence check.
             await asyncio.to_thread(
-                self.client.head_object, Bucket=self.bucket, Key=self.key(key)
+                self.client.head_object, Bucket=self.bucket, Key=self.resolve_key(key)
             )
             return True
         except Exception:
@@ -166,7 +166,7 @@ class S3ObjectStore(ObjectStore):
         """Delete ``key`` from S3 (idempotent no-op if backend unavailable)."""
         if not self.available:
             return
-        await asyncio.to_thread(self.client.delete_object, Bucket=self.bucket, Key=self.key(key))
+        await asyncio.to_thread(self.client.delete_object, Bucket=self.bucket, Key=self.resolve_key(key))
 
     async def list(self, prefix: str) -> AsyncIterator[str]:
         """Yield every key under ``prefix``.
@@ -188,7 +188,7 @@ class S3ObjectStore(ObjectStore):
         # the entire listing before yielding to keep the call shape
         # simple. For very large buckets, switch to an async
         # generator that fetches pages lazily.
-        full_prefix = self.key(prefix)
+        full_prefix = self.resolve_key(prefix)
         paginator = self.client.get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=self.bucket, Prefix=full_prefix):
             for obj in page.get("Contents", []):
