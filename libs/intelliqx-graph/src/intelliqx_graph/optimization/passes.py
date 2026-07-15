@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+from collections import deque
 
 import networkx as nx
 
@@ -13,6 +14,17 @@ from intelliqx_graph.models import (
     SoftwareGraph,
 )
 from intelliqx_graph.query import GraphIndex
+
+COMPLEXITY_ORDER: dict[str, int] = {
+    "O(1)": 0,
+    "O(log n)": 1,
+    "O(n)": 2,
+    "O(n log n)": 3,
+    "O(n^2)": 4,
+    "O(n^3)": 5,
+    "O(2^n)": 6,
+    "unknown": 7,
+}
 
 
 def rebuild_graph(
@@ -122,14 +134,14 @@ def detect_duplicates(
 
 def bfs_component(start: str, adjacency: dict[str, set[str]]) -> set[str]:
     component: set[str] = set()
-    queue = [start]
+    queue: deque[str] = deque([start])
+    seen: set[str] = {start}
     while queue:
-        current = queue.pop()
-        if current in component:
-            continue
+        current = queue.popleft()
         component.add(current)
-        for neighbor in adjacency.get(current, set()):
-            if neighbor not in component:
+        for neighbor in adjacency.get(current, ()):
+            if neighbor not in seen:
+                seen.add(neighbor)
                 queue.append(neighbor)
     return component
 
@@ -200,21 +212,9 @@ def inline_trivial_nodes(
 
 
 def is_simple_node(node: SGIRNode, threshold: int) -> bool:
-    complexity_order = {
-        "O(1)": 0,
-        "O(log n)": 1,
-        "O(n)": 2,
-        "O(n log n)": 3,
-        "O(n^2)": 4,
-        "O(n^3)": 5,
-        "O(2^n)": 6,
-        "unknown": 7,
-    }
-    return (
-        complexity_order.get(node.complexity.value, 7) <= threshold
-        and not node.side_effects
-        and not node.failure_modes
-    )
+    if COMPLEXITY_ORDER.get(node.complexity.value, 7) > threshold:
+        return False
+    return not (node.side_effects or node.failure_modes)
 
 
 # ------------------------------------------------------------------
@@ -225,34 +225,35 @@ def parallelize_independent_branches(
     graph: SoftwareGraph,
     graph_index: GraphIndex,
 ) -> list[list[str]]:
-    independent_branches: list[list[str]] = []
+    seen_branches: set[frozenset[str]] = set()
+    deduped: list[list[str]] = []
 
     for layer_graph in graph.layers.values():
-        nx_graph = nx.DiGraph()
-        for node in layer_graph.nodes:
-            nx_graph.add_node(node.id)
-        for edge in layer_graph.edges:
-            nx_graph.add_edge(edge.source, edge.target)
+        nx_graph = graph_index.get_graph(layer_graph.layer) if graph_index is not None else None
+        if nx_graph is None:
+            nx_graph = nx.DiGraph()
+            nx_graph.add_nodes_from(n.id for n in layer_graph.nodes)
+            nx_graph.add_edges_from(
+                (e.source, e.target) for e in layer_graph.edges
+            )
 
         if nx.is_directed_acyclic_graph(nx_graph):
             levels = parallel_levels(nx_graph)
             for level in levels:
                 if len(level) > 1:
-                    independent_branches.append(sorted(level))
+                    key = frozenset(level)
+                    if key not in seen_branches:
+                        seen_branches.add(key)
+                        deduped.append(sorted(level))
 
         sccs = list(nx.strongly_connected_components(nx_graph))
         for scc in sccs:
             if len(scc) > 1:
-                branch = sorted(scc)
-                independent_branches.append(branch)
+                key = frozenset(scc)
+                if key not in seen_branches:
+                    seen_branches.add(key)
+                    deduped.append(sorted(scc))
 
-    deduped: list[list[str]] = []
-    seen: set[frozenset[str]] = set()
-    for branch in independent_branches:
-        key = frozenset(branch)
-        if key not in seen:
-            seen.add(key)
-            deduped.append(branch)
     return deduped
 
 

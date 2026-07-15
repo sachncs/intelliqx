@@ -1,8 +1,11 @@
 """Graph query helpers backed by NetworkX.
 
-Provides a ``GraphIndex`` that wraps a ``SoftwareGraph`` in NetworkX
-directed graphs for efficient traversal, reachability analysis,
-community detection, and subgraph isomorphism.
+Provides a :class:`GraphIndex` that wraps a :class:`SoftwareGraph`
+in NetworkX directed graphs for efficient traversal, reachability
+analysis, community detection, and subgraph isomorphism. The
+index materialises every layer into its own ``nx.DiGraph`` up-front
+so subsequent queries avoid re-walking the SGIR graph (cache hits
+on the merged graph materially speed up repeated traversals).
 """
 
 from __future__ import annotations
@@ -18,41 +21,64 @@ from intelliqx_graph.models import (
 
 
 class GraphIndex:
-    """NetworkX-backed index over a ``SoftwareGraph``.
+    """NetworkX-backed index over a :class:`SoftwareGraph`.
 
     Builds directed graphs per layer and provides convenience
     methods for common graph algorithms: reachability, critical
     paths, community detection, cycle detection, and subgraph
     isomorphism.
+
+    The merged multi-layer view is memoised on first access and
+    invalidated on :meth:`build`. Pure traversal methods
+    (:meth:`reachable_from`, :meth:`find_dead_nodes`, etc.)
+    re-use the cached merged graph to avoid the quadratic cost
+    of rebuilding it on every call.
     """
+
+    __slots__ = ("_high_fanin_cache", "_high_fanout_cache", "graphs", "merged_cache", "sg")
 
     def __init__(self, software_graph: SoftwareGraph) -> None:
         self.sg = software_graph
         self.graphs: dict[GraphLayer, nx.DiGraph] = {}
+        self.merged_cache: nx.DiGraph | None = None
+        self._high_fanout_cache: dict[tuple[int, GraphLayer | None], list[str]] = {}
+        self._high_fanin_cache: dict[tuple[int, GraphLayer | None], list[str]] = {}
         self.build()
 
     def build(self) -> None:
         for layer, sg_graph in self.sg.layers.items():
             g: nx.DiGraph = nx.DiGraph()
-            for node in sg_graph.nodes:
-                g.add_node(
+            g.add_nodes_from(
+                (
                     node.id,
-                    name=node.name,
-                    purpose=node.purpose,
-                    node_type=node.node_type.value,
-                    language=node.language,
-                    complexity=node.complexity.value,
-                    is_dead=node.is_dead,
+                    {
+                        "name": node.name,
+                        "purpose": node.purpose,
+                        "node_type": node.node_type.value,
+                        "language": node.language,
+                        "complexity": node.complexity.value,
+                        "is_dead": node.is_dead,
+                    },
                 )
-            for edge in sg_graph.edges:
-                g.add_edge(
+                for node in sg_graph.nodes
+            )
+            g.add_edges_from(
+                (
                     edge.source,
                     edge.target,
-                    edge_type=edge.edge_type.value,
-                    weight=edge.weight,
-                    label=edge.label,
+                    {
+                        "edge_type": edge.edge_type.value,
+                        "weight": edge.weight,
+                        "label": edge.label,
+                    },
                 )
+                for edge in sg_graph.edges
+            )
             self.graphs[layer] = g
+        # Invalidate caches after a rebuild.
+        self.merged_cache = None
+        self._high_fanout_cache.clear()
+        self._high_fanin_cache.clear()
 
     @property
     def software_graph(self) -> SoftwareGraph:
@@ -81,7 +107,7 @@ class GraphIndex:
         If ``layer`` is specified, only that layer is traversed.
         Otherwise all layers are merged into a single directed graph.
         """
-        g = self.merged_graph() if layer is None else self.graphs.get(layer)
+        g = self.merged if layer is None else self.graphs.get(layer)
         if g is None or node_id not in g:
             return set()
         return nx.descendants(g, node_id)
@@ -101,7 +127,7 @@ class GraphIndex:
 
         Dead code = nodes that no entry point can reach.
         """
-        g = self.merged_graph() if layer is None else self.graphs.get(layer)
+        g = self.merged if layer is None else self.graphs.get(layer)
         if g is None:
             return set()
 
@@ -124,7 +150,7 @@ class GraphIndex:
         Returns the node ID sequence of the critical path, or
         ``None`` if no path exists.
         """
-        g = self.merged_graph() if layer is None else self.graphs.get(layer)
+        g = self.merged if layer is None else self.graphs.get(layer)
         if g is None or source not in g or target not in g:
             return None
         try:
@@ -148,7 +174,7 @@ class GraphIndex:
 
         Returns a list of communities, each a set of node IDs.
         """
-        g = self.merged_graph() if layer is None else self.graphs.get(layer)
+        g = self.merged if layer is None else self.graphs.get(layer)
         if g is None:
             return []
 
@@ -162,7 +188,7 @@ class GraphIndex:
 
     def find_cycles(self, *, layer: GraphLayer | None = None) -> list[list[str]]:
         """Return all simple cycles in the graph."""
-        g = self.merged_graph() if layer is None else self.graphs.get(layer)
+        g = self.merged if layer is None else self.graphs.get(layer)
         if g is None:
             return []
         try:
@@ -181,7 +207,7 @@ class GraphIndex:
 
         Returns a list of mappings {pattern_node: target_node}.
         """
-        g = self.merged_graph() if layer is None else self.graphs.get(layer)
+        g = self.merged if layer is None else self.graphs.get(layer)
         if g is None:
             return []
         matcher = nx.algorithms.isomorphism.DiGraphMatcher(g, pattern)
@@ -193,14 +219,14 @@ class GraphIndex:
 
     def fan_out(self, node_id: str, *, layer: GraphLayer | None = None) -> int:
         """Return the out-degree of a node."""
-        g = self.merged_graph() if layer is None else self.graphs.get(layer)
+        g = self.merged if layer is None else self.graphs.get(layer)
         if g is None or node_id not in g:
             return 0
         return g.out_degree(node_id)
 
     def fan_in(self, node_id: str, *, layer: GraphLayer | None = None) -> int:
         """Return the in-degree of a node."""
-        g = self.merged_graph() if layer is None else self.graphs.get(layer)
+        g = self.merged if layer is None else self.graphs.get(layer)
         if g is None or node_id not in g:
             return 0
         return g.in_degree(node_id)
@@ -208,20 +234,42 @@ class GraphIndex:
     def high_fan_out_nodes(
         self, threshold: int = 10, *, layer: GraphLayer | None = None
     ) -> list[str]:
-        """Return nodes with out-degree >= threshold (potential bottlenecks)."""
-        g = self.merged_graph() if layer is None else self.graphs.get(layer)
+        """Return nodes with out-degree >= threshold (potential bottlenecks).
+
+        Cached per (threshold, layer) key and invalidated by
+        :meth:`build`.
+        """
+        cache_key = (threshold, layer)
+        if cache_key in self._high_fanout_cache:
+            return self._high_fanout_cache[cache_key]
+        g = self.merged if layer is None else self.graphs.get(layer)
         if g is None:
             return []
-        return [n for n in g.nodes if g.out_degree(n) >= threshold]
+        out_degree = dict(g.out_degree())
+        result = sorted(
+            (n for n, d in out_degree.items() if d >= threshold),
+            key=lambda n: (-out_degree[n], n),
+        )
+        self._high_fanout_cache[cache_key] = result
+        return result
 
     def high_fan_in_nodes(
         self, threshold: int = 10, *, layer: GraphLayer | None = None
     ) -> list[str]:
         """Return nodes with in-degree >= threshold (potential bottlenecks)."""
-        g = self.merged_graph() if layer is None else self.graphs.get(layer)
+        cache_key = (threshold, layer)
+        if cache_key in self._high_fanin_cache:
+            return self._high_fanin_cache[cache_key]
+        g = self.merged if layer is None else self.graphs.get(layer)
         if g is None:
             return []
-        return [n for n in g.nodes if g.in_degree(n) >= threshold]
+        in_degree = dict(g.in_degree())
+        result = sorted(
+            (n for n, d in in_degree.items() if d >= threshold),
+            key=lambda n: (-in_degree[n], n),
+        )
+        self._high_fanin_cache[cache_key] = result
+        return result
 
     # ------------------------------------------------------------------
     # Topological sort
@@ -229,7 +277,7 @@ class GraphIndex:
 
     def topological_order(self, *, layer: GraphLayer | None = None) -> list[str] | None:
         """Return a topological ordering of nodes, or None if cyclic."""
-        g = self.merged_graph() if layer is None else self.graphs.get(layer)
+        g = self.merged if layer is None else self.graphs.get(layer)
         if g is None:
             return []
         try:
@@ -261,9 +309,23 @@ class GraphIndex:
     # Internal helpers
     # ------------------------------------------------------------------
 
+    @property
+    def merged(self) -> nx.DiGraph:
+        return self.merged_graph()
+
     def merged_graph(self) -> nx.DiGraph:
-        """Merge all layer graphs into a single directed graph."""
+        """Merge all layer graphs into a single directed graph (cached).
+
+        The merge is computed on first access and reused until
+        :meth:`build` is called again. For pipelines that run many
+        cross-layer traversals this avoids the O(sum of layer edges)
+        rebuild cost that dominated profiling on large repos.
+        """
+        cached = self.merged_cache
+        if cached is not None:
+            return cached
         merged = nx.DiGraph()
         for g in self.graphs.values():
             merged.update(g)
+        self.merged_cache = merged
         return merged

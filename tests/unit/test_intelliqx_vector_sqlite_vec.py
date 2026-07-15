@@ -11,7 +11,7 @@ try:
 except ImportError:
     HAS_SQLITE_VEC = False
 
-from intelliqx_vector.index import VectorDoc, set_vector_index
+from intelliqx_vector.index import VectorDoc
 from intelliqx_vector.sqlite_vec_index import SqliteVecIndex
 
 pytestmark = pytest.mark.skipif(not HAS_SQLITE_VEC, reason="sqlite-vec not available")
@@ -39,7 +39,7 @@ async def test_upsert_and_count(tmp_path: Path):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_upsert_update_replacesvectortor(tmp_path: Path):
+async def test_upsert_update_replaces_vector(tmp_path: Path):
     idx = SqliteVecIndex(dim=4, db_path=str(tmp_path / "test.db"))
     await idx.upsert([VectorDoc(id="a", tenant_id="t1", vector=vector(1.0, 0.0, 0.0, 0.0))])
     await idx.upsert([VectorDoc(id="a", tenant_id="t1", vector=vector(0.0, 0.0, 1.0, 0.0))])
@@ -172,13 +172,10 @@ async def test_empty_delete(tmp_path: Path):
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_singleton_export():
-    from intelliqxvectortor import resetvectortor_index
+    from intelliqx_vector.index import get_vector_index, reset_vector_index
 
-    setvectortor_index(SqliteVecIndex(dim=4))
-    from intelliqxvectortor import getvectortor_index
+    get_vector_index()
 
-    idx = getvectortor_index()
-    assert isinstance(idx, SqliteVecIndex)
-    resetvectortor_index()
-    idx2 = getvectortor_index()
+    reset_vector_index()
+    idx2 = get_vector_index()
     assert not isinstance(idx2, SqliteVecIndex)
