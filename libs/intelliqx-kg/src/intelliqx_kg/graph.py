@@ -322,6 +322,55 @@ class KnowledgeGraph:
         implementation always performs a one-hop traversal.
         """
         self.register_views()
+        cond_sql, params = self._build_edge_filter(tenant_id, edge_type)
+        base_select = (
+            "SELECT DISTINCT n.id, n.type, n.tenant_id, n.attrs "
+            "FROM kg_edges e JOIN kg_nodes n ON {join_on} "
+            "WHERE {endpoint_clause} AND " + cond_sql + " LIMIT 1000"
+        )
+
+        if direction == "out":
+            sql = base_select.format(
+                join_on="e.dst = n.id",
+                endpoint_clause="e.src = ?",
+            )
+            return self.query(sql, params=[node_id, *params])
+
+        if direction == "in":
+            sql = base_select.format(
+                join_on="e.src = n.id",
+                endpoint_clause="e.dst = ?",
+            )
+            return self.query(sql, params=[node_id, *params])
+
+        # "both": the parameter list appears twice because UNION
+        # binds each SELECT to its own parameter set.
+        sql_out = base_select.format(
+            join_on="e.dst = n.id",
+            endpoint_clause="e.src = ?",
+        )
+        sql_in = base_select.format(
+            join_on="e.src = n.id",
+            endpoint_clause="e.dst = ?",
+        )
+        full_params = [node_id, *params]
+        return self.query(
+            f"{sql_out} UNION {sql_in}",
+            params=full_params + full_params,
+        )
+
+    def _build_edge_filter(
+        self,
+        tenant_id: str | None,
+        edge_type: str | None,
+    ) -> tuple[str, list[Any]]:
+        """Return the shared WHERE clause + bind parameters for edge queries.
+
+        Both :meth:`neighbors` callers and any future multi-hop
+        traversal build the same filter, so it is hoisted here.
+        Returning ``"1=1"`` (rather than ``""``) keeps the SQL
+        grammar valid even when no filter is provided.
+        """
         cond: list[str] = []
         params: list[Any] = []
         if tenant_id is not None:
@@ -330,41 +379,7 @@ class KnowledgeGraph:
         if edge_type is not None:
             cond.append("e.type = ?")
             params.append(edge_type)
-        cond_sql = (" AND ".join(cond)) if cond else "1=1"
-
-        if direction == "out":
-            sql = (
-                "SELECT DISTINCT n.id, n.type, n.tenant_id, n.attrs "
-                "FROM kg_edges e JOIN kg_nodes n ON e.dst = n.id "
-                "WHERE e.src = ? AND " + cond_sql + " LIMIT 1000"
-            )
-            params = [node_id] + params
-        elif direction == "in":
-            sql = (
-                "SELECT DISTINCT n.id, n.type, n.tenant_id, n.attrs "
-                "FROM kg_edges e JOIN kg_nodes n ON e.src = n.id "
-                "WHERE e.dst = ? AND " + cond_sql + " LIMIT 1000"
-            )
-            params = [node_id] + params
-        else:
-            # "both": UNION of the two one-direction queries. The
-            # parameter list is duplicated to match the two SELECT
-            # statements.
-            sql_out = (
-                "SELECT DISTINCT n.id, n.type, n.tenant_id, n.attrs "
-                "FROM kg_edges e JOIN kg_nodes n ON e.dst = n.id "
-                "WHERE e.src = ? AND " + cond_sql + " LIMIT 1000"
-            )
-            sql_in = (
-                "SELECT DISTINCT n.id, n.type, n.tenant_id, n.attrs "
-                "FROM kg_edges e JOIN kg_nodes n ON e.src = n.id "
-                "WHERE e.dst = ? AND " + cond_sql + " LIMIT 1000"
-            )
-            full_params = [node_id] + params
-            sql = sql_out + " UNION " + sql_in
-            params = full_params + full_params
-
-        return self.query(sql, params=params)
+        return (" AND ".join(cond)) if cond else "1=1", params
 
     def node_count(self, tenant_id: str | None = None) -> int:
         """Return the number of nodes in the in-memory table.

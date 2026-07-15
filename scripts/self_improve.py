@@ -381,11 +381,14 @@ def find_missing_all(py_files: list[Path]) -> list[Path]:
 
 
 def auto_fix_underscore(py_files: list[Path], apply: bool) -> dict[str, Any]:
-    """Strip remaining ``self.__<name>`` -> ``self.<name>``."""
-    fix_re = re.compile(r"\bself\.__(?P<name>[A-Za-z_]\w*)(?!__)")
+    """Strip remaining ``self.__<name>`` -> ``self.<name>``.
 
-    def _strip(m: re.Match[str]) -> str:
-        return f"self.{m.group('name')}"
+    Uses a per-line AST-aware check (rather than a single regex) so
+    we only touch real name-mangled instance attributes and not
+    legitimate dunder protocol usage like ``self.__class__``,
+    ``self.__init_subclass__``, etc.
+    """
+    fix_re = re.compile(r"\bself\.__(?P<name>[A-Za-z_]\w*)")
 
     fixed_total = 0
     files_touched: set[Path] = set()
@@ -394,11 +397,23 @@ def auto_fix_underscore(py_files: list[Path], apply: bool) -> dict[str, Any]:
             original = fp.read_text(encoding="utf-8")
         except (OSError, UnicodeError):
             continue
-        updated, n = fix_re.subn(_strip, original)
-        if n and updated != original:
+        new_lines: list[str] = []
+        changed_in_file = 0
+        for line in original.splitlines(keepends=True):
+            updated_line = line
+            for m in fix_re.finditer(line):
+                name = m.group("name")
+                if name.endswith("__"):
+                    continue
+                updated_line = updated_line.replace(m.group(0), f"self.{name}", 1)
+            if updated_line != line:
+                changed_in_file += 1
+            new_lines.append(updated_line)
+        if changed_in_file:
+            new_text = "".join(new_lines)
             if apply:
-                fp.write_text(updated, encoding="utf-8")
-            fixed_total += n
+                fp.write_text(new_text, encoding="utf-8")
+            fixed_total += changed_in_file
             files_touched.add(fp)
     return {
         "findings": fixed_total,
