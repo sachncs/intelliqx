@@ -45,7 +45,8 @@ class InMemoryObjectStore(ObjectStore):
     Not thread-safe across processes; safe for concurrent use from
     many async tasks within one process. The optional ``put_sync``
     method allows writes from constructors that run before an event
-    loop exists (e.g. inside the zvec index bootstrap path).
+    loop exists (e.g. inside an early init path that needs to write
+    before any event loop runs).
     """
 
     def __init__(self) -> None:
@@ -76,8 +77,8 @@ class InMemoryObjectStore(ObjectStore):
     ) -> str:
         """Sync version of :meth:`put` for use outside an event loop.
 
-        Used during object-store initialisation when the zvec index
-        needs to write its initial manifest before any loop runs.
+        Used during object-store initialisation when an early init
+        path needs to write its initial state before any loop runs.
         """
         self.store[key] = value
         self.meta[key] = dict(metadata or {})

@@ -13,7 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `tests/conftest`, redundant `TenantContext`/`AgentContext` re-imports
   from `intelliqx_agents.base.invoke()`, redundant `struct` re-import
   from `intelliqx_okf.catalog`, and unused `EdgeType.MESSAGE` enum
-  member from `intelliqx_graph.models`.
+  member from `intelliqx_graph.models`. Removed the `intelliqx-vector`
+  package (Zilliz zvec) which had no live importers; the platform
+  uses only `asg017/sqlite-vec` for vector storage. Removed zvec
+  references from `intelliqx_storage.store` and the OKF module
+  docstring.
 * **Semi-private symbols made public.** Renamed 10 underscore-prefixed
   helper functions that were imported by tests: `extract_imports`,
   `extract_requirements`, `shared_keywords`, `pixel_diff_pct`,

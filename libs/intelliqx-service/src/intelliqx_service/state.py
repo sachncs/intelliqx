@@ -248,14 +248,14 @@ class StateStore:
             except Exception:
                 self._conn.rollback()
                 raise
+
     def requeue(self, run_id: str, next_attempt: int) -> None:
         """Reset the run to PENDING and record the new attempt count."""
         with self._lock:
             self._conn.execute("BEGIN IMMEDIATE")
             try:
                 self._conn.execute(
-                    "UPDATE runs SET status = ?, attempts = ?, updated_at = ? "
-                    "WHERE run_id = ?",
+                    "UPDATE runs SET status = ?, attempts = ?, updated_at = ? " "WHERE run_id = ?",
                     (RunStatus.PENDING.value, next_attempt, time.time(), run_id),
                 )
                 self._conn.commit()
