@@ -58,6 +58,7 @@ members = [
     "libs/intelliqx-okf",
     "libs/intelliqx-graph",
     "libs/intelliqx-ai",
+    "libs/intelliqx-service",
     "tests",
 ]
 

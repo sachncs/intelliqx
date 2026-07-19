@@ -17,6 +17,7 @@ members = [
     "intelliqx-observability",
     "intelliqx-okf",
     "intelliqx-sdk",
+    "intelliqx-service",
     "intelliqx-state",
     "intelliqx-storage",
     "intelliqx-tenant",
@@ -828,6 +829,39 @@ requires-dist = [
     { name = "intelliqx-agents", editable = "libs/intelliqx-agents" },
     { name = "intelliqx-core", editable = "libs/intelliqx-core" },
     { name = "pydantic", specifier = ">=2.8" },
+]
+
+[[package]]
+name = "intelliqx-service"
+version = "0.2.0"
+source = { editable = "libs/intelliqx-service" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "intelliqx-compute" },
+    { name = "intelliqx-core" },
+    { name = "intelliqx-events" },
+    { name = "intelliqx-llm" },
+    { name = "intelliqx-observability" },
+    { name = "intelliqx-okf" },
+    { name = "intelliqx-state" },
+    { name = "intelliqx-storage" },
+    { name = "pydantic" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.110" },
+    { name = "intelliqx-compute", editable = "libs/intelliqx-compute" },
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-events", editable = "libs/intelliqx-events" },
+    { name = "intelliqx-llm", editable = "libs/intelliqx-llm" },
+    { name = "intelliqx-observability", editable = "libs/intelliqx-observability" },
+    { name = "intelliqx-okf", editable = "libs/intelliqx-okf" },
+    { name = "intelliqx-state", editable = "libs/intelliqx-state" },
+    { name = "intelliqx-storage", editable = "libs/intelliqx-storage" },
+    { name = "pydantic", specifier = ">=2.8" },
+    { name = "uvicorn", specifier = ">=0.29" },
 ]
 
 [[package]]

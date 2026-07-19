@@ -67,8 +67,11 @@ def register_all() -> None:
 def _meta_from(role: AgentRole) -> Any:
     from intelliqx_agents.base import AgentMeta
 
+    desc = role.description
+    if isinstance(desc, (list, tuple)):
+        desc = " ".join(str(part) for part in desc)
     return AgentMeta(
-        name=role.name, category=role.category, version="1.0.0", description=role.description
+        name=role.name, category=role.category, version="1.0.0", description=str(desc)
     )
 
 
@@ -101,6 +104,9 @@ def register_compute_handlers() -> None:
             agent = _builder()
             with bind_run(run_ctx):
                 output = await agent.run(req.input, deps=None, message_history=[])
-            return output.output if hasattr(output, "output") else {"output": output}
+            data = output.output if hasattr(output, "output") else output
+            if hasattr(data, "model_dump"):
+                data = data.model_dump()
+            return data
 
         runtime.register(role.name, handler)

@@ -1,0 +1,35 @@
+# Multi-stage Dockerfile for the IntelliqX hardened service.
+#
+# Production image: numeric non-root user, no compilers, no cache,
+# the state + OKF databases live on a persistent volume.
+
+FROM python:3.12-slim AS base
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+WORKDIR /app
+
+FROM base AS deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+RUN pip install uv==0.11.24
+COPY pyproject.toml uv.lock ./
+COPY libs ./libs
+COPY agents ./agents
+RUN uv sync --frozen --no-dev --all-packages
+
+FROM base AS runtime
+RUN useradd --create-home --shell /bin/bash --uid 10001 intelliqx
+USER intelliqx
+WORKDIR /app
+COPY --from=deps --chown=intelliqx:intelliqx /app /app
+ENV INTELLIQX_API_TOKEN=change-me \
+    INTELLIQX_STATE_DB=/var/lib/intelliqx/state.db \
+    INTELLIQX_OKF_DB=/var/lib/intelliqx/okf.db \
+    INTELLIQX_WORKERS=1
+VOLUME ["/var/lib/intelliqx"]
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD python -c "import urllib.request, os; urllib.request.urlopen('http://localhost:8000/healthz').read()"
+ENTRYPOINT ["uv", "run", "uvicorn", "intelliqx_service.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
