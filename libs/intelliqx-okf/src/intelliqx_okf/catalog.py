@@ -301,8 +301,7 @@ class OKFCatalog:
         rowid = row[0]
         cur.execute("DELETE FROM concepts_ai WHERE rowid = ?", (rowid,))
         cur.execute(
-            "INSERT INTO concepts_ai (rowid, embedding) VALUES (?, ?)",
-            (rowid, pack_floats(vector)),
+            "INSERT INTO concepts_ai (rowid, embedding) VALUES (?, ?)", (rowid, pack_floats(vector))
         )
         self.conn.commit()
 
@@ -568,6 +567,15 @@ class OKFCatalog:
     ) -> list[CatalogHit]:
         """Hybrid retrieval: structured filter + FTS5 + vector with RRF.
 
+        The work is split across five private helpers, one per
+        stage of the pipeline:
+
+          1. ``_keyword_candidates``   — FTS5 or structured only
+          2. ``_vector_candidates``    — vec0 cosine over eligible rows
+          3. ``_merge_candidates``     — union by concept_id
+          4. ``_reciprocal_rank_fusion`` — RRF blend with vector_weight
+          5. ``_build_hits``           — top-k → CatalogHit conversion
+
         Args:
             query: Free-text query.
             type_filter: Optional OKF ``type`` values to restrict to.
@@ -586,76 +594,113 @@ class OKFCatalog:
             raise ValueError(f"vector_weight must be in [0, 1], got {vector_weight}")
         oversample = max(top_k * 3, 30)
 
-        # Stage 1: Collect candidates from FTS and structured paths.
+        fts_candidates = self._keyword_candidates(
+            query=query,
+            oversample=oversample,
+            tenant_id=tenant_id,
+            type_filter=type_filter,
+            tag_filter=tag_filter,
+        )
+        vec_candidates = self._vector_candidates(
+            query_embedding=query_embedding,
+            oversample=oversample,
+            tenant_id=tenant_id,
+            type_filter=type_filter,
+            tag_filter=tag_filter,
+        )
+
+        all_candidates = self._merge_candidates(fts_candidates, vec_candidates)
+        if not all_candidates:
+            return []
+
+        scored = self._reciprocal_rank_fusion(all_candidates, vector_weight)
+        return self._build_hits(scored, top_k)
+
+    def _keyword_candidates(
+        self,
+        *,
+        query: str,
+        oversample: int,
+        tenant_id: str | None,
+        type_filter: list[str] | None,
+        tag_filter: list[str] | None,
+    ) -> list[dict[str, Any]]:
+        """Stage 1: FTS5 hit list when ``query`` is non-empty, structured only otherwise."""
         if query:
-            fts_candidates = self.fetch_fts_candidates(
+            return self.fetch_fts_candidates(
                 query,
                 tenant_id=tenant_id,
                 type_filter=type_filter,
                 tag_filter=tag_filter,
                 limit=oversample,
             )
-        else:
-            fts_candidates = self.fetch_structured_candidates(
-                tenant_id=tenant_id,
-                type_filter=type_filter,
-                tag_filter=tag_filter,
-                limit=oversample,
-            )
+        return self.fetch_structured_candidates(
+            tenant_id=tenant_id, type_filter=type_filter, tag_filter=tag_filter, limit=oversample
+        )
 
-        # Stage 2: Collect vector candidates independently.
-        vec_candidates: list[dict[str, Any]] = []
-        if query_embedding is not None and self.sqlite_vec is not None:
-            vec_candidates = self.fetch_vector_candidates(
-                query_embedding,
-                tenant_id=tenant_id,
-                type_filter=type_filter,
-                tag_filter=tag_filter,
-                limit=oversample,
-            )
+    def _vector_candidates(
+        self,
+        *,
+        query_embedding: list[float] | None,
+        oversample: int,
+        tenant_id: str | None,
+        type_filter: list[str] | None,
+        tag_filter: list[str] | None,
+    ) -> list[dict[str, Any]]:
+        """Stage 2: vec0 cosine ranking, skipped when the embedding extension is unavailable."""
+        if query_embedding is None or self.sqlite_vec is None:
+            return []
+        return self.fetch_vector_candidates(
+            query_embedding,
+            tenant_id=tenant_id,
+            type_filter=type_filter,
+            tag_filter=tag_filter,
+            limit=oversample,
+        )
 
-        # Stage 3: Merge candidates by concept_id, union of both sets.
+    @staticmethod
+    def _merge_candidates(
+        fts: list[dict[str, Any]], vec: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Stage 3: union by ``concept_id``. FTS wins on collision because it carries snippet + bm25."""
         merged: dict[str, dict[str, Any]] = {}
-        for c in fts_candidates:
+        for c in fts:
             merged[c["concept_id"]] = c
-        for c in vec_candidates:
+        for c in vec:
             if c["concept_id"] not in merged:
                 merged[c["concept_id"]] = c
+        return list(merged.values())
 
-        all_candidates = list(merged.values())
-        if not all_candidates:
-            return []
-
-        # Stage 4: Reciprocal-rank fusion.
+    @staticmethod
+    def _reciprocal_rank_fusion(
+        candidates: list[dict[str, Any]], vector_weight: float
+    ) -> list[dict[str, Any]]:
+        """Stage 4: combine FTS and vector ranks via RRF, write back ``score``."""
         fts_ranked = sorted(
-            [c for c in all_candidates if c["fts_score"] != 0.0],
-            key=lambda c: c["fts_score"],  # bm25 is negative, lower = better
+            (c for c in candidates if c["fts_score"] != 0.0),
+            key=lambda c: c["fts_score"],  # bm25 is negative; lower = better
         )
         vec_ranked = sorted(
-            [c for c in all_candidates if c["vector_score"] != 0.0],
-            key=lambda c: -c["vector_score"],
+            (c for c in candidates if c["vector_score"] != 0.0), key=lambda c: -c["vector_score"]
         )
-
-        rrf_scores: dict[str, float] = {c["concept_id"]: 0.0 for c in all_candidates}
+        rrf: dict[str, float] = {c["concept_id"]: 0.0 for c in candidates}
         for rank, c in enumerate(fts_ranked):
-            rrf_scores[c["concept_id"]] += (1.0 - vector_weight) / (RRF_K + rank + 1)
+            rrf[c["concept_id"]] += (1.0 - vector_weight) / (RRF_K + rank + 1)
         for rank, c in enumerate(vec_ranked):
-            rrf_scores[c["concept_id"]] += vector_weight / (RRF_K + rank + 1)
-
-        # If no ranked lists contributed, give equal base score.
+            rrf[c["concept_id"]] += vector_weight / (RRF_K + rank + 1)
         if not fts_ranked and not vec_ranked:
-            for cid in rrf_scores:
-                rrf_scores[cid] = 1.0 / RRF_K
+            for cid in rrf:
+                rrf[cid] = 1.0 / RRF_K
+        for c in candidates:
+            c["score"] = rrf[c["concept_id"]]
+        candidates.sort(key=lambda c: c["score"], reverse=True)
+        return candidates
 
-        # Stage 5: Final scoring — blend RRF with vector similarity.
-        for c in all_candidates:
-            rrf = rrf_scores[c["concept_id"]]
-            c["score"] = rrf
-
-        all_candidates.sort(key=lambda c: c["score"], reverse=True)
-
+    @staticmethod
+    def _build_hits(candidates: list[dict[str, Any]], top_k: int) -> list[CatalogHit]:
+        """Stage 5: top-k slice → CatalogHit conversion."""
         out: list[CatalogHit] = []
-        for c in all_candidates[:top_k]:
+        for c in candidates[:top_k]:
             out.append(
                 CatalogHit(
                     concept_id=c["concept_id"],
