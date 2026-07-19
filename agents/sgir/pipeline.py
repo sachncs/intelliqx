@@ -48,8 +48,10 @@ def run_pipeline(
     metadata = scan_repository_tool(repo_path)
     result["metadata"] = metadata
 
-    entities = parse_repository_tool(repo_path)
+    parsed = parse_repository_tool(repo_path)
+    entities = parsed["entities"]
     result["parsed_entity_count"] = len(entities)
+    result["parse_errors"] = parsed["errors"]
 
     graph_json = build_software_graph_tool(metadata, entities)
     result["graph"] = graph_json

@@ -84,12 +84,15 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
     metadata = scan_repository_tool(repo_path)
     out["metadata"] = metadata
 
-    raw_entities = parse_repository_tool(repo_path)
+    parsed = parse_repository_tool(repo_path)
+    raw_entities = parsed["entities"]
+    out["errors"].extend(parsed["errors"])
     out["parsed_entity_count"] = len(raw_entities)
     entity_types = Counter(e.get("entity_type", "?") for e in raw_entities)
 
     section("Building graph layers")
     from intelliqx_graph.adk_agents import build_software_graph_tool
+
     try:
         graph_json_str = build_software_graph_tool(metadata, raw_entities)
     except Exception as exc:
@@ -97,15 +100,12 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
         traceback.print_exc()
         return out
     from intelliqx_graph.serialization import graph_from_json
+
     sg = graph_from_json(graph_json_str)
     layer_graphs = dict(sg.layers)  # dict[GraphLayer, SGIRGraph]
-    layer_node_counts = {
-        layer.value: len(layer_graphs[layer].nodes) for layer in layer_graphs
-    }
+    layer_node_counts = {layer.value: len(layer_graphs[layer].nodes) for layer in layer_graphs}
 
-    layer_node_counts = {
-        layer.value: len(g.nodes) for layer, g in layer_graphs.items()
-    }
+    layer_node_counts = {layer.value: len(g.nodes) for layer, g in layer_graphs.items()}
     out["layer_node_counts"] = layer_node_counts
     print(f"  scanned {metadata['total_files']} files, {metadata['total_lines']} LOC")
     print(f"  parsed {len(raw_entities)} entities: {dict(entity_types.most_common(6))}")
@@ -140,10 +140,9 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
     in_deg = Counter(e.target for e in (call_layer.edges if call_layer else []))
     out_deg = Counter(e.source for e in (call_layer.edges if call_layer else []))
     node_ids = call_layer.node_ids if call_layer else set()
-    entry_points = [
-        nid for nid in node_ids
-        if in_deg.get(nid, 0) == 0 and out_deg.get(nid, 0) > 0
-    ][:25]
+    entry_points = [nid for nid in node_ids if in_deg.get(nid, 0) == 0 and out_deg.get(nid, 0) > 0][
+        :25
+    ]
     print(f"  entry points identified: {len(entry_points)}")
 
     graph_json = sg.model_dump_json()
@@ -253,12 +252,7 @@ def find_unused_imports_ast(py_files: list[Path]) -> list[tuple[Path, int, str, 
                         continue
                     if line_has_noqa(node.lineno):
                         continue
-                    findings.append((
-                        fp,
-                        node.lineno,
-                        f"unused import: {alias.name}",
-                        name,
-                    ))
+                    findings.append((fp, node.lineno, f"unused import: {alias.name}", name))
             elif isinstance(node, ast.ImportFrom):
                 # ``from __future__ import annotations`` is a special
                 # directive that does not bind a module name —
@@ -275,12 +269,9 @@ def find_unused_imports_ast(py_files: list[Path]) -> list[tuple[Path, int, str, 
                         continue
                     if line_has_noqa(node.lineno):
                         continue
-                    findings.append((
-                        fp,
-                        node.lineno,
-                        f"unused import: {name} from {node.module or '?'}",
-                        name,
-                    ))
+                    findings.append(
+                        (fp, node.lineno, f"unused import: {name} from {node.module or '?'}", name)
+                    )
     return findings
 
 
@@ -382,8 +373,7 @@ def find_missing_all(py_files: list[Path]) -> list[Path]:
         if any(
             isinstance(node, ast.Assign)
             and any(
-                isinstance(target, ast.Name) and target.id == "__all__"
-                for target in node.targets
+                isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
             )
             for node in tree.body
         ):
@@ -392,7 +382,8 @@ def find_missing_all(py_files: list[Path]) -> list[Path]:
         # If the file has nothing but the module docstring, it's
         # a documentation placeholder, not an importable module.
         non_docstring = [
-            n for n in tree.body
+            n
+            for n in tree.body
             if not (
                 isinstance(n, ast.Expr)
                 and isinstance(n.value, ast.Constant)
@@ -433,8 +424,9 @@ def find_print_leaks(py_files: list[Path]) -> list[tuple[Path, int, str]]:
 
         def is_in_docstring(lineno: int, _tree: ast.Module = tree) -> bool:
             for node in ast.walk(_tree):
-                if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef,
-                                      ast.ClassDef)):
+                if isinstance(
+                    node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+                ):
                     docstring_node = node.body[0] if node.body else None
                     if (
                         isinstance(docstring_node, ast.Expr)
@@ -563,8 +555,7 @@ def auto_fix_add_all(py_files: list[Path], apply: bool) -> dict[str, Any]:
         if any(
             isinstance(node, ast.Assign)
             and any(
-                isinstance(target, ast.Name) and target.id == "__all__"
-                for target in node.targets
+                isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
             )
             for node in tree.body
         ):
@@ -582,9 +573,8 @@ def auto_fix_add_all(py_files: list[Path], apply: bool) -> dict[str, Any]:
             elif isinstance(node, ast.Import):
                 for alias in node.names:
                     names.append(alias.asname or alias.name.split(".")[0])
-            elif (
-                isinstance(node, (ast.FunctionDef, ast.ClassDef))
-                and not node.name.startswith("_")
+            elif isinstance(node, (ast.FunctionDef, ast.ClassDef)) and not node.name.startswith(
+                "_"
             ):
                 names.append(node.name)
             elif isinstance(node, ast.Assign):
@@ -621,11 +611,7 @@ def auto_fix_add_all(py_files: list[Path], apply: bool) -> dict[str, Any]:
             fp.write_text(new_source, encoding="utf-8")
             files_touched.add(fp)
         added += 1
-    return {
-        "added": added,
-        "files_touched": len(files_touched),
-        "applied": apply,
-    }
+    return {"added": added, "files_touched": len(files_touched), "applied": apply}
 
 
 def auto_fix_underscore(py_files: list[Path], apply: bool) -> dict[str, Any]:
@@ -663,16 +649,10 @@ def auto_fix_underscore(py_files: list[Path], apply: bool) -> dict[str, Any]:
                 fp.write_text(new_text, encoding="utf-8")
             fixed_total += changed_in_file
             files_touched.add(fp)
-    return {
-        "findings": fixed_total,
-        "files_touched": len(files_touched),
-        "applied": apply,
-    }
+    return {"findings": fixed_total, "files_touched": len(files_touched), "applied": apply}
 
 
-def auto_fix_unused_imports(
-    py_files: list[Path], apply: bool
-) -> dict[str, Any]:
+def auto_fix_unused_imports(py_files: list[Path], apply: bool) -> dict[str, Any]:
     """Remove unused imports detected by AST analysis."""
     removed_total = 0
     files_touched: set[Path] = set()
@@ -731,9 +711,13 @@ def auto_fix_unused_imports(
         unused_lines.sort(key=lambda x: -x[0])
         modified = False
         for start_idx, end_idx in unused_lines:
-            if not (0 <= start_idx < len(lines_with_endings) and 0 <= end_idx < len(lines_with_endings)):
+            if not (
+                0 <= start_idx < len(lines_with_endings) and 0 <= end_idx < len(lines_with_endings)
+            ):
                 continue
-            indent = len(lines_with_endings[start_idx]) - len(lines_with_endings[start_idx].lstrip())
+            indent = len(lines_with_endings[start_idx]) - len(
+                lines_with_endings[start_idx].lstrip()
+            )
             blank = " " * indent + "\n"
             for idx in range(end_idx, start_idx - 1, -1):
                 if idx < len(lines_with_endings) and lines_with_endings[idx].strip() == "":
@@ -769,10 +753,7 @@ def run_ruff_and_tests() -> tuple[bool, bool]:
     """Run ruff and pytest, return (ruff_clean, tests_pass)."""
     print("\nrunning ruff check...")
     ruff_clean = subprocess.run(
-        ["uv", "run", "ruff", "check", "."],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
+        ["uv", "run", "ruff", "check", "."], cwd=REPO_ROOT, capture_output=True, text=True
     )
     if ruff_clean.returncode != 0:
         print(ruff_clean.stdout)
@@ -781,10 +762,7 @@ def run_ruff_and_tests() -> tuple[bool, bool]:
 
     print("running pytest...")
     test_result = subprocess.run(
-        ["uv", "run", "pytest", "tests/unit", "-q"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
+        ["uv", "run", "pytest", "tests/unit", "-q"], cwd=REPO_ROOT, capture_output=True, text=True
     )
     print(test_result.stdout[-2000:])
     if test_result.returncode != 0:
@@ -795,14 +773,14 @@ def run_ruff_and_tests() -> tuple[bool, bool]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--apply", action="store_true",
-                        help="Apply safe auto-fixes instead of dry-run")
+    parser.add_argument(
+        "--apply", action="store_true", help="Apply safe auto-fixes instead of dry-run"
+    )
     parser.add_argument("--repo", default=str(REPO_ROOT))
     args = parser.parse_args()
 
     py_files = [
-        p for p in Path(args.repo).rglob("*.py")
-        if ".venv" not in p.parts and ".git" not in p.parts
+        p for p in Path(args.repo).rglob("*.py") if ".venv" not in p.parts and ".git" not in p.parts
     ]
     print(f"found {len(py_files)} .py files in repo")
 
@@ -865,7 +843,9 @@ def main() -> int:
     scorecard["underscore"] = fix
 
     unused_fix = auto_fix_unused_imports(py_files, apply=args.apply)
-    print(f"  unused imports removed: {unused_fix['removed']} across {unused_fix['files_touched']} files")
+    print(
+        f"  unused imports removed: {unused_fix['removed']} across {unused_fix['files_touched']} files"
+    )
     if unused_fix["skipped"]:
         print(f"  skipped: {unused_fix['skipped']}")
     scorecard["unused_imports"] = unused_fix

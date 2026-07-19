@@ -89,24 +89,31 @@ def scan_repository_tool(repo_path: str) -> dict[str, Any]:
     return metadata.model_dump(mode="json")
 
 
-def parse_repository_tool(repo_path: str, languages: list[str] | None = None) -> list[dict[str, Any]]:
-    """Parse repository files and return entities.
+def parse_repository_tool(
+    repo_path: str, languages: list[str] | None = None
+) -> dict[str, list[dict[str, Any]]]:
+    """Parse repository files and return entities and per-file errors.
 
     Uses Python parser for .py files, tree-sitter for others,
-    and regex fallback for unsupported languages.
+    and regex fallback for unsupported languages. ``SyntaxError`` and
+    file-read errors are no longer swallowed: they appear in the
+    ``errors`` list so callers can observe them.
+
+    The successful return shape is preserved as the ``entities``
+    list (``list[dict[str, Any]]`` of model dumps), matching the
+    pre-existing contract for callers that iterate entity dicts.
     """
     from pathlib import Path
 
     root = Path(repo_path)
     if not root.is_dir():
-        return []
+        return {"entities": [], "errors": [{"file": repo_path, "error": "not a directory"}]}
 
-    parsers_map: dict[str, Any] = {
-        ".py": PythonParser(),
-    }
+    parsers_map: dict[str, Any] = {".py": PythonParser()}
 
     try:
         from intelliqx_graph.parsers.typescript_parser import TypeScriptParser
+
         ts_parser = TypeScriptParser()
         for ext in ts_parser.supported_extensions():
             parsers_map[ext] = ts_parser
@@ -115,6 +122,7 @@ def parse_repository_tool(repo_path: str, languages: list[str] | None = None) ->
 
     try:
         from intelliqx_graph.parsers.go_parser import GoParser
+
         go_parser = GoParser()
         for ext in go_parser.supported_extensions():
             parsers_map[ext] = go_parser
@@ -123,6 +131,7 @@ def parse_repository_tool(repo_path: str, languages: list[str] | None = None) ->
 
     try:
         from intelliqx_graph.parsers.java_parser import JavaParser
+
         java_parser = JavaParser()
         for ext in java_parser.supported_extensions():
             parsers_map[ext] = java_parser
@@ -130,11 +139,25 @@ def parse_repository_tool(repo_path: str, languages: list[str] | None = None) ->
         pass
 
     from intelliqx_graph.parsers.fallback_parser import FallbackParser
+
     fallback = FallbackParser()
 
     all_entities: list[ParsedEntity] = []
-    skip_dirs = {".git", "__pycache__", "node_modules", "vendor", ".venv", "venv",
-                 ".mypy_cache", ".pytest_cache", ".ruff_cache", "target", "dist", "build"}
+    all_errors: list[dict[str, str]] = []
+    skip_dirs = {
+        ".git",
+        "__pycache__",
+        "node_modules",
+        "vendor",
+        ".venv",
+        "venv",
+        ".mypy_cache",
+        ".pytest_cache",
+        ".ruff_cache",
+        "target",
+        "dist",
+        "build",
+    }
 
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if d not in skip_dirs]
@@ -145,15 +168,14 @@ def parse_repository_tool(repo_path: str, languages: list[str] | None = None) ->
             try:
                 entities = parser.parse_file(fp)
                 all_entities.extend(entities)
-            except Exception:
-                pass
+            except Exception as exc:
+                all_errors.append({"file": str(fp), "error": str(exc)})
 
-    return [e.model_dump(mode="json") for e in all_entities]
+    return {"entities": [e.model_dump(mode="json") for e in all_entities], "errors": all_errors}
 
 
 def build_software_graph_tool(
-    repository_metadata: dict[str, Any],
-    parsed_entities: list[dict[str, Any]],
+    repository_metadata: dict[str, Any], parsed_entities: list[dict[str, Any]]
 ) -> str:
     """Build a SoftwareGraph from parsed entities.
 
@@ -170,21 +192,20 @@ def build_software_graph_tool(
     repo = RepositoryMetadata.model_validate(repository_metadata)
     entities = [ParsedEntity.model_validate(e) for e in parsed_entities]
 
-    parsed_data: dict[str, Any] = {
-        "entities": entities,
-        "repository": repo,
-    }
+    parsed_data: dict[str, Any] = {"entities": entities, "repository": repo}
 
     sg = SoftwareGraph(repository=repo)
 
     try:
         from intelliqx_graph.optimization.layers import create_default_registry
+
         registry = create_default_registry()
         layer_graphs = registry.build_all(parsed_data)
         for _layer, graph in layer_graphs.items():
             sg.add_layer(graph)
     except Exception:
         from intelliqx_graph.models import GraphLayer
+
         for layer in GraphLayer:
             sg.add_layer(SGIRGraph(layer=layer))
 
@@ -240,9 +261,7 @@ def analyze_security_tool(software_graph_json: str) -> dict[str, Any]:
 
 
 def optimize_graph_tool(
-    software_graph_json: str,
-    entry_points: list[str] | None = None,
-    target_language: str = "python",
+    software_graph_json: str, entry_points: list[str] | None = None, target_language: str = "python"
 ) -> dict[str, Any]:
     """Optimize the software graph.
 
@@ -261,10 +280,7 @@ def optimize_graph_tool(
     return result.model_dump(mode="json")
 
 
-def generate_code_tool(
-    software_graph_json: str,
-    target_language: str = "python",
-) -> dict[str, str]:
+def generate_code_tool(software_graph_json: str, target_language: str = "python") -> dict[str, str]:
     """Generate source code from the optimized graph.
 
     Produces source files organized in the target language's

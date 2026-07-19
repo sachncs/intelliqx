@@ -47,6 +47,8 @@ class ParsedEntity(BaseModel):
     import_source: str | None = None
     import_names: list[str] = Field(default_factory=list)
     is_from_import: bool = False
+    import_aliases: list[str] = Field(default_factory=list)
+    import_level: int = 0
 
     # For classes
     bases: list[str] = Field(default_factory=list)
@@ -121,10 +123,7 @@ class BaseParser(abc.ABC):
                 errors.append({"file": str(fp), "error": str(exc)})
 
         return ParseResult(
-            language=self.language,
-            files_parsed=parsed_count,
-            entities=all_entities,
-            errors=errors,
+            language=self.language, files_parsed=parsed_count, entities=all_entities, errors=errors
         )
 
     def supported_extensions(self) -> list[str]:
