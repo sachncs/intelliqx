@@ -20,6 +20,7 @@ dependencies = [
     "intelliqx-sdk",
     "intelliqx-okf",
     "intelliqx-graph",
+    "tqdm>=4.66",
 ]
 
 [tool.uv.sources]

@@ -482,6 +482,7 @@ dependencies = [
     { name = "intelliqx-tenant" },
     { name = "intelliqx-tools" },
     { name = "intelliqx-vector" },
+    { name = "tqdm" },
 ]
 
 [package.dev-dependencies]
@@ -512,6 +513,7 @@ requires-dist = [
     { name = "intelliqx-tenant", editable = "libs/intelliqx-tenant" },
     { name = "intelliqx-tools", editable = "libs/intelliqx-tools" },
     { name = "intelliqx-vector", editable = "libs/intelliqx-vector" },
+    { name = "tqdm", specifier = ">=4.66" },
 ]
 
 [package.metadata.requires-dev]
