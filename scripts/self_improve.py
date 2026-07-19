@@ -7,7 +7,7 @@ This proves the platform works end-to-end. The driver:
    optimize -> codegen) against the repo root.
 2. Surfaces every SGIR finding (architecture, flow, perf, security,
    duplicates, dead code, parallel branches, generated files).
-3. Runs 10 heuristic auditors that complement the SGIR findings:
+3. Runs 9 heuristic auditors that complement the SGIR findings:
 
    * lingering __ name-mangling (regression safety net)
    * unused imports
@@ -15,7 +15,6 @@ This proves the platform works end-to-end. The driver:
    * missing module __all__
    * bare ``except`` clauses
    * silent ``except: pass`` blocks
-   * print() leaks in libs (excluding docstring examples)
    * TODO/FIXME/HACK markers
    * id()-based caches (memory leak risk)
    * public functions missing docstrings
@@ -40,21 +39,22 @@ import json
 import re
 import subprocess
 import sys
-import traceback
 from collections import Counter
 from pathlib import Path
 from typing import Any
+
+from intelliqx_observability.logging import configure_logging, get_logger
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "agents"))
 
+_logger = get_logger(__name__)
+
 
 def section(title: str) -> None:
-    print("\n" + "=" * 78)
-    print(f"  {title}")
-    print("=" * 78)
+    _logger.info("\n{}\n  {}\n{}", "=" * 78, title, "=" * 78)
 
 
 def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
@@ -97,7 +97,7 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
         graph_json_str = build_software_graph(metadata, raw_entities)
     except Exception as exc:
         out["errors"].append(f"build_software_graph crashed: {exc!r}")
-        traceback.print_exc()
+        _logger.exception("build_software_graph crashed")
         return out
     from intelliqx_graph.serialization import graph_from_json
 
@@ -107,10 +107,10 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
 
     layer_node_counts = {layer.value: len(g.nodes) for layer, g in layer_graphs.items()}
     out["layer_node_counts"] = layer_node_counts
-    print(f"  scanned {metadata['total_files']} files, {metadata['total_lines']} LOC")
-    print(f"  parsed {len(raw_entities)} entities: {dict(entity_types.most_common(6))}")
+    _logger.info("  scanned {} files, {} LOC", metadata["total_files"], metadata["total_lines"])
+    _logger.info("  parsed {} entities: {}", len(raw_entities), dict(entity_types.most_common(6)))
     for layer_name, count in layer_node_counts.items():
-        print(f"    layer {layer_name}: {count} nodes")
+        _logger.info("    layer {}: {} nodes", layer_name, count)
 
     out["graph_node_total"] = sum(layer_node_counts.values())
 
@@ -129,11 +129,12 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
             for key in payload:
                 val = payload[key]
                 if isinstance(val, list):
-                    print(f"  {name}.{key}: {len(val)} item(s)")
+                    _logger.info("  {}.{}: {} item(s)", name, key, len(val))
                 elif (isinstance(val, dict) and val) or isinstance(val, bool):
-                    print(f"  {name}.{key}: {val}")
+                    _logger.info("  {}.{}", name, key, value=val)
         except Exception as exc:
             out["errors"].append(f"{name} agent crashed: {exc!r}")
+            _logger.error("{} agent crashed: {}", name, exc)
 
     section("Optimization passes")
     call_layer = sg.layers.get(GraphLayer.CALL)
@@ -143,45 +144,49 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
     entry_points = [nid for nid in node_ids if in_deg.get(nid, 0) == 0 and out_deg.get(nid, 0) > 0][
         :25
     ]
-    print(f"  entry points identified: {len(entry_points)}")
+    _logger.info("  entry points identified: {}", len(entry_points))
 
     graph_json = sg.model_dump_json()
     try:
         opt_result = optimize_graph(graph_json, entry_points, "python")
         out["optimization"] = opt_result
         s = opt_result.get("summary", {}) if isinstance(opt_result, dict) else {}
-        print(f"  duplicates: {s.get('duplicate_pairs_found', '?')}")
-        print(f"  parallel branches: {s.get('parallel_branches_found', '?')}")
-        print(f"  passes verified: {s.get('pass_count', '?')}")
-        print(f"  behaviour preserved: {s.get('all_behavior_preserved', '?')}")
+        _logger.info("  duplicates: {}", s.get("duplicate_pairs_found", "?"))
+        _logger.info("  parallel branches: {}", s.get("parallel_branches_found", "?"))
+        _logger.info("  passes verified: {}", s.get("pass_count", "?"))
+        _logger.info("  behaviour preserved: {}", s.get("all_behavior_preserved", "?"))
     except Exception as exc:
         out["errors"].append(f"optimization crashed: {exc!r}")
+        _logger.error("optimization crashed: {}", exc)
 
     section("Code generation")
     try:
         code = generate_code(graph_json, "python")
         if isinstance(code, dict):
             out["generated_files"] = len(code)
-            print(f"  generated {len(code)} files (sample):")
+            _logger.info("  generated {} files (sample):", len(code))
             for k in list(code.keys())[:5]:
-                print(f"    {k}")
+                _logger.info("    {}", k)
         else:
             out["generated_files"] = 0
-            print(f"  generate_code returned: {code}")
+            _logger.info("  generate_code returned", value=code)
     except Exception as exc:
         out["errors"].append(f"codegen crashed: {exc!r}")
+        _logger.error("codegen crashed: {}", exc)
 
     try:
         dups = detect_duplicates(sg, index)
         out["duplicates_direct"] = [list(d) for d in dups]
     except Exception as exc:
         out["warnings"].append(f"detect_duplicates crashed: {exc!r}")
+        _logger.error("detect_duplicates crashed: {}", exc)
 
     try:
         branches = parallelize_independent_branches(sg, index)
         out["parallel_branches_direct"] = [sorted(b) for b in branches[:25]]
     except Exception as exc:
         out["warnings"].append(f"parallelize crashed: {exc!r}")
+        _logger.error("parallelize crashed: {}", exc)
 
     try:
         if call_layer and call_layer.edges and call_layer.node_ids:
@@ -189,6 +194,7 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
             out["dead_code_scan"] = "survived"
     except Exception as exc:
         out["warnings"].append(f"remove_dead_nodes crashed: {exc!r}")
+        _logger.error("remove_dead_nodes crashed: {}", exc)
 
     return out
 
@@ -393,62 +399,6 @@ def find_missing_all(py_files: list[Path]) -> list[Path]:
         if not non_docstring:
             continue
         findings.append(fp)
-    return findings
-
-
-def find_print_leaks(py_files: list[Path]) -> list[tuple[Path, int, str]]:
-    """Find executable ``print()`` calls left in production libs code.
-
-    Production libraries should report via a logger or raise;
-    ``print()`` goes directly to stderr/stdout and is invisible
-    to callers. The auditor counts only top-level ``print()`` and
-    ``print()`` calls inside function bodies, never docstring
-    examples. CLI entry points (``_smoke.py``, ``__main__.py``)
-    are explicitly exempt — they exist to write to stdout.
-    """
-    findings: list[tuple[Path, int, str]] = []
-    cli_files = {"_smoke.py", "__main__.py"}
-    for fp in py_files:
-        if "scripts" in fp.parts or "tests" in fp.parts:
-            continue
-        if fp.name in cli_files:
-            continue
-        try:
-            source = fp.read_text(encoding="utf-8", errors="ignore")
-        except (OSError, UnicodeError):
-            continue
-        try:
-            tree = ast.parse(source)
-        except SyntaxError:
-            continue
-
-        def is_in_docstring(lineno: int, _tree: ast.Module = tree) -> bool:
-            for node in ast.walk(_tree):
-                if isinstance(
-                    node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-                ):
-                    docstring_node = node.body[0] if node.body else None
-                    if (
-                        isinstance(docstring_node, ast.Expr)
-                        and isinstance(docstring_node.value, ast.Constant)
-                        and isinstance(docstring_node.value.value, str)
-                    ):
-                        start = docstring_node.lineno
-                        end = getattr(docstring_node, "end_lineno", start) or start
-                        if start <= lineno <= end:
-                            return True
-            return False
-
-        for node in ast.walk(tree):
-            if (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id == "print"
-            ):
-                src = ast.unparse(node)
-                if is_in_docstring(node.lineno):
-                    continue
-                findings.append((fp, node.lineno, src))
     return findings
 
 
@@ -751,22 +701,21 @@ def auto_fix_unused_imports(py_files: list[Path], apply: bool) -> dict[str, Any]
 
 def run_ruff_and_tests() -> tuple[bool, bool]:
     """Run ruff and pytest, return (ruff_clean, tests_pass)."""
-    print("\nrunning ruff check...")
+    _logger.info("running ruff check...")
     ruff_clean = subprocess.run(
         ["uv", "run", "ruff", "check", "."], cwd=REPO_ROOT, capture_output=True, text=True
     )
     if ruff_clean.returncode != 0:
-        print(ruff_clean.stdout)
-        print(ruff_clean.stderr)
+        _logger.error("ruff output:\n{}\n{}", ruff_clean.stdout, ruff_clean.stderr)
         return False, False
 
-    print("running pytest...")
+    _logger.info("running pytest...")
     test_result = subprocess.run(
         ["uv", "run", "pytest", "tests/unit", "-q"], cwd=REPO_ROOT, capture_output=True, text=True
     )
-    print(test_result.stdout[-2000:])
+    _logger.info("pytest output:\n{}", test_result.stdout[-2000:])
     if test_result.returncode != 0:
-        print(test_result.stderr[-2000:])
+        _logger.error("pytest errors:\n{}", test_result.stderr[-2000:])
         return True, False
     return True, True
 
@@ -778,93 +727,89 @@ def main() -> int:
     )
     parser.add_argument("--repo", default=str(REPO_ROOT))
     args = parser.parse_args()
+    configure_logging(level="INFO", json_logs=False, component="self-improve")
 
     py_files = [
         p for p in Path(args.repo).rglob("*.py") if ".venv" not in p.parts and ".git" not in p.parts
     ]
-    print(f"found {len(py_files)} .py files in repo")
+    _logger.info(f"found {len(py_files)} .py files in repo")
 
     section("Step 1 — SGIR pipeline against the intelliqx repo")
     pipeline_result = run_sgir_pipeline(args.repo)
 
     section("Step 2 — Heuristic auditors")
     underscore_findings = find_lingering_double_underscore(py_files)
-    print(f"  lingering __ name-mangling: {len(underscore_findings)}")
+    _logger.info(f"  lingering __ name-mangling: {len(underscore_findings)}")
     for fp, ln, _line, name in underscore_findings[:10]:
-        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  -> self.{name}")
+        _logger.info(f"    {fp.relative_to(REPO_ROOT)}:{ln}  -> self.{name}")
 
     unused = find_unused_imports_ast(py_files)
-    print(f"  unused imports (AST): {len(unused)}")
+    _logger.info(f"  unused imports (AST): {len(unused)}")
     for fp, ln, msg, _name in unused[:15]:
-        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  {msg}")
+        _logger.info(f"    {fp.relative_to(REPO_ROOT)}:{ln}  {msg}")
 
     long_fns = find_long_functions(py_files, threshold=50)
-    print(f"  long functions (>= 50 lines): {len(long_fns)}")
+    _logger.info(f"  long functions (>= 50 lines): {len(long_fns)}")
     for fp, info, ln in long_fns[:10]:
-        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  {info}")
+        _logger.info(f"    {fp.relative_to(REPO_ROOT)}:{ln}  {info}")
 
     bare_exc = find_bare_except(py_files)
     bare = [f for f in bare_exc if "bare" in f[2]]
     silent = [f for f in bare_exc if "silent" in f[2]]
-    print(f"  bare except: {len(bare)}; silent except:pass: {len(silent)}")
+    _logger.info(f"  bare except: {len(bare)}; silent except:pass: {len(silent)}")
     for fp, ln, msg in (bare + silent)[:10]:
-        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  {msg}")
+        _logger.info(f"    {fp.relative_to(REPO_ROOT)}:{ln}  {msg}")
 
     missing_all = find_missing_all(py_files)
-    print(f"  __init__.py files missing __all__: {len(missing_all)}")
+    _logger.info(f"  __init__.py files missing __all__: {len(missing_all)}")
     for fp in missing_all[:10]:
-        print(f"    {fp.relative_to(REPO_ROOT)}")
-
-    print_leaks = find_print_leaks(py_files)
-    print(f"  print() leaks in libs/: {len(print_leaks)}")
-    for fp, ln, line in print_leaks[:10]:
-        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  {line[:80]}")
+        _logger.info(f"    {fp.relative_to(REPO_ROOT)}")
 
     todo = find_todo_fixme_markers(py_files)
-    print(f"  TODO/FIXME/HACK markers: {len(todo)}")
+    _logger.info(f"  TODO/FIXME/HACK markers: {len(todo)}")
     for fp, ln, line, marker in todo[:10]:
-        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  [{marker}] {line[:80]}")
+        _logger.info(f"    {fp.relative_to(REPO_ROOT)}:{ln}  [{marker}] {line[:80]}")
 
     id_caches = find_id_based_caches(py_files)
-    print(f"  id()-based caches: {len(id_caches)}")
+    _logger.info(f"  id()-based caches: {len(id_caches)}")
     for fp, ln, line, kind in id_caches[:10]:
-        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  {kind}: {line[:80]}")
+        _logger.info(f"    {fp.relative_to(REPO_ROOT)}:{ln}  {kind}: {line[:80]}")
 
     missing_docs = find_missing_public_func_docstrings(py_files)
-    print(f"  public funcs missing docstrings: {len(missing_docs)}")
+    _logger.info(f"  public funcs missing docstrings: {len(missing_docs)}")
     for fp, name, ln in missing_docs[:10]:
-        print(f"    {fp.relative_to(REPO_ROOT)}:{ln}  def {name}()")
+        _logger.info(f"    {fp.relative_to(REPO_ROOT)}:{ln}  def {name}()")
 
     section("Step 3 — Auto-fixes" + (" (APPLIED)" if args.apply else " (dry-run)"))
 
     scorecard: dict[str, Any] = {}
     fix = auto_fix_underscore(py_files, apply=args.apply)
-    print(f"  underscore -> public: {fix['findings']} across {fix['files_touched']} files")
+    _logger.info(f"  underscore -> public: {fix['findings']} across {fix['files_touched']} files")
     scorecard["underscore"] = fix
 
     unused_fix = auto_fix_unused_imports(py_files, apply=args.apply)
-    print(
+    _logger.info(
         f"  unused imports removed: {unused_fix['removed']} across {unused_fix['files_touched']} files"
     )
     if unused_fix["skipped"]:
-        print(f"  skipped: {unused_fix['skipped']}")
+        _logger.info(f"  skipped: {unused_fix['skipped']}")
     scorecard["unused_imports"] = unused_fix
 
     all_fix = auto_fix_add_all(py_files, apply=args.apply)
-    print(f"  __all__ added: {all_fix['added']} files ({all_fix['files_touched']} touched)")
+    _logger.info(f"  __all__ added: {all_fix['added']} files ({all_fix['files_touched']} touched)")
     scorecard["add_all"] = all_fix
 
     section("Step 4 — Pipeline errors discovered")
     if pipeline_result["errors"]:
         for err in pipeline_result["errors"]:
-            print(f"  ! {err}")
+            _logger.error(f"  ! {err}")
     else:
-        print("  none")
+        _logger.info("  none")
 
     section("Step 5 — Verifying")
     ruff_ok, tests_ok = run_ruff_and_tests()
-    print(f"  ruff: {'clean' if ruff_ok else 'FAIL'}")
-    print(f"  tests: {'pass' if tests_ok else 'FAIL'}")
+    _logger.info(f"  ruff: {'clean' if ruff_ok else 'FAIL'}")
+    _logger.info(f"  tests: {'pass' if tests_ok else 'FAIL'}")
 
     section("Step 6 — Saving report")
     report = {
@@ -887,7 +832,6 @@ def main() -> int:
             "bare_except": len(bare),
             "silent_except_pass": len(silent),
             "missing_all": len(missing_all),
-            "print_leaks": len(print_leaks),
             "todo_fixme": len(todo),
             "id_based_caches": len(id_caches),
             "missing_docstrings": len(missing_docs),
@@ -902,7 +846,7 @@ def main() -> int:
     report_path = REPO_ROOT / "scripts" / "self_improve_report.json"
     report_path.parent.mkdir(exist_ok=True)
     report_path.write_text(json.dumps(report, indent=2, default=str))
-    print(f"  report: {report_path}")
+    _logger.info(f"  report: {report_path}")
 
     return 0 if (ruff_ok and tests_ok) else 2
 

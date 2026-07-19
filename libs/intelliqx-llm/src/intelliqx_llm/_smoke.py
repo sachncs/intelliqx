@@ -13,7 +13,7 @@ Examples:
     INTELLIQX_LLM_BACKEND=minimax MINIMAX_API_KEY=sk-... \\
         intelliqx-llm-smoke --prompt "Hello from MiniMax!"
 
-The CLI prints the raw response content plus a one-line
+The CLI emits the raw response content plus a one-line
 per-call latency report. A non-zero exit code is returned when
 the configured backend raises an exception that the adapter
 cannot catch.
@@ -28,7 +28,11 @@ import sys
 import time
 from typing import Any
 
+from intelliqx_observability.logging import configure_logging, get_logger
+
 from intelliqx_llm.client import CompletionRequest, get_llm_client
+
+_logger = get_logger(__name__)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -59,12 +63,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--show-env",
         action="store_true",
-        help="Print the active INTELLIQX_LLM_BACKEND, model, and dim before running.",
+        help="Emit the active INTELLIQX_LLM_BACKEND, model, and dim before running.",
     )
     return parser.parse_args(argv)
 
 
-def print_env(client: Any, args: argparse.Namespace) -> None:
+def log_environment(client: Any, args: argparse.Namespace) -> None:
     backend = os.environ.get("INTELLIQX_LLM_BACKEND", "fake")
     model = args.model or getattr(client, "model", None) or getattr(client, "DEFAULT_MODEL", "?")
     embed_model = getattr(client, "embed_model", None) or "?"
@@ -72,10 +76,13 @@ def print_env(client: Any, args: argparse.Namespace) -> None:
     available = getattr(client, "available", None)
     if available is None:
         available = "<not-applicable>"
-    print(
-        f"backend={backend}  model={model}  embed_model={embed_model}  "
-        f"embed_dim={dim}  available={available}",
-        flush=True,
+    _logger.info(
+        "backend={} model={} embed_model={} embed_dim={} available={}",
+        backend,
+        model,
+        embed_model,
+        dim,
+        available,
     )
 
 
@@ -89,7 +96,7 @@ async def build_client(args: argparse.Namespace) -> tuple[Any, int]:
     try:
         return get_llm_client(), 0
     except Exception as exc:
-        print(f"failed to build LLM client: {type(exc).__name__}: {exc}", file=sys.stderr)
+        _logger.error("failed to build LLM client: {}: {}", type(exc).__name__, exc)
         return None, 1
 
 
@@ -98,7 +105,7 @@ async def run_complete(args: argparse.Namespace) -> int:
     if rc != 0:
         return rc
     if args.show_env:
-        print_env(client, args)
+        log_environment(client, args)
     request = CompletionRequest(
         model=args.model or "auto",
         messages=[{"role": "user", "content": args.prompt}],
@@ -108,18 +115,19 @@ async def run_complete(args: argparse.Namespace) -> int:
     try:
         response = await client.complete(request)
     except Exception as exc:
-        print(f"complete() raised {type(exc).__name__}: {exc}", file=sys.stderr)
+        _logger.error("complete() raised {}: {}", type(exc).__name__, exc)
         return 1
     duration_ms = int((time.monotonic() - start) * 1000)
-    print("--- response ---", flush=True)
-    print(response.content, flush=True)
-    print("--- meta ---", flush=True)
-    print(
-        f"model={response.model}  finish_reason={response.finish_reason}  "
-        f"prompt_tokens={response.usage.prompt_tokens}  "
-        f"completion_tokens={response.usage.completion_tokens}  "
-        f"duration_ms={duration_ms}",
-        flush=True,
+    _logger.info("--- response ---")
+    _logger.info("{}", response.content)
+    _logger.info("--- meta ---")
+    _logger.info(
+        "model={} finish_reason={} prompt_tokens={} completion_tokens={} duration_ms={}",
+        response.model,
+        response.finish_reason,
+        response.usage.prompt_tokens,
+        response.usage.completion_tokens,
+        duration_ms,
     )
     return 0
 
@@ -129,23 +137,27 @@ async def run_embed(args: argparse.Namespace) -> int:
     if rc != 0:
         return rc
     if args.show_env:
-        print_env(client, args)
+        log_environment(client, args)
     start = time.monotonic()
     try:
         vectors = await client.embed([args.prompt], model=args.model or "auto")
     except Exception as exc:
-        print(f"embed() raised {type(exc).__name__}: {exc}", file=sys.stderr)
+        _logger.error("embed() raised {}: {}", type(exc).__name__, exc)
         return 1
     duration_ms = int((time.monotonic() - start) * 1000)
-    print("--- embed ---", flush=True)
-    print(
-        f"count={len(vectors)}  dim={len(vectors[0]) if vectors else 0}  duration_ms={duration_ms}"
+    _logger.info("--- embed ---")
+    _logger.info(
+        "count={} dim={} duration_ms={}",
+        len(vectors),
+        len(vectors[0]) if vectors else 0,
+        duration_ms,
     )
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    configure_logging(level="INFO", json_logs=False, component="llm-smoke")
     runner = run_embed if args.embed else run_complete
     return asyncio.run(runner(args))
 

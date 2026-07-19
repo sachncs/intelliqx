@@ -6,17 +6,21 @@ so callers can collect all issues in one pass rather than failing fast.
 
 Typical usage::
 
+    from intelliqx_observability.logging import configure_logging, get_logger
     from intelliqx_okf.validator import validate_concept, validate_bundle
     from intelliqx_okf import load_concept, load_bundle
 
+    configure_logging(json_logs=False, component="okf-validator")
+    logger = get_logger(__name__)
     concept = load_concept("tables/users.md")
     result = validate_concept(concept)
     if not result.ok:
         for issue in result.issues:
-            print(issue)
+            logger.info("{}", issue)
 
     bundle = load_bundle("./okf-bundle")
     bundle_result = validate_bundle(bundle)
+
 """
 
 from __future__ import annotations

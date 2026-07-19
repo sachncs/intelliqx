@@ -51,11 +51,11 @@ def test_main_complete_smoke(monkeypatch: pytest.MonkeyPatch, capsys):
 
     rc = main(["--prompt", "smoke-test"])
     assert rc == 0
-    out = capsys.readouterr().out
-    assert "smoke-ok" in out
-    assert "--- response ---" in out
-    assert "--- meta ---" in out
-    assert "duration_ms=" in out
+    err = capsys.readouterr().err
+    assert "smoke-ok" in err
+    assert "--- response ---" in err
+    assert "--- meta ---" in err
+    assert "duration_ms=" in err
 
 
 def test_main_embed_smoke(monkeypatch: pytest.MonkeyPatch, capsys):
@@ -63,10 +63,10 @@ def test_main_embed_smoke(monkeypatch: pytest.MonkeyPatch, capsys):
     set_llm_client(FakeLLMClient(dim=8))
     rc = main(["--embed", "--prompt", "embed-me"])
     assert rc == 0
-    out = capsys.readouterr().out
-    assert "--- embed ---" in out
-    assert "count=1" in out
-    assert "dim=8" in out
+    err = capsys.readouterr().err
+    assert "--- embed ---" in err
+    assert "count=1" in err
+    assert "dim=8" in err
 
 
 def test_main_unknown_backend_raises(monkeypatch: pytest.MonkeyPatch, capsys):
@@ -98,9 +98,9 @@ def test_main_show_env(monkeypatch: pytest.MonkeyPatch, capsys):
     set_llm_client(FakeLLMClient(dim=128))
     rc = main(["--show-env", "--prompt", "env-test"])
     assert rc == 0
-    out = capsys.readouterr().out
-    assert "backend=fake" in out
-    assert "dim=128" in out
+    err = capsys.readouterr().err
+    assert "backend=fake" in err
+    assert "dim=128" in err
 
 
 @pytest.mark.unit
@@ -115,5 +115,5 @@ def test_python_m_intelliqx_llm_runs_smoke_cli(monkeypatch: pytest.MonkeyPatch):
         check=False,
     )
     assert result.returncode == 0
-    assert "--- response ---" in result.stdout
-    assert "--- meta ---" in result.stdout
+    assert "--- response ---" in result.stderr
+    assert "--- meta ---" in result.stderr

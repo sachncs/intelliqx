@@ -96,8 +96,10 @@ from intelliqx_compute.runtime import InvocationRequest
 
 register_all()
 from intelliqx_compute.runtime import get_compute_runtime
+from intelliqx_observability.logging import configure_logging, get_logger
 req = InvocationRequest(agent_name='smoke', input={'marker': 'hello'}, tenant_id='t1')
-print(asyncio.run(get_compute_runtime().invoke(req)))
+configure_logging(json_logs=False, component='quick-start')
+get_logger(__name__).info("{}", asyncio.run(get_compute_runtime().invoke(req)))
 "
 
 # Run the full local test pipeline
@@ -130,8 +132,10 @@ from intelliqx_compute.runtime import InvocationRequest
 
 register_all()
 from intelliqx_compute.runtime import get_compute_runtime
+from intelliqx_observability.logging import configure_logging, get_logger
 req = InvocationRequest(agent_name='smoke', input={'marker': 'hello'}, tenant_id='t1')
-print(asyncio.run(get_compute_runtime().invoke(req)))
+configure_logging(json_logs=False, component='quick-start')
+get_logger(__name__).info("{}", asyncio.run(get_compute_runtime().invoke(req)))
 "
 ```
 
@@ -148,6 +152,7 @@ uv run python -c "
 import asyncio
 from intelliqx_llm import get_llm_client
 from intelliqx_llm.client import CompletionRequest
+from intelliqx_observability.logging import configure_logging, get_logger
 
 async def main():
     client = get_llm_client()
@@ -156,8 +161,9 @@ async def main():
         messages=[{'role': 'user', 'content': 'Hello!'}],
     )
     resp = await client.complete(req)
-    print(resp.content)
+    get_logger(__name__).info("{}", resp.content)
 
+configure_logging(json_logs=False, component='llm-example')
 asyncio.run(main())
 "
 ```
@@ -313,7 +319,7 @@ make clean              # rm -rf .venv build dist **/__pycache__ ...
 
 - **Line length:** 100
 - **Formatter:** `black` (enforced in CI)
-- **Linter:** `ruff` (selected rules: `E`, `F`, `I`, `B`, `UP`, `SIM`, `RUF`)
+- **Linter:** `ruff` (selected rules: `E`, `F`, `I`, `B`, `UP`, `SIM`, `RUF`, `T20`)
 - **Type checker:** `mypy` (strict-optional, warn-unused-ignores, no-implicit-optional)
 - **Naming:** Pydantic models are `PascalCase`; modules and functions are `snake_case`; private members use Python name-mangling (`__name`).
 - **Async first:** every public I/O method is `async def`. Blocking SDK calls are offloaded via `asyncio.to_thread`.
