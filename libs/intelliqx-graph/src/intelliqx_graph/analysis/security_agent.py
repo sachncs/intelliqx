@@ -8,7 +8,7 @@ from typing import ClassVar
 import networkx as nx
 from pydantic import BaseModel, ConfigDict, Field
 
-from intelliqx_graph.models import GraphLayer, SecurityBoundary
+from intelliqx_graph.models import GraphLayer, SecurityBoundary, SGIRNode, SoftwareGraph
 from intelliqx_graph.query import GraphIndex
 
 MAX_SENSITIVE_FLOWS: int = 50
@@ -73,9 +73,34 @@ class SecurityReport(BaseModel):
 
 
 class SecurityAgent:
-    SQL_PATTERNS: ClassVar[set[str]] = {"query", "execute", "select", "insert", "update", "delete", "sql", "cursor"}
-    SANITIZE_PATTERNS: ClassVar[set[str]] = {"sanitize", "escape", "validate", "clean", "encode", "parameterize"}
-    SENSITIVE_KEYWORDS: ClassVar[set[str]] = {"password", "token", "secret", "key", "credential", "ssn", "email", "auth"}
+    SQL_PATTERNS: ClassVar[set[str]] = {
+        "query",
+        "execute",
+        "select",
+        "insert",
+        "update",
+        "delete",
+        "sql",
+        "cursor",
+    }
+    SANITIZE_PATTERNS: ClassVar[set[str]] = {
+        "sanitize",
+        "escape",
+        "validate",
+        "clean",
+        "encode",
+        "parameterize",
+    }
+    SENSITIVE_KEYWORDS: ClassVar[set[str]] = {
+        "password",
+        "token",
+        "secret",
+        "key",
+        "credential",
+        "ssn",
+        "email",
+        "auth",
+    }
     INPUT_KEYWORDS: ClassVar[set[str]] = {"receive", "parse", "read", "input", "request", "param"}
     UNSAFE_OUTPUT_KEYWORDS: ClassVar[set[str]] = {"html", "response", "exec", "query", "system"}
     SENSITIVE_NAME_KEYWORDS: ClassVar[set[str]] = {"password", "secret", "token", "key"}
@@ -87,8 +112,7 @@ class SecurityAgent:
     # benign tokens like ``monkey_patch``, ``key_value`` pairs,
     # or test names such as ``test_dict_keys``.
     SENSITIVE_NAME_RE: ClassVar[re.Pattern[str]] = re.compile(
-        r"\b(?:password|secret|token|key)\b",
-        re.IGNORECASE,
+        r"\b(?:password|secret|token|key)\b", re.IGNORECASE
     )
 
     def __init__(self, graph_index: GraphIndex) -> None:
@@ -131,9 +155,9 @@ class SecurityAgent:
             risk_score=risk_score,
         )
 
-    def build_boundary_map(self, sg: object) -> dict[str, SecurityBoundary]:
+    def build_boundary_map(self, sg: SoftwareGraph) -> dict[str, SecurityBoundary]:
         boundary_map: dict[str, SecurityBoundary] = {}
-        for layer_graph in sg.layers.values():  # type: ignore[union-attr]
+        for layer_graph in sg.layers.values():
             for node in layer_graph.nodes:
                 if node.id not in boundary_map:
                     boundary_map[node.id] = node.security_boundary
@@ -147,19 +171,14 @@ class SecurityAgent:
         return counts
 
     def trace_sensitive_data_flows(
-        self,
-        data_flow: nx.DiGraph | None,
-        boundary_map: dict[str, SecurityBoundary],
+        self, data_flow: nx.DiGraph | None, boundary_map: dict[str, SecurityBoundary]
     ) -> list[SensitiveDataFlow]:
         flows: list[SensitiveDataFlow] = []
         if data_flow is None:
             return flows
 
         sg = self.index.software_graph
-        source_nodes = [
-            n for n in data_flow.nodes
-            if data_flow.in_degree(n) == 0
-        ]
+        source_nodes = [n for n in data_flow.nodes if data_flow.in_degree(n) == 0]
 
         for source in source_nodes:
             node = sg.find_node(source)
@@ -169,7 +188,9 @@ class SecurityAgent:
             name_lower = node.name.lower()
             is_sensitive = any(kw in name_lower for kw in self.SENSITIVE_KEYWORDS)
             if not is_sensitive and node.security_boundary in {
-                SecurityBoundary.AUTHENTICATED, SecurityBoundary.AUTHORIZED, SecurityBoundary.ADMIN
+                SecurityBoundary.AUTHENTICATED,
+                SecurityBoundary.AUTHORIZED,
+                SecurityBoundary.ADMIN,
             }:
                 is_sensitive = True
             if not is_sensitive:
@@ -192,22 +213,22 @@ class SecurityAgent:
                     if et not in edge_types:
                         edge_types.append(et)
 
-                flows.append(SensitiveDataFlow(
-                    source_node=source,
-                    target_node=target,
-                    path=path,
-                    source_boundary=source_boundary,
-                    target_boundary=target_boundary,
-                    crosses_boundary=crosses,
-                    edge_types=edge_types,
-                ))
+                flows.append(
+                    SensitiveDataFlow(
+                        source_node=source,
+                        target_node=target,
+                        path=path,
+                        source_boundary=source_boundary,
+                        target_boundary=target_boundary,
+                        crosses_boundary=crosses,
+                        edge_types=edge_types,
+                    )
+                )
 
         return flows[:MAX_SENSITIVE_FLOWS]
 
     def detect_trust_boundary_crossings(
-        self,
-        security_graph: nx.DiGraph | None,
-        boundary_map: dict[str, SecurityBoundary],
+        self, security_graph: nx.DiGraph | None, boundary_map: dict[str, SecurityBoundary]
     ) -> list[TrustBoundaryCrossing]:
         crossings: list[TrustBoundaryCrossing] = []
         if security_graph is None:
@@ -227,24 +248,27 @@ class SecurityAgent:
 
             risk_level = self.crossing_risk(src_boundary, tgt_boundary)
 
-            crossings.append(TrustBoundaryCrossing(
-                source_id=source,
-                target_id=target,
-                source_boundary=src_boundary.value,
-                target_boundary=tgt_boundary.value,
-                edge_type=edge_type,
-                risk_level=risk_level,
-                description=f"Data flows from {src_boundary.value} to {tgt_boundary.value} boundary",
-            ))
+            crossings.append(
+                TrustBoundaryCrossing(
+                    source_id=source,
+                    target_id=target,
+                    source_boundary=src_boundary.value,
+                    target_boundary=tgt_boundary.value,
+                    edge_type=edge_type,
+                    risk_level=risk_level,
+                    description=f"Data flows from {src_boundary.value} to {tgt_boundary.value} boundary",
+                )
+            )
 
         crossings.sort(key=lambda c: self.RISK_SCORES.get(c.risk_level, 0), reverse=True)
         return crossings
 
     def crossing_risk(self, source: SecurityBoundary, target: SecurityBoundary) -> str:
-        if (
-            (source == SecurityBoundary.NONE or source == SecurityBoundary.EXTERNAL)
-            and target in {SecurityBoundary.AUTHENTICATED, SecurityBoundary.AUTHORIZED, SecurityBoundary.ADMIN}
-        ):
+        if (source == SecurityBoundary.NONE or source == SecurityBoundary.EXTERNAL) and target in {
+            SecurityBoundary.AUTHENTICATED,
+            SecurityBoundary.AUTHORIZED,
+            SecurityBoundary.ADMIN,
+        }:
             return "high"
         if source == SecurityBoundary.ADMIN and target != SecurityBoundary.ADMIN:
             return "high"
@@ -269,16 +293,11 @@ class SecurityAgent:
         vulns: list[Vulnerability] = []
         vulns.extend(self._scan_per_node(call_graph, boundary_map))
         vulns.extend(self._scan_per_edge(data_flow, boundary_map))
-        vulns.sort(
-            key=lambda v: self.SEVERITY_VALUES.get(v.severity, 0),
-            reverse=True,
-        )
+        vulns.sort(key=lambda v: self.SEVERITY_VALUES.get(v.severity, 0), reverse=True)
         return vulns
 
     def _scan_per_node(
-        self,
-        call_graph: nx.DiGraph | None,
-        boundary_map: dict[str, SecurityBoundary],
+        self, call_graph: nx.DiGraph | None, boundary_map: dict[str, SecurityBoundary]
     ) -> list[Vulnerability]:
         """Apply the three per-node vulnerability detectors."""
         vulns: list[Vulnerability] = []
@@ -292,46 +311,49 @@ class SecurityAgent:
                 continue
 
             if self.is_sql_injection_risk(node):
-                vulns.append(Vulnerability(
-                    vulnerability_type=VulnerabilityType.SQL_INJECTION,
-                    node_id=node_id,
-                    node_name=node.name,
-                    severity="high",
-                    description=f"Node '{node.name}' may execute SQL with unsanitized input",
-                    affected_data_flow=[node_id],
-                    recommendation="Use parameterized queries and input validation",
-                ))
+                vulns.append(
+                    Vulnerability(
+                        vulnerability_type=VulnerabilityType.SQL_INJECTION,
+                        node_id=node_id,
+                        node_name=node.name,
+                        severity="high",
+                        description=f"Node '{node.name}' may execute SQL with unsanitized input",
+                        affected_data_flow=[node_id],
+                        recommendation="Use parameterized queries and input validation",
+                    )
+                )
 
             if self.is_unsanitized_input(node):
-                vulns.append(Vulnerability(
-                    vulnerability_type=VulnerabilityType.UNSANITIZED_INPUT,
-                    node_id=node_id,
-                    node_name=node.name,
-                    severity="medium",
-                    description=f"Node '{node.name}' accepts input that may not be sanitized",
-                    affected_data_flow=[node_id],
-                    recommendation="Validate and sanitize all external inputs",
-                ))
+                vulns.append(
+                    Vulnerability(
+                        vulnerability_type=VulnerabilityType.UNSANITIZED_INPUT,
+                        node_id=node_id,
+                        node_name=node.name,
+                        severity="medium",
+                        description=f"Node '{node.name}' accepts input that may not be sanitized",
+                        affected_data_flow=[node_id],
+                        recommendation="Validate and sanitize all external inputs",
+                    )
+                )
 
-            if (
-                boundary_map.get(node_id, SecurityBoundary.NONE) == SecurityBoundary.NONE
-                and self.name_matches_sensitive(node.name)
-            ):
-                vulns.append(Vulnerability(
-                    vulnerability_type=VulnerabilityType.SENSITIVE_DATA_EXPOSURE,
-                    node_id=node_id,
-                    node_name=node.name,
-                    severity="high",
-                    description=f"Node '{node.name}' handles sensitive data without a security boundary",
-                    affected_data_flow=[node_id],
-                    recommendation="Apply appropriate security boundaries to sensitive data handlers",
-                ))
+            if boundary_map.get(
+                node_id, SecurityBoundary.NONE
+            ) == SecurityBoundary.NONE and self.name_matches_sensitive(node.name):
+                vulns.append(
+                    Vulnerability(
+                        vulnerability_type=VulnerabilityType.SENSITIVE_DATA_EXPOSURE,
+                        node_id=node_id,
+                        node_name=node.name,
+                        severity="high",
+                        description=f"Node '{node.name}' handles sensitive data without a security boundary",
+                        affected_data_flow=[node_id],
+                        recommendation="Apply appropriate security boundaries to sensitive data handlers",
+                    )
+                )
         return vulns
 
     def _scan_per_edge(
-        self,
-        data_flow: nx.DiGraph | None,
-        boundary_map: dict[str, SecurityBoundary],
+        self, data_flow: nx.DiGraph | None, boundary_map: dict[str, SecurityBoundary]
     ) -> list[Vulnerability]:
         """Apply the per-edge trust-boundary-crossing detector."""
         if data_flow is None:
@@ -348,18 +370,20 @@ class SecurityAgent:
             ):
                 source_node = sg.find_node(source)
                 if source_node and not self.has_sanitization(source_node):
-                    vulns.append(Vulnerability(
-                        vulnerability_type=VulnerabilityType.TRUST_BOUNDARY_CROSSING,
-                        node_id=source,
-                        node_name=source_node.name,
-                        severity="medium",
-                        description=(
-                            f"Untrusted node '{source_node.name}' feeds into "
-                            f"{tgt_boundary.value} boundary"
-                        ),
-                        affected_data_flow=[source, target],
-                        recommendation="Validate and sanitize data crossing trust boundaries",
-                    ))
+                    vulns.append(
+                        Vulnerability(
+                            vulnerability_type=VulnerabilityType.TRUST_BOUNDARY_CROSSING,
+                            node_id=source,
+                            node_name=source_node.name,
+                            severity="medium",
+                            description=(
+                                f"Untrusted node '{source_node.name}' feeds into "
+                                f"{tgt_boundary.value} boundary"
+                            ),
+                            affected_data_flow=[source, target],
+                            recommendation="Validate and sanitize data crossing trust boundaries",
+                        )
+                    )
         return vulns
 
     def name_matches_sensitive(self, name: str) -> bool:
@@ -372,36 +396,32 @@ class SecurityAgent:
         """
         return bool(self.SENSITIVE_NAME_RE.search(name))
 
-    def is_sql_injection_risk(self, node: object) -> bool:
-        name_lower = node.name.lower()  # type: ignore[union-attr]
+    def is_sql_injection_risk(self, node: SGIRNode) -> bool:
+        name_lower = node.name.lower()
         has_sql = any(p in name_lower for p in self.SQL_PATTERNS)
         if not has_sql:
             return False
-        inputs_lower = [i.lower() for i in node.inputs]  # type: ignore[union-attr]
+        inputs_lower = [i.lower() for i in node.inputs]
         has_raw_input = any(
             "string" in inp or "raw" in inp or "text" in inp or "input" in inp
             for inp in inputs_lower
         )
         return has_raw_input and not self.has_sanitization(node)
 
-    def is_unsanitized_input(self, node: object) -> bool:
-        name_lower = node.name.lower()  # type: ignore[union-attr]
+    def is_unsanitized_input(self, node: SGIRNode) -> bool:
+        name_lower = node.name.lower()
         has_input = any(kw in name_lower for kw in self.INPUT_KEYWORDS)
         if not has_input:
             return False
-        outputs = [o.lower() for o in node.outputs]  # type: ignore[union-attr]
-        has_unsafe_output = any(
-            kw in out for kw in self.UNSAFE_OUTPUT_KEYWORDS
-            for out in outputs
-        )
+        outputs = [o.lower() for o in node.outputs]
+        has_unsafe_output = any(kw in out for kw in self.UNSAFE_OUTPUT_KEYWORDS for out in outputs)
         return has_unsafe_output and not self.has_sanitization(node)
 
-    def has_sanitization(self, node: object) -> bool:
-        name_lower = node.name.lower()  # type: ignore[union-attr]
-        postconditions = [p.lower() for p in node.postconditions]  # type: ignore[union-attr]
-        return (
-            any(p in name_lower for p in self.SANITIZE_PATTERNS)
-            or any(any(s in pc for s in self.SANITIZE_PATTERNS) for pc in postconditions)
+    def has_sanitization(self, node: SGIRNode) -> bool:
+        name_lower = node.name.lower()
+        postconditions = [p.lower() for p in node.postconditions]
+        return any(p in name_lower for p in self.SANITIZE_PATTERNS) or any(
+            any(s in pc for s in self.SANITIZE_PATTERNS) for pc in postconditions
         )
 
     def compute_risk_score(self, vulns: list[Vulnerability], crossing_count: int) -> float:

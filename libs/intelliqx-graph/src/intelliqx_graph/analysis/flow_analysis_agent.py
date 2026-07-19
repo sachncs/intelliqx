@@ -122,11 +122,7 @@ class FlowAnalysisAgent:
                         call_graph[u][v].get("weight", DEFAULT_EDGE_WEIGHT)
                         for u, v in pairwise(path)
                     )
-                    paths.append(ExecutionPath(
-                        path=path,
-                        length=len(path),
-                        total_weight=weight,
-                    ))
+                    paths.append(ExecutionPath(path=path, length=len(path), total_weight=weight))
                 except (nx.NetworkXNoPath, nx.NodeNotFound):
                     continue
 
@@ -140,20 +136,23 @@ class FlowAnalysisAgent:
         for node_id in unreachable_ids:
             node = sg.find_node(node_id)
             if node is not None:
-                dead_nodes.append(DeadCodeNode(
-                    node_id=node.id,
-                    node_name=node.name,
-                    node_type=node.node_type.value,
-                    language=node.language,
-                    source_file=node.source_location.file_path if node.source_location else None,
-                ))
+                dead_nodes.append(
+                    DeadCodeNode(
+                        node_id=node.id,
+                        node_name=node.name,
+                        node_type=node.node_type.value,
+                        language=node.language,
+                        source_file=(
+                            node.source_location.file_path if node.source_location else None
+                        ),
+                    )
+                )
             else:
-                dead_nodes.append(DeadCodeNode(
-                    node_id=node_id,
-                    node_name=node_id,
-                    node_type="unknown",
-                    language="unknown",
-                ))
+                dead_nodes.append(
+                    DeadCodeNode(
+                        node_id=node_id, node_name=node_id, node_type="unknown", language="unknown"
+                    )
+                )
         return dead_nodes
 
     def find_bottlenecks(self, call_graph: nx.DiGraph) -> list[BottleneckNode]:
@@ -177,14 +176,16 @@ class FlowAnalysisAgent:
             node_data = call_graph.nodes[node_id]
             node_name = node_data.get("name", node_id)
 
-            bottlenecks.append(BottleneckNode(
-                node_id=node_id,
-                node_name=str(node_name),
-                fan_in=fi,
-                fan_out=fo,
-                bottleneck_score=float(score),
-                impact=impact,
-            ))
+            bottlenecks.append(
+                BottleneckNode(
+                    node_id=node_id,
+                    node_name=str(node_name),
+                    fan_in=fi,
+                    fan_out=fo,
+                    bottleneck_score=float(score),
+                    impact=impact,
+                )
+            )
 
         bottlenecks.sort(key=lambda b: b.bottleneck_score, reverse=True)
         return bottlenecks

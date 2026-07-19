@@ -4,13 +4,8 @@ version = "0.2.0"
 description = "Software Graph Intermediate Representation (SGIR) — graph-based software intelligence"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "intelliqx-core",
-    "intelliqx-llm",
     "pydantic>=2.8",
     "networkx>=3.4",
-    "tree-sitter>=0.24",
-    "tree-sitter-languages>=1.10",
-    "google-adk>=2.0.0",
 ]
 
 [build-system]

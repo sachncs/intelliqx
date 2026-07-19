@@ -4,9 +4,7 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
-from intelliqx_graph.models import (
-    SoftwareGraph,
-)
+from intelliqx_graph.models import SoftwareGraph
 from intelliqx_graph.query import GraphIndex
 
 
@@ -17,12 +15,7 @@ class RiskLevel(str, Enum):
     CRITICAL = "critical"
 
 
-RISK_ORDER = {
-    RiskLevel.LOW: 0,
-    RiskLevel.MEDIUM: 1,
-    RiskLevel.HIGH: 2,
-    RiskLevel.CRITICAL: 3,
-}
+RISK_ORDER = {RiskLevel.LOW: 0, RiskLevel.MEDIUM: 1, RiskLevel.HIGH: 2, RiskLevel.CRITICAL: 3}
 
 DEFAULT_TRACE_MAX_DEPTH: int = 50
 MAX_TRACE_BRANCHING: int = 10
@@ -112,10 +105,7 @@ def dfs_traces(
     visited.add(current)
     path.append(current)
 
-    successors = [
-        n for n in graph_index.reachable_from(current)
-        if n in valid_ids
-    ]
+    successors = [n for n in graph_index.reachable_from(current) if n in valid_ids]
 
     if not successors:
         traces.add(tuple(path))
@@ -129,10 +119,7 @@ def dfs_traces(
 
 class VerificationAgent:
     def __init__(
-        self,
-        before: SoftwareGraph,
-        after: SoftwareGraph,
-        entry_points: list[str],
+        self, before: SoftwareGraph, after: SoftwareGraph, entry_points: list[str]
     ) -> None:
         self.before = before
         self.after = after
@@ -154,19 +141,13 @@ class VerificationAgent:
         findings: list[str] = []
         behavior_preserved = True
 
-        traces_before = build_trace_set(
-            self.before, self.before_index, self.entry_points,
-        )
-        traces_after = build_trace_set(
-            self.after, self.after_index, self.entry_points,
-        )
+        traces_before = build_trace_set(self.before, self.before_index, self.entry_points)
+        traces_after = build_trace_set(self.after, self.after_index, self.entry_points)
 
         lost_traces = traces_before - traces_after
         if lost_traces:
             behavior_preserved = False
-            findings.append(
-                f"Lost {len(lost_traces)} execution traces after optimization"
-            )
+            findings.append(f"Lost {len(lost_traces)} execution traces after optimization")
 
         reachable_before = set()
         for ep in self.entry_points:
@@ -184,8 +165,12 @@ class VerificationAgent:
             )
 
         risk = self.assess_risk(
-            nodes_added, nodes_removed, edges_added, edges_removed,
-            behavior_preserved, improperly_removed,
+            nodes_added,
+            nodes_removed,
+            edges_added,
+            edges_removed,
+            behavior_preserved,
+            improperly_removed,
         )
 
         if nodes_removed > 0:

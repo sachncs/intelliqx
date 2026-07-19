@@ -8,8 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed — Codebase quality pass
 
-* **Dead code removed.** Deleted unused `create_adk_workflow()` from
-  `agents.sgir.pipeline`, unused `make_run_id()` from
+* **Dead code removed.** Deleted unused `make_run_id()` from
   `agents.coordination.events`, redundant `anyio_backend` fixture from
   `tests/conftest`, redundant `TenantContext`/`AgentContext` re-imports
   from `intelliqx_agents.base.invoke()`, redundant `struct` re-import

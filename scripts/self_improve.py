@@ -59,12 +59,6 @@ def section(title: str) -> None:
 
 def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
     """Run the SGIR pipeline end-to-end and return structured output."""
-    from intelliqx_graph.adk_agents import (
-        generate_code_tool,
-        optimize_graph_tool,
-        parse_repository_tool,
-        scan_repository_tool,
-    )
     from intelliqx_graph.analysis import (
         ArchitectureAgent,
         FlowAnalysisAgent,
@@ -72,6 +66,13 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
         SecurityAgent,
     )
     from intelliqx_graph.models import GraphLayer
+    from intelliqx_graph.operations import (
+        build_software_graph,
+        generate_code,
+        optimize_graph,
+        parse_repository,
+        scan_repository,
+    )
     from intelliqx_graph.optimization.passes import (
         detect_duplicates,
         parallelize_independent_branches,
@@ -81,22 +82,21 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
 
     out: dict[str, Any] = {"errors": [], "warnings": []}
 
-    metadata = scan_repository_tool(repo_path)
+    metadata = scan_repository(repo_path)
     out["metadata"] = metadata
 
-    parsed = parse_repository_tool(repo_path)
+    parsed = parse_repository(repo_path)
     raw_entities = parsed["entities"]
     out["errors"].extend(parsed["errors"])
     out["parsed_entity_count"] = len(raw_entities)
     entity_types = Counter(e.get("entity_type", "?") for e in raw_entities)
 
     section("Building graph layers")
-    from intelliqx_graph.adk_agents import build_software_graph_tool
 
     try:
-        graph_json_str = build_software_graph_tool(metadata, raw_entities)
+        graph_json_str = build_software_graph(metadata, raw_entities)
     except Exception as exc:
-        out["errors"].append(f"build_software_graph_tool crashed: {exc!r}")
+        out["errors"].append(f"build_software_graph crashed: {exc!r}")
         traceback.print_exc()
         return out
     from intelliqx_graph.serialization import graph_from_json
@@ -147,7 +147,7 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
 
     graph_json = sg.model_dump_json()
     try:
-        opt_result = optimize_graph_tool(graph_json, entry_points, "python")
+        opt_result = optimize_graph(graph_json, entry_points, "python")
         out["optimization"] = opt_result
         s = opt_result.get("summary", {}) if isinstance(opt_result, dict) else {}
         print(f"  duplicates: {s.get('duplicate_pairs_found', '?')}")
@@ -159,7 +159,7 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
 
     section("Code generation")
     try:
-        code = generate_code_tool(graph_json, "python")
+        code = generate_code(graph_json, "python")
         if isinstance(code, dict):
             out["generated_files"] = len(code)
             print(f"  generated {len(code)} files (sample):")
@@ -167,7 +167,7 @@ def run_sgir_pipeline(repo_path: str) -> dict[str, Any]:
                 print(f"    {k}")
         else:
             out["generated_files"] = 0
-            print(f"  generate_code_tool returned: {code}")
+            print(f"  generate_code returned: {code}")
     except Exception as exc:
         out["errors"].append(f"codegen crashed: {exc!r}")
 

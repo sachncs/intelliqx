@@ -471,7 +471,7 @@ class PythonParser(BaseParser):
         """Parse a single ``.py`` / ``.pyi`` file into entities.
 
         ``SyntaxError`` and file-read errors propagate so the caller
-        (``BaseParser.parse_files`` or the ADK repository tool) can
+        (``BaseParser.parse_files`` or :func:`parse_repository`) can
         record them in ``ParseResult.errors`` instead of swallowing
         them silently.
         """

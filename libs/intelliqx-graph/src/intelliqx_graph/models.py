@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # Enums
 # ---------------------------------------------------------------------------
 
+
 class EdgeType(str, Enum):
     """Types of edges in the SGIR.
 
@@ -101,6 +102,7 @@ class SecurityBoundary(str, Enum):
 # SGIR Node
 # ---------------------------------------------------------------------------
 
+
 class SourceLocation(BaseModel):
     """Location in the original source code."""
 
@@ -160,6 +162,7 @@ class SGIRNode(BaseModel):
 # SGIR Edge
 # ---------------------------------------------------------------------------
 
+
 class SGIREdge(BaseModel):
     """An edge in the Software Graph IR.
 
@@ -180,6 +183,7 @@ class SGIREdge(BaseModel):
 # ---------------------------------------------------------------------------
 # SGIR Graph (single layer)
 # ---------------------------------------------------------------------------
+
 
 class SGIRGraph(BaseModel):
     """A single graph layer containing nodes and edges.
@@ -211,6 +215,7 @@ class SGIRGraph(BaseModel):
 # Repository Metadata
 # ---------------------------------------------------------------------------
 
+
 class RepositoryMetadata(BaseModel):
     """Metadata about the source repository being analyzed."""
 
@@ -231,6 +236,7 @@ class RepositoryMetadata(BaseModel):
 # ---------------------------------------------------------------------------
 # Software Graph (multi-layer container)
 # ---------------------------------------------------------------------------
+
 
 class SoftwareGraph(BaseModel):
     """Multi-layer container — the complete semantic model of software.

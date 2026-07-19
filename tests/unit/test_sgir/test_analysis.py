@@ -32,10 +32,14 @@ def make_test_sg() -> SoftwareGraph:
 
     nodes = [
         SGIRNode(id="main", name="main", purpose="entry"),
-        SGIRNode(id="auth", name="authenticate", purpose="auth", complexity=ComplexityEstimate.QUADRATIC),
+        SGIRNode(
+            id="auth", name="authenticate", purpose="auth", complexity=ComplexityEstimate.QUADRATIC
+        ),
         SGIRNode(id="db", name="query_db", purpose="database"),
         SGIRNode(id="render", name="render", purpose="output"),
-        SGIRNode(id="admin", name="admin_fn", purpose="admin", security_boundary=SecurityBoundary.ADMIN),
+        SGIRNode(
+            id="admin", name="admin_fn", purpose="admin", security_boundary=SecurityBoundary.ADMIN
+        ),
     ]
     edges = [
         SGIREdge(source="main", target="auth", edge_type=EdgeType.CALL),

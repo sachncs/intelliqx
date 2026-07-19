@@ -57,34 +57,14 @@ class TestGetBackend:
         assert backend is not None
         assert backend.language == "python"
 
-    def test_go_backend(self) -> None:
-        backend = get_backend("go")
-        assert backend is not None
-        assert backend.language == "go"
-
-    def test_rust_backend(self) -> None:
-        backend = get_backend("rust")
-        assert backend is not None
-        assert backend.language == "rust"
-
-    def test_typescript_backend(self) -> None:
-        backend = get_backend("typescript")
-        assert backend is not None
-        assert backend.language == "typescript"
-
-    def test_java_backend(self) -> None:
-        backend = get_backend("java")
-        assert backend is not None
-        assert backend.language == "java"
-
     def test_unknown_backend(self) -> None:
         with pytest.raises(ValueError):
             get_backend("brainfuck")
 
     def test_available_backends(self) -> None:
         from intelliqx_graph.backends import BACKENDS
-        assert "python" in BACKENDS
-        assert "go" in BACKENDS
+
+        assert {"python": get_backend("python").__class__} == BACKENDS
 
 
 class TestPythonBackend:
@@ -103,37 +83,5 @@ class TestPythonBackend:
         sg = SoftwareGraph(repository=repo)
         sg.add_layer(SGIRGraph(layer=GraphLayer.CALL))
         backend = get_backend("python")
-        files = backend.generate(sg)
-        assert isinstance(files, dict)
-
-
-class TestGoBackend:
-    def test_generate(self) -> None:
-        sg = make_test_sg()
-        backend = get_backend("go")
-        files = backend.generate(sg)
-        assert isinstance(files, dict)
-
-
-class TestRustBackend:
-    def test_generate(self) -> None:
-        sg = make_test_sg()
-        backend = get_backend("rust")
-        files = backend.generate(sg)
-        assert isinstance(files, dict)
-
-
-class TestTypeScriptBackend:
-    def test_generate(self) -> None:
-        sg = make_test_sg()
-        backend = get_backend("typescript")
-        files = backend.generate(sg)
-        assert isinstance(files, dict)
-
-
-class TestJavaBackend:
-    def test_generate(self) -> None:
-        sg = make_test_sg()
-        backend = get_backend("java")
         files = backend.generate(sg)
         assert isinstance(files, dict)

@@ -24,10 +24,7 @@ from intelliqx_graph.serialization import (
 def make_test_sg() -> SoftwareGraph:
     repo = RepositoryMetadata(name="test", root_path="/tmp")
     sg = SoftwareGraph(repository=repo)
-    sg.add_layer(SGIRGraph(
-        layer=GraphLayer.CALL,
-        nodes=[SGIRNode(id="n1", name="main")],
-    ))
+    sg.add_layer(SGIRGraph(layer=GraphLayer.CALL, nodes=[SGIRNode(id="n1", name="main")]))
     return sg
 
 

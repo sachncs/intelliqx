@@ -96,6 +96,7 @@ class TestVerificationAgent:
 
     def test_different_graphs(self) -> None:
         import copy
+
         sg1 = make_test_sg()
         sg2 = copy.deepcopy(sg1)
         sg2.layers[GraphLayer.CALL].nodes = sg2.layers[GraphLayer.CALL].nodes[:3]

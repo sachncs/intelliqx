@@ -77,12 +77,16 @@ class ArchitectureAgent:
     def analyze(self) -> ArchitectureReport:
         stats = self.index.stats()
 
-        total_nodes = sum(
-            layer_stats["nodes"] for layer_stats in stats["layers"].values()
-        ) if stats["layers"] else 0
-        total_edges = sum(
-            layer_stats["edges"] for layer_stats in stats["layers"].values()
-        ) if stats["layers"] else 0
+        total_nodes = (
+            sum(layer_stats["nodes"] for layer_stats in stats["layers"].values())
+            if stats["layers"]
+            else 0
+        )
+        total_edges = (
+            sum(layer_stats["edges"] for layer_stats in stats["layers"].values())
+            if stats["layers"]
+            else 0
+        )
 
         call_stats = stats["layers"].get("call", {})
         density = call_stats.get("density", 0.0)
@@ -127,15 +131,17 @@ class ArchitectureAgent:
             node_data = call_graph.nodes[node_id]
             node_name = node_data.get("name", node_id)
 
-            findings.append(CouplingFinding(
-                node_id=node_id,
-                node_name=str(node_name),
-                fan_in=fan_in,
-                fan_out=fan_out,
-                total_coupling=total,
-                severity=severity,
-                recommendation=recommendation,
-            ))
+            findings.append(
+                CouplingFinding(
+                    node_id=node_id,
+                    node_name=str(node_name),
+                    fan_in=fan_in,
+                    fan_out=fan_out,
+                    total_coupling=total,
+                    severity=severity,
+                    recommendation=recommendation,
+                )
+            )
 
         findings.sort(key=lambda f: f.total_coupling, reverse=True)
         return findings
@@ -171,14 +177,16 @@ class ArchitectureAgent:
                     and source_layer != target_layer
                     and edge.edge_type in {EdgeType.CALL, EdgeType.DATA, EdgeType.IMPORT}
                 ):
-                    violations.append(LayeringViolation(
-                        source_id=edge.source,
-                        target_id=edge.target,
-                        source_layer=source_layer,
-                        target_layer=target_layer,
-                        edge_type=edge.edge_type.value,
-                        description=f"Cross-layer {edge.edge_type.value} edge from {source_layer} to {target_layer}",
-                    ))
+                    violations.append(
+                        LayeringViolation(
+                            source_id=edge.source,
+                            target_id=edge.target,
+                            source_layer=source_layer,
+                            target_layer=target_layer,
+                            edge_type=edge.edge_type.value,
+                            description=f"Cross-layer {edge.edge_type.value} edge from {source_layer} to {target_layer}",
+                        )
+                    )
 
         return violations
 
@@ -209,20 +217,24 @@ class ArchitectureAgent:
             total = internal + external
             cohesion = internal / total if total > 0 else 0.0
 
-            modules.append(ModuleInfo(
-                module_id=idx,
-                node_ids=community,
-                node_count=len(community),
-                internal_edges=internal,
-                external_edges=external,
-                cohesion=cohesion,
-            ))
+            modules.append(
+                ModuleInfo(
+                    module_id=idx,
+                    node_ids=community,
+                    node_count=len(community),
+                    internal_edges=internal,
+                    external_edges=external,
+                    cohesion=cohesion,
+                )
+            )
 
         modules.sort(key=lambda m: m.cohesion, reverse=True)
         return modules
 
     def find_high_coupling_nodes(self) -> list[str]:
-        high_out = self.index.high_fan_out_nodes(threshold=self.FAN_THRESHOLD, layer=GraphLayer.CALL)
+        high_out = self.index.high_fan_out_nodes(
+            threshold=self.FAN_THRESHOLD, layer=GraphLayer.CALL
+        )
         high_in = self.index.high_fan_in_nodes(threshold=self.FAN_THRESHOLD, layer=GraphLayer.CALL)
         return list(set(high_out) | set(high_in))
 

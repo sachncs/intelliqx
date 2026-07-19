@@ -1,20 +1,18 @@
-"""SGIR serialization — JSON and Parquet persistence.
+"""SGIR JSON serialization.
 
-Provides helpers to persist and load a ``SoftwareGraph`` to/from
-JSON files and Parquet tables (backed by the existing intelliqx-kg
-Parquet+DuckDB infrastructure).
+Provides helpers to persist and load a ``SoftwareGraph``
+to/from JSON strings and files. JSON is the single
+serialized wire format for ``SoftwareGraph``; the previous
+Parquet round-trip fell out of use after the graph
+became Python-only.
 """
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
-from intelliqx_graph.models import (
-    SGIRNode,
-    SoftwareGraph,
-)
+from intelliqx_graph.models import SoftwareGraph
 
 
 def graph_to_json(sg: SoftwareGraph) -> str:
@@ -46,39 +44,3 @@ def graph_to_dict(sg: SoftwareGraph) -> dict[str, Any]:
 def graph_from_dict(data: dict[str, Any]) -> SoftwareGraph:
     """Deserialize a ``SoftwareGraph`` from a plain dict."""
     return SoftwareGraph.model_validate(data)
-
-
-def nodes_to_parquet(nodes: list[SGIRNode], path: Path) -> None:
-    """Write SGIR nodes to a Parquet file.
-
-    Requires ``pyarrow`` to be installed. Falls back to JSON if
-    pyarrow is unavailable.
-    """
-    try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
-
-        records = [n.model_dump(mode="json") for n in nodes]
-        table = pa.table({}) if not records else pa.Table.from_pylist(records)
-        pq.write_table(table, path)
-    except ImportError:
-        # Fallback: write as JSON lines
-        path.write_text(
-            "\n".join(json.dumps(n.model_dump(mode="json")) for n in nodes),
-            encoding="utf-8",
-        )
-
-
-def nodes_from_parquet(path: Path) -> list[SGIRNode]:
-    """Read SGIR nodes from a Parquet or JSON-lines file."""
-    try:
-        import pyarrow.parquet as pq
-
-        table = pq.read_table(path)
-        return [SGIRNode.model_validate(row) for row in table.to_pylist()]
-    except ImportError:
-        nodes: list[SGIRNode] = []
-        for line in path.read_text(encoding="utf-8").strip().split("\n"):
-            if line.strip():
-                nodes.append(SGIRNode.model_validate_json(line))
-        return nodes

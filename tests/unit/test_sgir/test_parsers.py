@@ -495,16 +495,16 @@ class TestPythonParserGraphIntegration:
         assert any(e.edge_type == EdgeType.CONTROL for e in control_layer.edges)
 
 
-class TestParseRepositoryToolContract:
+class TestParseRepositoryContract:
     def test_parse_repository_returns_entities_and_errors(self, tmp_path: Path) -> None:
-        from intelliqx_graph.adk_agents import parse_repository_tool
+        from intelliqx_graph.operations import parse_repository
 
         good = tmp_path / "good.py"
         good.write_text("def f(): pass\n")
         bad = tmp_path / "bad.py"
         bad.write_text("def broken(:\n")
 
-        result = parse_repository_tool(str(tmp_path))
+        result = parse_repository(str(tmp_path))
         assert isinstance(result, dict)
         assert "entities" in result and "errors" in result
         assert isinstance(result["entities"], list)
@@ -514,9 +514,9 @@ class TestParseRepositoryToolContract:
         assert all(isinstance(e, dict) for e in result["entities"])
         assert all(isinstance(e, dict) for e in result["errors"])
 
-    def test_parse_repository_feeds_build_software_graph_tool(self, tmp_path: Path) -> None:
-        from intelliqx_graph.adk_agents import build_software_graph_tool, parse_repository_tool
+    def test_parse_repository_feeds_build_software_graph(self, tmp_path: Path) -> None:
         from intelliqx_graph.models import RepositoryMetadata
+        from intelliqx_graph.operations import build_software_graph, parse_repository
         from intelliqx_graph.serialization import graph_from_json
 
         code = textwrap.dedent('''\
@@ -527,22 +527,22 @@ class TestParseRepositoryToolContract:
                 return helper()
         ''')
         (tmp_path / "mod.py").write_text(code)
-        result = parse_repository_tool(str(tmp_path))
+        result = parse_repository(str(tmp_path))
         assert result["errors"] == []
 
         repo = RepositoryMetadata(name="t", root_path=str(tmp_path))
-        graph_json = build_software_graph_tool(repo.model_dump(mode="json"), result["entities"])
+        graph_json = build_software_graph(repo.model_dump(mode="json"), result["entities"])
         sg = graph_from_json(graph_json)
         assert sum(g.node_count for g in sg.layers.values()) > 0
 
 
 def test_self_improve_pipeline_smoke(tmp_path: Path) -> None:
-    from intelliqx_graph.adk_agents import parse_repository_tool
+    from intelliqx_graph.operations import parse_repository
 
     (tmp_path / "a.py").write_text("def f(): return 1\n")
     (tmp_path / "b.py").write_text("class C:\n    def m(self): return f()\n")
 
-    parsed = parse_repository_tool(str(tmp_path))
+    parsed = parse_repository(str(tmp_path))
     assert isinstance(parsed, dict)
     assert "entities" in parsed
     assert "errors" in parsed

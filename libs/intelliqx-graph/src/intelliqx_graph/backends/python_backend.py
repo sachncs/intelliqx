@@ -4,11 +4,7 @@ from textwrap import indent
 from typing import TYPE_CHECKING
 
 from intelliqx_graph.backends.base import CodeBackend
-from intelliqx_graph.models import (
-    NodeType,
-    SGIRNode,
-    SoftwareGraph,
-)
+from intelliqx_graph.models import NodeType, SGIRNode, SoftwareGraph
 
 if TYPE_CHECKING:
     from intelliqx_graph.models import SGIREdge
@@ -42,13 +38,11 @@ class _GenerateHelper:
     realistic graph.
     """
 
-    __slots__ = (
-        "children_of_parent",
-        "import_edges",
-        "node_by_id",
-        "nodes_by_type",
-        "parents_of_child",
-    )
+    nodes_by_type: dict[NodeType, list[SGIRNode]]
+    node_by_id: dict[str, SGIRNode]
+    children_of_parent: dict[str, list[SGIRNode]]
+    parents_of_child: dict[str, list[SGIRNode]]
+    import_edges: list[SGIREdge]
 
     @classmethod
     def build(cls, graph: SoftwareGraph) -> _GenerateHelper:
@@ -83,23 +77,17 @@ class _GenerateHelper:
     def find_node(self, node_id: str) -> SGIRNode | None:
         return self.node_by_id.get(node_id)
 
-    def children_of(
-        self, parent: SGIRNode, candidates: list[SGIRNode]
-    ) -> list[SGIRNode]:
+    def children_of(self, parent: SGIRNode, candidates: list[SGIRNode]) -> list[SGIRNode]:
         child_ids = {c.id for c in self.children_of_parent.get(parent.id, ())}
         return [c for c in candidates if c.id in child_ids]
 
     def is_child_of(self, child: SGIRNode, parent: SGIRNode) -> bool:
-        return any(
-            p.id == parent.id for p in self.parents_of_child.get(child.id, ())
-        )
+        return any(p.id == parent.id for p in self.parents_of_child.get(child.id, ()))
 
     def parents_of(self, child: SGIRNode) -> list[SGIRNode]:
-        return self.parents_of_child.get(child.id, ())
+        return self.parents_of_child.get(child.id, [])
 
-    def is_under_modules(
-        self, node: SGIRNode, modules: list[SGIRNode]
-    ) -> bool:
+    def is_under_modules(self, node: SGIRNode, modules: list[SGIRNode]) -> bool:
         module_ids = {m.id for m in modules}
         for parent in self.parents_of(node):
             if parent.id in module_ids:
@@ -108,7 +96,10 @@ class _GenerateHelper:
         # original ``is_child_of`` semantics).
         if node.source_location and node.source_location.file_path:
             for module in modules:
-                if module.source_location and module.source_location.file_path == node.source_location.file_path:
+                if (
+                    module.source_location
+                    and module.source_location.file_path == node.source_location.file_path
+                ):
                     return True
         return False
 
@@ -158,15 +149,14 @@ class PythonBackend(CodeBackend):
                 files[init_path] = self.generate_package_init(package)
 
         orphans = [
-            n for n in class_nodes + function_nodes + datamodel_nodes
+            n
+            for n in class_nodes + function_nodes + datamodel_nodes
             if not helper.is_under_modules(n, module_nodes)
         ]
         if orphans:
             file_path = f"{graph.repository.name.replace(' ', '_').lower()}.py"
             if file_path not in files:
-                files[file_path] = self.generate_single_file(
-                    graph, orphans, [], [], []
-                )
+                files[file_path] = self.generate_single_file(graph, orphans, [], [], [])
 
         return files
 
@@ -319,9 +309,7 @@ class PythonBackend(CodeBackend):
         types = ", ".join(o.strip() for o in node.outputs)
         return f" -> tuple[{types}]"
 
-    def get_inheritance(
-        self, cls: SGIRNode, helper: _GenerateHelper
-    ) -> list[str]:
+    def get_inheritance(self, cls: SGIRNode, helper: _GenerateHelper) -> list[str]:
         bases: list[str] = []
         for source in helper.parents_of(cls):
             if source.node_type == NodeType.CLASS:

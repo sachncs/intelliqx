@@ -56,9 +56,7 @@ class LayerBuilderRegistry:
         """Return the builder for the given layer, or None."""
         return self.builders.get(layer)
 
-    def build_all(
-        self, parsed_data: dict[str, Any]
-    ) -> dict[GraphLayer, SGIRGraph]:
+    def build_all(self, parsed_data: dict[str, Any]) -> dict[GraphLayer, SGIRGraph]:
         """Invoke every registered builder and return the results."""
         results: dict[GraphLayer, SGIRGraph] = {}
         for layer, builder in self.builders.items():

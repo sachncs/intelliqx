@@ -46,62 +46,63 @@ class DependencyGraphBuilder(LayerBuilder):
                     if source_id not in node_ids:
                         node_ids.add(source_id)
                         module_nodes[entity.file_path] = source_id
-                        nodes.append(SGIRNode(
-                            id=source_id,
-                            name=entity.file_path,
-                            node_type=NodeType.MODULE,
-                            language=entity.language,
-                            source_location=SourceLocation(
-                                file_path=entity.file_path,
-                                line_start=entity.line_start,
-                                line_end=entity.line_end,
-                            ),
-                        ))
+                        nodes.append(
+                            SGIRNode(
+                                id=source_id,
+                                name=entity.file_path,
+                                node_type=NodeType.MODULE,
+                                language=entity.language,
+                                source_location=SourceLocation(
+                                    file_path=entity.file_path,
+                                    line_start=entity.line_start,
+                                    line_end=entity.line_end,
+                                ),
+                            )
+                        )
 
                     if target_id not in node_ids:
                         node_ids.add(target_id)
                         module_nodes[imp_name] = target_id
-                        nodes.append(SGIRNode(
-                            id=target_id,
-                            name=imp_name,
-                            node_type=NodeType.PACKAGE if "." in imp_name else NodeType.MODULE,
-                            language=entity.language,
-                        ))
+                        nodes.append(
+                            SGIRNode(
+                                id=target_id,
+                                name=imp_name,
+                                node_type=NodeType.PACKAGE if "." in imp_name else NodeType.MODULE,
+                                language=entity.language,
+                            )
+                        )
 
-                    edges.append(SGIREdge(
-                        source=source_id,
-                        target=target_id,
-                        edge_type=EdgeType.IMPORT,
-                        label=imp_name,
-                    ))
+                    edges.append(
+                        SGIREdge(
+                            source=source_id,
+                            target=target_id,
+                            edge_type=EdgeType.IMPORT,
+                            label=imp_name,
+                        )
+                    )
 
         if repository:
             repo_id = f"repo::{repository.name}"
             if repo_id not in node_ids:
                 node_ids.add(repo_id)
-                nodes.append(SGIRNode(
-                    id=repo_id,
-                    name=repository.name,
-                    node_type=NodeType.PACKAGE,
-                    language=", ".join(repository.languages),
-                    external_dependencies=repository.frameworks,
-                ))
+                nodes.append(
+                    SGIRNode(
+                        id=repo_id,
+                        name=repository.name,
+                        node_type=NodeType.PACKAGE,
+                        language=", ".join(repository.languages),
+                        external_dependencies=repository.frameworks,
+                    )
+                )
 
             for module_id in module_nodes.values():
                 if module_id != repo_id:
-                    edges.append(SGIREdge(
-                        source=repo_id,
-                        target=module_id,
-                        edge_type=EdgeType.DEPENDENCY,
-                    ))
+                    edges.append(
+                        SGIREdge(source=repo_id, target=module_id, edge_type=EdgeType.DEPENDENCY)
+                    )
 
         metadata: dict[str, Any] = {}
         if existing:
             metadata = existing.metadata
 
-        return SGIRGraph(
-            layer=GraphLayer.DEPENDENCY,
-            nodes=nodes,
-            edges=edges,
-            metadata=metadata,
-        )
+        return SGIRGraph(layer=GraphLayer.DEPENDENCY, nodes=nodes, edges=edges, metadata=metadata)

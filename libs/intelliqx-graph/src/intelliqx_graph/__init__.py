@@ -7,18 +7,6 @@ computations and edges represent the flow of data, control, and
 dependencies.
 """
 
-from intelliqx_graph.models import (
-    EdgeType,
-    GraphLayer,
-    SGIRGraph,
-    SGIRNode,
-    SoftwareGraph,
-)
+from intelliqx_graph.models import EdgeType, GraphLayer, SGIRGraph, SGIRNode, SoftwareGraph
 
-__all__ = [
-    "EdgeType",
-    "GraphLayer",
-    "SGIRGraph",
-    "SGIRNode",
-    "SoftwareGraph",
-]
+__all__ = ["EdgeType", "GraphLayer", "SGIRGraph", "SGIRNode", "SoftwareGraph"]

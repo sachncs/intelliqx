@@ -81,52 +81,57 @@ class ResourceGraphBuilder(LayerBuilder):
 
             side_effects = detect_io_operations(entity)
 
-            nodes.append(SGIRNode(
-                id=nid,
-                name=entity.name,
-                purpose=entity.docstring or "",
-                node_type=NodeType.METHOD if entity.entity_type == "method" else NodeType.FUNCTION,
-                language=entity.language,
-                source_location=SourceLocation(
-                    file_path=entity.file_path,
-                    line_start=entity.line_start,
-                    line_end=entity.line_end,
-                ),
-                inputs=entity.parameters,
-                outputs=[entity.return_type] if entity.return_type else [],
-                side_effects=side_effects,
-                resource_usage=build_resource_usage(entity),
-            ))
+            nodes.append(
+                SGIRNode(
+                    id=nid,
+                    name=entity.name,
+                    purpose=entity.docstring or "",
+                    node_type=(
+                        NodeType.METHOD if entity.entity_type == "method" else NodeType.FUNCTION
+                    ),
+                    language=entity.language,
+                    source_location=SourceLocation(
+                        file_path=entity.file_path,
+                        line_start=entity.line_start,
+                        line_end=entity.line_end,
+                    ),
+                    inputs=entity.parameters,
+                    outputs=[entity.return_type] if entity.return_type else [],
+                    side_effects=side_effects,
+                    resource_usage=build_resource_usage(entity),
+                )
+            )
 
             for resource_name in side_effects:
                 res_id = f"resource::{resource_name}"
                 if res_id not in node_ids:
                     node_ids.add(res_id)
                     resource_nodes[resource_name] = res_id
-                    nodes.append(SGIRNode(
-                        id=res_id,
-                        name=resource_name,
-                        node_type=NodeType.SERVICE,
-                        resource_usage={"type": classify_resource(resource_name)},
-                    ))
+                    nodes.append(
+                        SGIRNode(
+                            id=res_id,
+                            name=resource_name,
+                            node_type=NodeType.SERVICE,
+                            resource_usage={"type": classify_resource(resource_name)},
+                        )
+                    )
 
-                edges.append(SGIREdge(
-                    source=nid,
-                    target=res_id,
-                    edge_type=EdgeType.NETWORK if is_external(resource_name) else EdgeType.DATABASE,
-                    label=resource_name,
-                ))
+                edges.append(
+                    SGIREdge(
+                        source=nid,
+                        target=res_id,
+                        edge_type=(
+                            EdgeType.NETWORK if is_external(resource_name) else EdgeType.DATABASE
+                        ),
+                        label=resource_name,
+                    )
+                )
 
         metadata: dict[str, Any] = {}
         if existing:
             metadata = existing.metadata
 
-        return SGIRGraph(
-            layer=GraphLayer.RESOURCE,
-            nodes=nodes,
-            edges=edges,
-            metadata=metadata,
-        )
+        return SGIRGraph(layer=GraphLayer.RESOURCE, nodes=nodes, edges=edges, metadata=metadata)
 
 
 def detect_io_operations(entity: Any) -> list[str]:

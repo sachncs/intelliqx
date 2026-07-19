@@ -34,32 +34,21 @@ DEFAULT_SPLIT_PARTS: int = 2
 COMPLEXITY_SPLIT_THRESHOLD: frozenset[str] = frozenset({"O(n^3)", "O(2^n)"})
 
 
-def rebuild_graph(
-    graph: SGIRGraph,
-    nodes: list[SGIRNode],
-    edges: list[SGIREdge],
-) -> SGIRGraph:
-    return SGIRGraph(
-        layer=graph.layer,
-        nodes=nodes,
-        edges=edges,
-        metadata=graph.metadata,
-    )
+def rebuild_graph(graph: SGIRGraph, nodes: list[SGIRNode], edges: list[SGIREdge]) -> SGIRGraph:
+    return SGIRGraph(layer=graph.layer, nodes=nodes, edges=edges, metadata=graph.metadata)
 
 
 def node_map(graph: SGIRGraph) -> dict[str, SGIRNode]:
     return {n.id: n for n in graph.nodes}
 
 
-
 # ------------------------------------------------------------------
 # remove_dead_nodes
 # ------------------------------------------------------------------
 
+
 def remove_dead_nodes(
-    graph: SoftwareGraph,
-    graph_index: GraphIndex,
-    entry_points: list[str],
+    graph: SoftwareGraph, graph_index: GraphIndex, entry_points: list[str]
 ) -> SoftwareGraph:
     working = copy.deepcopy(graph)
     dead_ids = graph_index.find_dead_nodes(entry_points)
@@ -71,14 +60,15 @@ def remove_dead_nodes(
             continue
         surviving_nodes = [n for n in layer_graph.nodes if n.id not in dead_in_layer]
         surviving_edges = [
-            e for e in layer_graph.edges
+            e
+            for e in layer_graph.edges
             if e.source not in dead_in_layer and e.target not in dead_in_layer
         ]
         for n in layer_graph.nodes:
             if n.id in dead_in_layer:
                 n.is_dead = True
         working.layers[layer_graph.layer] = rebuild_graph(
-            layer_graph, surviving_nodes, surviving_edges,
+            layer_graph, surviving_nodes, surviving_edges
         )
 
     return working
@@ -88,10 +78,8 @@ def remove_dead_nodes(
 # detect_duplicates
 # ------------------------------------------------------------------
 
-def subgraph_signature(
-    graph: SGIRGraph,
-    node_ids: frozenset[str],
-) -> tuple[str, ...]:
+
+def subgraph_signature(graph: SGIRGraph, node_ids: frozenset[str]) -> tuple[str, ...]:
     nm = node_map(graph)
     sub_edges = [
         (e.source, e.target, e.edge_type)
@@ -99,18 +87,18 @@ def subgraph_signature(
         if e.source in node_ids and e.target in node_ids
     ]
     sorted_edges = sorted(sub_edges, key=lambda e: (e[0], e[1]))
-    return tuple(
-        (nm[nid].node_type.value if nid in nm else "unknown", src, tgt, et.value)
-        for nid, src, tgt, et in [
-            (nid, s, t, e) for s, t, e in sorted_edges for nid in (s, t)
-        ]
-    )
+    parts: list[str] = []
+    for src, tgt, et in sorted_edges:
+        for nid in (src, tgt):
+            label = nm[nid].node_type.value if nid in nm else "unknown"
+            parts.append(label)
+            parts.append(src)
+            parts.append(tgt)
+            parts.append(et.value)
+    return tuple(parts)
 
 
-def detect_duplicates(
-    graph: SoftwareGraph,
-    graph_index: GraphIndex,
-) -> list[tuple[str, str]]:
+def detect_duplicates(graph: SoftwareGraph, graph_index: GraphIndex) -> list[tuple[str, str]]:
     seen_signatures: dict[tuple[str, ...], list[str]] = {}
     duplicates: list[tuple[str, str]] = []
 
@@ -157,10 +145,9 @@ def bfs_component(start: str, adjacency: dict[str, set[str]]) -> set[str]:
 # inline_trivial_nodes
 # ------------------------------------------------------------------
 
+
 def inline_trivial_nodes(
-    graph: SoftwareGraph,
-    graph_index: GraphIndex,
-    threshold: int = DEFAULT_INLINE_THRESHOLD,
+    graph: SoftwareGraph, graph_index: GraphIndex, threshold: int = DEFAULT_INLINE_THRESHOLD
 ) -> SoftwareGraph:
     working = copy.deepcopy(graph)
 
@@ -195,7 +182,8 @@ def inline_trivial_nodes(
 
         for cid in inline_candidates:
             in_edges = [
-                e for e in layer_graph.edges
+                e
+                for e in layer_graph.edges
                 if e.target == cid and e.source not in inline_candidates
             ]
             target = inlined_map.get(cid)
@@ -203,17 +191,17 @@ def inline_trivial_nodes(
                 continue
             for ie in in_edges:
                 nm[cid].optimization_notes.append(f"inlined into {target}")
-                new_edges.append(SGIREdge(
-                    source=ie.source,
-                    target=target,
-                    edge_type=ie.edge_type,
-                    weight=ie.weight,
-                    label=f"inlined:{nm[cid].name}",
-                ))
+                new_edges.append(
+                    SGIREdge(
+                        source=ie.source,
+                        target=target,
+                        edge_type=ie.edge_type,
+                        weight=ie.weight,
+                        label=f"inlined:{nm[cid].name}",
+                    )
+                )
 
-        working.layers[layer_graph.layer] = rebuild_graph(
-            layer_graph, surviving_nodes, new_edges,
-        )
+        working.layers[layer_graph.layer] = rebuild_graph(layer_graph, surviving_nodes, new_edges)
 
     return working
 
@@ -228,9 +216,9 @@ def is_simple_node(node: SGIRNode, threshold: int) -> bool:
 # parallelize_independent_branches
 # ------------------------------------------------------------------
 
+
 def parallelize_independent_branches(
-    graph: SoftwareGraph,
-    graph_index: GraphIndex,
+    graph: SoftwareGraph, graph_index: GraphIndex
 ) -> list[list[str]]:
     seen_branches: set[frozenset[str]] = set()
     deduped: list[list[str]] = []
@@ -240,9 +228,7 @@ def parallelize_independent_branches(
         if nx_graph is None:
             nx_graph = nx.DiGraph()
             nx_graph.add_nodes_from(n.id for n in layer_graph.nodes)
-            nx_graph.add_edges_from(
-                (e.source, e.target) for e in layer_graph.edges
-            )
+            nx_graph.add_edges_from((e.source, e.target) for e in layer_graph.edges)
 
         if nx.is_directed_acyclic_graph(nx_graph):
             levels = parallel_levels(nx_graph)
@@ -289,14 +275,12 @@ def parallel_levels(graph: nx.DiGraph) -> list[set[str]]:
 # clean_dependency_cycles
 # ------------------------------------------------------------------
 
-def clean_dependency_cycles(
-    graph: SoftwareGraph,
-    graph_index: GraphIndex,
-) -> SoftwareGraph:
+
+def clean_dependency_cycles(graph: SoftwareGraph, graph_index: GraphIndex) -> SoftwareGraph:
     working = copy.deepcopy(graph)
 
     for layer_graph in working.layers.values():
-        nx_graph = nx.DiGraph()
+        nx_graph: nx.DiGraph = nx.DiGraph()
         for node in layer_graph.nodes:
             nx_graph.add_node(node.id)
         for edge in layer_graph.edges:
@@ -316,20 +300,16 @@ def clean_dependency_cycles(
                     edges_to_remove.add(worst_edge)
 
         surviving_edges = [
-            e for e in layer_graph.edges
-            if (e.source, e.target) not in edges_to_remove
+            e for e in layer_graph.edges if (e.source, e.target) not in edges_to_remove
         ]
         working.layers[layer_graph.layer] = rebuild_graph(
-            layer_graph, layer_graph.nodes, surviving_edges,
+            layer_graph, layer_graph.nodes, surviving_edges
         )
 
     return working
 
 
-def select_cycle_break_edge(
-    cycle: list[str],
-    layer_graph: SGIRGraph,
-) -> tuple[str, str] | None:
+def select_cycle_break_edge(cycle: list[str], layer_graph: SGIRGraph) -> tuple[str, str] | None:
     nm = node_map(layer_graph)
     worst_complexity = -1
     worst_edge: tuple[str, str] | None = None
@@ -340,9 +320,7 @@ def select_cycle_break_edge(
         node = nm.get(src)
         if node is None:
             continue
-        complexity_val = COMPLEXITY_ORDER.get(
-            node.complexity.value, COMPLEXITY_ORDER["unknown"],
-        )
+        complexity_val = COMPLEXITY_ORDER.get(node.complexity.value, COMPLEXITY_ORDER["unknown"])
         if complexity_val > worst_complexity:
             worst_complexity = complexity_val
             worst_edge = (src, tgt)
@@ -355,10 +333,7 @@ def select_cycle_break_edge(
 # ------------------------------------------------------------------
 
 
-def reduce_complexity(
-    graph: SoftwareGraph,
-    graph_index: GraphIndex,
-) -> SoftwareGraph:
+def reduce_complexity(graph: SoftwareGraph, graph_index: GraphIndex) -> SoftwareGraph:
     working = copy.deepcopy(graph)
 
     for layer_graph in working.layers.values():
@@ -398,16 +373,16 @@ def reduce_complexity(
 
         for _old_id, part_ids in splits.items():
             for j in range(len(part_ids) - 1):
-                new_edges.append(SGIREdge(
-                    source=part_ids[j],
-                    target=part_ids[j + 1],
-                    edge_type=EdgeType.CONTROL,
-                    label="split_chain",
-                ))
+                new_edges.append(
+                    SGIREdge(
+                        source=part_ids[j],
+                        target=part_ids[j + 1],
+                        edge_type=EdgeType.CONTROL,
+                        label="split_chain",
+                    )
+                )
 
-        working.layers[layer_graph.layer] = rebuild_graph(
-            layer_graph, new_nodes, new_edges,
-        )
+        working.layers[layer_graph.layer] = rebuild_graph(layer_graph, new_nodes, new_edges)
 
     return working
 
@@ -416,24 +391,26 @@ def split_node(node: SGIRNode, num_parts: int = DEFAULT_SPLIT_PARTS) -> list[SGI
     parts: list[SGIRNode] = []
     for i in range(num_parts):
         part_id = f"{node.id}__part{i}"
-        parts.append(SGIRNode(
-            id=part_id,
-            name=f"{node.name}_part{i}",
-            purpose=node.purpose,
-            node_type=node.node_type,
-            language=node.language,
-            source_location=node.source_location,
-            inputs=node.inputs if i == 0 else [f"{node.id}__part{i - 1}"],
-            outputs=node.outputs if i == num_parts - 1 else [part_id],
-            preconditions=node.preconditions if i == 0 else [],
-            postconditions=node.postconditions if i == num_parts - 1 else [],
-            side_effects=node.side_effects,
-            external_dependencies=node.external_dependencies,
-            complexity=ComplexityEstimate.LINEAR,
-            failure_modes=node.failure_modes,
-            security_boundary=node.security_boundary,
-            ownership=node.ownership,
-            test_coverage=node.test_coverage,
-            documentation=node.documentation,
-        ))
+        parts.append(
+            SGIRNode(
+                id=part_id,
+                name=f"{node.name}_part{i}",
+                purpose=node.purpose,
+                node_type=node.node_type,
+                language=node.language,
+                source_location=node.source_location,
+                inputs=node.inputs if i == 0 else [f"{node.id}__part{i - 1}"],
+                outputs=node.outputs if i == num_parts - 1 else [part_id],
+                preconditions=node.preconditions if i == 0 else [],
+                postconditions=node.postconditions if i == num_parts - 1 else [],
+                side_effects=node.side_effects,
+                external_dependencies=node.external_dependencies,
+                complexity=ComplexityEstimate.LINEAR,
+                failure_modes=node.failure_modes,
+                security_boundary=node.security_boundary,
+                ownership=node.ownership,
+                test_coverage=node.test_coverage,
+                documentation=node.documentation,
+            )
+        )
     return parts

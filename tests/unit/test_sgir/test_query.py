@@ -94,10 +94,7 @@ class TestGraphIndex:
     def test_find_cycles_cyclic(self) -> None:
         repo = RepositoryMetadata(name="test", root_path="/tmp")
         sg = SoftwareGraph(repository=repo)
-        nodes = [
-            SGIRNode(id="a", name="a"),
-            SGIRNode(id="b", name="b"),
-        ]
+        nodes = [SGIRNode(id="a", name="a"), SGIRNode(id="b", name="b")]
         edges = [
             SGIREdge(source="a", target="b", edge_type=EdgeType.CALL),
             SGIREdge(source="b", target="a", edge_type=EdgeType.CALL),

@@ -53,26 +53,30 @@ class ControlFlowBuilder(LayerBuilder):
                 continue
             node_ids.add(nid)
 
-            node_type = NodeType.METHOD if entity.entity_type == "method" else (
-                NodeType.CLASS if entity.entity_type == "class" else NodeType.FUNCTION
+            node_type = (
+                NodeType.METHOD
+                if entity.entity_type == "method"
+                else (NodeType.CLASS if entity.entity_type == "class" else NodeType.FUNCTION)
             )
 
-            nodes.append(SGIRNode(
-                id=nid,
-                name=entity.name,
-                purpose=entity.docstring or "",
-                node_type=node_type,
-                language=entity.language,
-                source_location=SourceLocation(
-                    file_path=entity.file_path,
-                    line_start=entity.line_start,
-                    line_end=entity.line_end,
-                ),
-                inputs=entity.parameters,
-                outputs=[entity.return_type] if entity.return_type else [],
-                complexity=entity.complexity,
-                side_effects=detect_side_effects(entity),
-            ))
+            nodes.append(
+                SGIRNode(
+                    id=nid,
+                    name=entity.name,
+                    purpose=entity.docstring or "",
+                    node_type=node_type,
+                    language=entity.language,
+                    source_location=SourceLocation(
+                        file_path=entity.file_path,
+                        line_start=entity.line_start,
+                        line_end=entity.line_end,
+                    ),
+                    inputs=entity.parameters,
+                    outputs=[entity.return_type] if entity.return_type else [],
+                    complexity=entity.complexity,
+                    side_effects=detect_side_effects(entity),
+                )
+            )
 
         for entity in entities:
             if entity.entity_type == "class":
@@ -81,12 +85,14 @@ class ControlFlowBuilder(LayerBuilder):
                     if child.parent == entity.name and child.entity_type == "method":
                         method_id = make_node_id(child.file_path, child.name)
                         if class_id in node_ids and method_id in node_ids:
-                            edges.append(SGIREdge(
-                                source=class_id,
-                                target=method_id,
-                                edge_type=EdgeType.CONTROL,
-                                label="contains",
-                            ))
+                            edges.append(
+                                SGIREdge(
+                                    source=class_id,
+                                    target=method_id,
+                                    edge_type=EdgeType.CONTROL,
+                                    label="contains",
+                                )
+                            )
 
         for entity in entities:
             if entity.entity_type not in {"function", "method"}:
@@ -98,23 +104,20 @@ class ControlFlowBuilder(LayerBuilder):
                         target_ids = resolve_ids(call_name, entities, node_ids)
                         for target_id in target_ids:
                             if target_id != nid:
-                                edges.append(SGIREdge(
-                                    source=nid,
-                                    target=target_id,
-                                    edge_type=EdgeType.CONTROL,
-                                    label=call_name,
-                                ))
+                                edges.append(
+                                    SGIREdge(
+                                        source=nid,
+                                        target=target_id,
+                                        edge_type=EdgeType.CONTROL,
+                                        label=call_name,
+                                    )
+                                )
 
         metadata: dict[str, Any] = {}
         if existing:
             metadata = existing.metadata
 
-        return SGIRGraph(
-            layer=GraphLayer.CONTROL_FLOW,
-            nodes=nodes,
-            edges=edges,
-            metadata=metadata,
-        )
+        return SGIRGraph(layer=GraphLayer.CONTROL_FLOW, nodes=nodes, edges=edges, metadata=metadata)
 
 
 def detect_side_effects(entity: Any) -> list[str]:

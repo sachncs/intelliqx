@@ -14,10 +14,7 @@ from typing import Any
 
 import networkx as nx
 
-from intelliqx_graph.models import (
-    GraphLayer,
-    SoftwareGraph,
-)
+from intelliqx_graph.models import GraphLayer, SoftwareGraph
 
 
 class GraphIndex:
@@ -66,11 +63,7 @@ class GraphIndex:
                 (
                     edge.source,
                     edge.target,
-                    {
-                        "edge_type": edge.edge_type.value,
-                        "weight": edge.weight,
-                        "label": edge.label,
-                    },
+                    {"edge_type": edge.edge_type.value, "weight": edge.weight, "label": edge.label},
                 )
                 for edge in sg_graph.edges
             )
@@ -99,9 +92,7 @@ class GraphIndex:
     # Reachability
     # ------------------------------------------------------------------
 
-    def reachable_from(
-        self, node_id: str, *, layer: GraphLayer | None = None
-    ) -> set[str]:
+    def reachable_from(self, node_id: str, *, layer: GraphLayer | None = None) -> set[str]:
         """Return all nodes reachable from ``node_id``.
 
         If ``layer`` is specified, only that layer is traversed.
@@ -112,9 +103,7 @@ class GraphIndex:
             return set()
         return nx.descendants(g, node_id)
 
-    def can_reach(
-        self, source: str, target: str, *, layer: GraphLayer | None = None
-    ) -> bool:
+    def can_reach(self, source: str, target: str, *, layer: GraphLayer | None = None) -> bool:
         """Return True if ``target`` is reachable from ``source``."""
         return target in self.reachable_from(source, layer=layer)
 
@@ -122,7 +111,9 @@ class GraphIndex:
     # Dead code detection
     # ------------------------------------------------------------------
 
-    def find_dead_nodes(self, entry_points: list[str], *, layer: GraphLayer | None = None) -> set[str]:
+    def find_dead_nodes(
+        self, entry_points: list[str], *, layer: GraphLayer | None = None
+    ) -> set[str]:
         """Return node IDs unreachable from any entry point.
 
         Dead code = nodes that no entry point can reach.
@@ -167,9 +158,7 @@ class GraphIndex:
     # Community detection
     # ------------------------------------------------------------------
 
-    def detect_communities(
-        self, *, layer: GraphLayer | None = None
-    ) -> list[set[str]]:
+    def detect_communities(self, *, layer: GraphLayer | None = None) -> list[set[str]]:
         """Detect communities using greedy modularity maximization.
 
         Returns a list of communities, each a set of node IDs.
@@ -247,8 +236,7 @@ class GraphIndex:
             return []
         out_degree = dict(g.out_degree())
         result = sorted(
-            (n for n, d in out_degree.items() if d >= threshold),
-            key=lambda n: (-out_degree[n], n),
+            (n for n, d in out_degree.items() if d >= threshold), key=lambda n: (-out_degree[n], n)
         )
         self._high_fanout_cache[cache_key] = result
         return result
@@ -265,8 +253,7 @@ class GraphIndex:
             return []
         in_degree = dict(g.in_degree())
         result = sorted(
-            (n for n, d in in_degree.items() if d >= threshold),
-            key=lambda n: (-in_degree[n], n),
+            (n for n, d in in_degree.items() if d >= threshold), key=lambda n: (-in_degree[n], n)
         )
         self._high_fanin_cache[cache_key] = result
         return result
@@ -291,10 +278,7 @@ class GraphIndex:
 
     def stats(self) -> dict[str, Any]:
         """Return summary statistics for the indexed graph."""
-        result: dict[str, Any] = {
-            "total_layers": len(self.graphs),
-            "layers": {},
-        }
+        result: dict[str, Any] = {"total_layers": len(self.graphs), "layers": {}}
         for layer, g in self.graphs.items():
             result["layers"][layer.value] = {
                 "nodes": g.number_of_nodes(),
@@ -324,7 +308,7 @@ class GraphIndex:
         cached = self.merged_cache
         if cached is not None:
             return cached
-        merged = nx.DiGraph()
+        merged: nx.DiGraph = nx.DiGraph()
         for g in self.graphs.values():
             merged.update(g)
         self.merged_cache = merged

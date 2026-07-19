@@ -116,4 +116,5 @@ dev = [
     "mypy>=1.18",
     "black>=26.0",
     "vulture>=2.16",
+    "types-networkx>=3.4",
 ]

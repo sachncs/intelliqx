@@ -53,30 +53,26 @@ class OptimizationPipeline:
         working = copy.deepcopy(self.graph)
 
         working = self.apply_pass(
-            working, "dead_code_removal",
+            working,
+            "dead_code_removal",
             lambda g: remove_dead_nodes(g, self.graph_index, self.entry_points),
         )
 
         self.duplicate_pairs = detect_duplicates(working, self.graph_index)
 
         working = self.apply_pass(
-            working, "inline_trivial",
-            lambda g: inline_trivial_nodes(g, self.graph_index),
+            working, "inline_trivial", lambda g: inline_trivial_nodes(g, self.graph_index)
         )
 
         working = self.apply_pass(
-            working, "reduce_complexity",
-            lambda g: reduce_complexity(g, self.graph_index),
+            working, "reduce_complexity", lambda g: reduce_complexity(g, self.graph_index)
         )
 
         working = self.apply_pass(
-            working, "clean_cycles",
-            lambda g: clean_dependency_cycles(g, self.graph_index),
+            working, "clean_cycles", lambda g: clean_dependency_cycles(g, self.graph_index)
         )
 
-        self.parallel_branches = parallelize_independent_branches(
-            working, self.graph_index,
-        )
+        self.parallel_branches = parallelize_independent_branches(working, self.graph_index)
 
         summary = self.build_summary(original, working)
 
@@ -92,16 +88,12 @@ class OptimizationPipeline:
     def apply_pass(
         self,
         graph: SoftwareGraph,
-        pass_name: str,
+        _pass_name: str,
         pass_fn: Callable[[SoftwareGraph], SoftwareGraph],
     ) -> SoftwareGraph:
         result = pass_fn(graph)
 
-        agent = VerificationAgent(
-            before=graph,
-            after=result,
-            entry_points=self.entry_points,
-        )
+        agent = VerificationAgent(before=graph, after=result, entry_points=self.entry_points)
         report = agent.verify()
         self.reports.append(report)
 
@@ -110,11 +102,7 @@ class OptimizationPipeline:
 
         return result
 
-    def build_summary(
-        self,
-        before: SoftwareGraph,
-        after: SoftwareGraph,
-    ) -> dict[str, Any]:
+    def build_summary(self, before: SoftwareGraph, after: SoftwareGraph) -> dict[str, Any]:
         return {
             "target_language": self.target_language,
             "nodes_before": before.total_nodes,
@@ -124,13 +112,8 @@ class OptimizationPipeline:
             "node_reduction": before.total_nodes - after.total_nodes,
             "edge_reduction": before.total_edges - after.total_edges,
             "pass_count": len(self.reports),
-            "all_behavior_preserved": all(
-                r.behavior_preserved for r in self.reports
-            ),
-            "max_risk_level": max(
-                (r.risk_level for r in self.reports),
-                default=DEFAULT_RISK_LEVEL,
-            ),
+            "all_behavior_preserved": all(r.behavior_preserved for r in self.reports),
+            "max_risk_level": max((r.risk_level for r in self.reports), default=DEFAULT_RISK_LEVEL),
             "duplicate_pairs_found": len(self.duplicate_pairs),
             "parallel_branches_found": len(self.parallel_branches),
         }

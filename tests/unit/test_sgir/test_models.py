@@ -35,9 +35,7 @@ class TestSGIRNode:
             purpose="Validate user credentials",
             node_type=NodeType.FUNCTION,
             language="python",
-            source_location=SourceLocation(
-                file_path="auth.py", line_start=10, line_end=25
-            ),
+            source_location=SourceLocation(file_path="auth.py", line_start=10, line_end=25),
             inputs=["username", "password"],
             outputs=["bool"],
             preconditions=["user_exists"],
@@ -55,6 +53,7 @@ class TestSGIRNode:
 
     def test_extra_forbid(self) -> None:
         from pydantic import ValidationError
+
         with pytest.raises(ValidationError):
             SGIRNode(id="n3", name="x", unknown_field="bad")
 
@@ -117,10 +116,12 @@ class TestSoftwareGraph:
 
     def test_total_nodes(self) -> None:
         sg = self._make_sg()
-        sg.add_layer(SGIRGraph(
-            layer=GraphLayer.DATA_FLOW,
-            nodes=[SGIRNode(id="d1", name="x"), SGIRNode(id="d2", name="y")],
-        ))
+        sg.add_layer(
+            SGIRGraph(
+                layer=GraphLayer.DATA_FLOW,
+                nodes=[SGIRNode(id="d1", name="x"), SGIRNode(id="d2", name="y")],
+            )
+        )
         assert sg.total_nodes == 3
 
     def test_find_node(self) -> None:

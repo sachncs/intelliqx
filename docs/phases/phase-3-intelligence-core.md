@@ -11,7 +11,7 @@
 | Agent | Inputs | Outputs | Backing Data |
 |---|---|---|---|
 | Requirements Intelligence | PRD, stories, AC | Requirements graph + traceability matrix | KG (Parquet) |
-| Code Intelligence | AST (tree-sitter), PRs, code | Impact graph, dependency graph | KG + zvec |
+| Code Intelligence | Python AST, PRs, code | Impact graph, dependency graph | KG + zvec |
 | Risk Assessment | Requirements + Code + historical defects | Risk score, regression priority, business impact | KG |
 | Test Design | Requirements + Risk | Functional, boundary, negative, exploratory tests | zvec (templates) |
 | Test Data | Requirements + Test Design | Synthetic, boundary, privacy-safe datasets | in-process object store |
@@ -30,7 +30,7 @@ Deferred to Phase 6: Learning Agent, Prompt Management Agent.
 ## 3.3 Deliverables
 
 - [x] `agents/intelligence/requirements_intel/` — PRD parser, entity extractor (LLM), traceability matrix writer.
-- [x] `agents/intelligence/code_intel/` — tree-sitter AST ingestion, diff impact analyzer.
+- [x] `agents/intelligence/code_intel/` — Python AST ingestion, diff impact analyzer.
 - [x] `agents/intelligence/risk_assessment/` — risk scorer (LLM-as-judge + heuristic).
 - [x] `agents/intelligence/test_design/` — Gherkin + structured test spec generator.
 - [x] `agents/intelligence/test_data/` — synthetic data + boundary datasets.
@@ -59,6 +59,6 @@ Deferred to Phase 6: Learning Agent, Prompt Management Agent.
 
 | Risk | Mitigation |
 |---|---|
-| tree-sitter grammars heavy in CI | Cache grammars in workspace tempdir |
+| Python syntax errors during ingestion | Record file-level errors and continue the scan |
 | LLM hallucinations in requirements parsing | Critic + golden-eval regression |
 | PII in synthetic data | Allowlist-driven synthetic generator |

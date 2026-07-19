@@ -102,7 +102,8 @@ class PerformanceAgent:
         parallelization = self.find_parallelization_opportunities(call_graph)
         complexity_dist = self.complexity_distribution(call_graph)
         high_complexity = sum(
-            count for complexity, count in complexity_dist.items()
+            count
+            for complexity, count in complexity_dist.items()
             if complexity in self.EXPENSIVE_COMPLEXITIES
         )
 
@@ -117,17 +118,11 @@ class PerformanceAgent:
         )
 
     def find_critical_paths(self, call_graph: nx.DiGraph) -> list[CriticalPathInfo]:
-        entry_points = [
-            n for n in call_graph.nodes
-            if call_graph.in_degree(n) == 0
-        ]
+        entry_points = [n for n in call_graph.nodes if call_graph.in_degree(n) == 0]
         if not entry_points:
             return []
 
-        exit_points = [
-            n for n in call_graph.nodes
-            if call_graph.out_degree(n) == 0
-        ]
+        exit_points = [n for n in call_graph.nodes if call_graph.out_degree(n) == 0]
 
         paths: list[CriticalPathInfo] = []
         for source in entry_points[:MAX_ENTRY_POINTS]:
@@ -139,16 +134,17 @@ class PerformanceAgent:
                     continue
 
                 weight = sum(
-                    call_graph[u][v].get("weight", DEFAULT_EDGE_WEIGHT)
-                    for u, v in pairwise(path)
+                    call_graph[u][v].get("weight", DEFAULT_EDGE_WEIGHT) for u, v in pairwise(path)
                 )
-                paths.append(CriticalPathInfo(
-                    source=source,
-                    target=target,
-                    path=path,
-                    path_length=len(path),
-                    total_weight=weight,
-                ))
+                paths.append(
+                    CriticalPathInfo(
+                        source=source,
+                        target=target,
+                        path=path,
+                        path_length=len(path),
+                        total_weight=weight,
+                    )
+                )
 
         paths.sort(key=lambda p: p.total_weight, reverse=True)
         return paths[:MAX_CRITICAL_PATHS]
@@ -170,17 +166,21 @@ class PerformanceAgent:
 
             callers = list(call_graph.predecessors(node_id))
 
-            cost_score = self.COMPLEXITY_COSTS.get(node.complexity.value, 1.0) * (1 + fi * FAN_IN_COST_WEIGHT)
+            cost_score = self.COMPLEXITY_COSTS.get(node.complexity.value, 1.0) * (
+                1 + fi * FAN_IN_COST_WEIGHT
+            )
 
-            expensive.append(ExpensiveComputation(
-                node_id=node_id,
-                node_name=node.name,
-                complexity=node.complexity.value,
-                fan_in=fi,
-                fan_out=fo,
-                callers=callers,
-                cost_score=cost_score,
-            ))
+            expensive.append(
+                ExpensiveComputation(
+                    node_id=node_id,
+                    node_name=node.name,
+                    complexity=node.complexity.value,
+                    fan_in=fi,
+                    fan_out=fo,
+                    callers=callers,
+                    cost_score=cost_score,
+                )
+            )
 
         expensive.sort(key=lambda e: e.cost_score, reverse=True)
         return expensive
@@ -203,21 +203,25 @@ class PerformanceAgent:
 
             if is_pure and fi >= MIN_CACHE_FAN_IN:
                 estimated = "moderate" if fi < HIGH_CACHE_SPEEDUP_FAN_IN else "significant"
-                opportunities.append(CachingOpportunity(
-                    node_id=node_id,
-                    node_name=node.name,
-                    reason=f"Pure function called {fi} times with no side effects",
-                    estimated_speedup=f"{estimated} speedup by caching results",
-                    fan_in=fi,
-                ))
+                opportunities.append(
+                    CachingOpportunity(
+                        node_id=node_id,
+                        node_name=node.name,
+                        reason=f"Pure function called {fi} times with no side effects",
+                        estimated_speedup=f"{estimated} speedup by caching results",
+                        fan_in=fi,
+                    )
+                )
             elif fi >= HIGH_CACHE_FAN_IN:
-                opportunities.append(CachingOpportunity(
-                    node_id=node_id,
-                    node_name=node.name,
-                    reason=f"High fan-in ({fi} callers); consider memoizing if inputs are bounded",
-                    estimated_speedup="variable depending on input distribution",
-                    fan_in=fi,
-                ))
+                opportunities.append(
+                    CachingOpportunity(
+                        node_id=node_id,
+                        node_name=node.name,
+                        reason=f"High fan-in ({fi} callers); consider memoizing if inputs are bounded",
+                        estimated_speedup="variable depending on input distribution",
+                        fan_in=fi,
+                    )
+                )
 
         opportunities.sort(key=lambda o: o.fan_in, reverse=True)
         return opportunities
@@ -235,18 +239,19 @@ class PerformanceAgent:
             independent = []
             for s in successors:
                 has_cross_dep = any(
-                    other != s and nx.has_path(call_graph, s, other)
-                    for other in successors
+                    other != s and nx.has_path(call_graph, s, other) for other in successors
                 )
                 if not has_cross_dep:
                     independent.append(s)
 
             if len(independent) >= MIN_PARALLEL_SUCCESSORS:
-                opportunities.append(ParallelizationOpportunity(
-                    node_ids=[node_id] + independent,
-                    reason=f"Node {node_id} fans out to {len(independent)} independent successors",
-                    potential_speedup=f"Up to {len(independent)}x parallelism",
-                ))
+                opportunities.append(
+                    ParallelizationOpportunity(
+                        node_ids=[node_id] + independent,
+                        reason=f"Node {node_id} fans out to {len(independent)} independent successors",
+                        potential_speedup=f"Up to {len(independent)}x parallelism",
+                    )
+                )
 
         return opportunities
 
