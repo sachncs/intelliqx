@@ -20,6 +20,7 @@ dependencies = [
     "intelliqx-okf",
     "intelliqx-graph",
     "tqdm>=4.66",
+    "pydantic-ai-slim[openai]>=0.0.30",
 ]
 
 [tool.uv.sources]
@@ -56,6 +57,7 @@ members = [
     "agents",
     "libs/intelliqx-okf",
     "libs/intelliqx-graph",
+    "libs/intelliqx-ai",
     "tests",
 ]
 

@@ -1,1 +1,0 @@
-"""SGIR test package."""
