@@ -44,14 +44,11 @@ class InvocationRequest(BaseModel):
     """An agent invocation.
 
     Attributes:
-        agent_name: Registry key for the agent to invoke. Used as
-            the Lambda function name (``intelliqx-{agent_name}``) in AWS
-            and as the URL path component on GCP.
+        agent_name: Registry key for the agent to invoke.
         input: JSON-serialisable dict of agent input.
         tenant_id: Tenant scope; flows into :class:`AgentContext`.
         timeout_seconds: Per-call timeout. Enforced by
-            ``asyncio.wait_for`` in the in-process runtime; the
-            cloud adapters rely on the platform's native timeout.
+            ``asyncio.wait_for`` in the in-process runtime.
         metadata: Free-form per-call metadata (run id, plan id, etc.).
     """
 
@@ -188,9 +185,7 @@ class InProcessComputeRuntime(ComputeRuntime):
 SINGLETON: ComputeRuntime | None = None
 
 
-COMPUTE_RUNTIME_REGISTRY: dict[str, type[ComputeRuntime]] = {
-    "in_process": InProcessComputeRuntime,
-}
+COMPUTE_RUNTIME_REGISTRY: dict[str, type[ComputeRuntime]] = {"in_process": InProcessComputeRuntime}
 
 
 def register_compute_runtime(name: str, factory: type[ComputeRuntime]) -> None:
@@ -198,55 +193,23 @@ def register_compute_runtime(name: str, factory: type[ComputeRuntime]) -> None:
 
     The factory is a zero-arg callable that returns a
     :class:`ComputeRuntime` instance (typically the adapter class
-    itself). Use this to plug in a cloud adapter without modifying
+    itself). Use this to plug in a custom runtime without modifying
     the call site of :func:`get_compute_runtime`.
     """
     COMPUTE_RUNTIME_REGISTRY[name] = factory
 
 
-def _load_default_compute_runtimes() -> None:
-    """Load built-in cloud adapters when their SDKs are importable.
-
-    Mirrors the lazy-load pattern used by
-    :mod:`intelliqx_state.store` so importing :mod:`intelliqx_compute`
-    stays lightweight for environments that only use the in-process
-    runtime (tests, local dev).
-    """
-    if "aws" not in COMPUTE_RUNTIME_REGISTRY:
-        try:
-            from intelliqx_compute.aws import AWSLambdaComputeRuntime
-
-            COMPUTE_RUNTIME_REGISTRY["aws"] = AWSLambdaComputeRuntime
-        except ImportError:
-            pass
-    if "gcp" not in COMPUTE_RUNTIME_REGISTRY:
-        try:
-            from intelliqx_compute.gcp import GCPFunctionsComputeRuntime
-
-            COMPUTE_RUNTIME_REGISTRY["gcp"] = GCPFunctionsComputeRuntime
-        except ImportError:
-            pass
-    if "modal" not in COMPUTE_RUNTIME_REGISTRY:
-        try:
-            from intelliqx_compute.modal import ModalComputeRuntime
-
-            COMPUTE_RUNTIME_REGISTRY["modal"] = ModalComputeRuntime
-        except ImportError:
-            pass
-
-
 def list_compute_runtimes() -> tuple[str, ...]:
     """Return the names of all registered compute runtimes."""
-    _load_default_compute_runtimes()
     return tuple(sorted(COMPUTE_RUNTIME_REGISTRY))
 
 
 def get_compute_runtime() -> ComputeRuntime:
     """Return the singleton compute runtime.
 
-    Defaults to :class:`InProcessComputeRuntime`. Production
-    deployments should construct a cloud adapter once at startup
-    and call :func:`set_compute_runtime` to install it.
+    Defaults to :class:`InProcessComputeRuntime`. Custom runtimes
+    can be installed ahead of the first call via
+    :func:`set_compute_runtime`.
     """
     global SINGLETON
     if SINGLETON is None:
@@ -257,8 +220,8 @@ def get_compute_runtime() -> ComputeRuntime:
 def set_compute_runtime(runtime: ComputeRuntime) -> None:
     """Replace the singleton compute runtime.
 
-    Used by application bootstrap to install a configured cloud
-    adapter before the first :func:`get_compute_runtime` call.
+    Used by application bootstrap to install a configured runtime
+    before the first :func:`get_compute_runtime` call.
     """
     global SINGLETON
     SINGLETON = runtime

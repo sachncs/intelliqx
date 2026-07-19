@@ -3,20 +3,13 @@
 from datetime import datetime
 
 import pytest
-from intelliqx_core.errors import (
-    CloudConfigError,
-    ContractError,
-    IntelliqxError,
-    NotFoundError,
-    ValidationError,
-)
+from intelliqx_core.errors import ContractError, IntelliqxError, NotFoundError, ValidationError
 from intelliqx_core.events import BaseEvent, EventEnvelope, EventMetadata
 from intelliqx_core.ids import is_valid_id, new_id, parse_id
 from intelliqx_core.models import (
     AgentCapability,
     AgentCategory,
     AgentRef,
-    CloudProvider,
     Goal,
     HealthStatus,
     PlanNode,
@@ -80,14 +73,6 @@ def test_tenant_context_frozen():
 
 
 @pytest.mark.unit
-def test_cloud_provider_enum():
-    assert CloudProvider.AWS.value == "aws"
-    assert CloudProvider.GCP.value == "gcp"
-    assert CloudProvider.MODAL.value == "modal"
-    assert CloudProvider.LOCAL.value == "local"
-
-
-@pytest.mark.unit
 def test_run_status_enum():
     for s in RunStatus:
         assert s.value in {"PENDING", "RUNNING", "SUCCEEDED", "FAILED", "CANCELLED", "PAUSED"}
@@ -113,7 +98,6 @@ def test_health_status_enum():
 
 @pytest.mark.unit
 def test_error_hierarchy():
-    assert issubclass(CloudConfigError, IntelliqxError)
     assert issubclass(ContractError, IntelliqxError)
     assert issubclass(NotFoundError, IntelliqxError)
     assert issubclass(ValidationError, IntelliqxError)

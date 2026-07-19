@@ -1,6 +1,6 @@
 <p align="center">
   <h1 align="center">intelliqx</h1>
-  <p align="center">Autonomous QA Intelligence Platform — multi-cloud, agent-native test automation.</p>
+  <p align="center">Autonomous QA Intelligence Platform — agent-native test automation.</p>
   <p align="center">
     <a href="#installation"><img src="https://img.shields.io/badge/python-3.12-blue" alt="Python"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-green" alt="License"></a>
@@ -10,9 +10,8 @@
 </p>
 
 **intelliqx** is a Python platform that runs 29 specialised agents
-across AWS, GCP, and Modal to plan, generate, execute, and govern
-software tests. The same agent code runs on any cloud — cloud-specific
-SDK access lives behind a thin portability layer.
+that plan, generate, execute, and govern software tests. The same
+agent code is portable across process and container boundaries.
 
 ```bash
 # Install everything (15 libraries + 29 agents + dev tools)
@@ -27,7 +26,7 @@ uv run black --check .
 uv run mypy libs agents
 uv run vulture libs agents tests .vulture-whitelist
 
-# Start the local infrastructure (Redis, Postgres) for adapters
+# Start the local infrastructure for adapters
 docker compose up -d
 ```
 
@@ -42,14 +41,6 @@ docker compose up -d
   Self-Healing, Failure Analysis, Design Intel, Visual, A11y, Perf,
   Security, Cost Opt), Governance (Observability, Reporting,
   Compliance, Release Readiness).
-- **Multi-Cloud Portability** — Same agent code runs on AWS, GCP,
-  and Modal via 15 independent libraries
-  (`intelliqx-core`, `intelliqx-events`, `intelliqx-storage`,
-  `intelliqx-state`, `intelliqx-vector`, `intelliqx-kg`,
-  `intelliqx-llm`, `intelliqx-compute`, `intelliqx-observability`,
-  `intelliqx-tools`, `intelliqx-portability`, `intelliqx-tenant`,
-  `intelliqx-sdk`, `intelliqx-agents`, `intelliqx-okf`). Each adapter
-  implements the same async interface.
 - **Knowledge Graph on Parquet + DuckDB** — File-based, no managed
   graph DB needed; every node and edge is queryable through SQL.
 - **Vector Search via zvec** — Embedded vector store persisted to
@@ -58,17 +49,16 @@ docker compose up -d
   for tenant-scoped full-text + vector search of structured
   documentation.
 - **Polymorphic Memory Manager** — One agent entry-point handles
-  working, episodic, semantic, and code memories backed by Redis or
-  S3.
-- **Cross-Cloud Contract Tests** — Asserts every adapter produces
-  identical structured output across AWS / GCP / Modal / local
-  profiles.
+  working, episodic, semantic, and code memories backed by the
+  in-process stores.
+- **Contract Tests** — Asserts every object-store, state-store, and
+  event-bus implementation satisfies the same interface.
 - **RBAC + ABAC + Audit Trail** — Tenant-scoped permissions with
   dead-letter queues, human approval workflows, and tamper-evident
   audit records.
 - **Zero-Cost Local Dev** — In-memory adapters for events, storage,
   state, vectors, and the LLM client make the entire pipeline
-  runnable on a laptop with no cloud credentials.
+  runnable on a laptop with no external credentials.
 
 ---
 
@@ -85,7 +75,7 @@ uv sync --all-packages       # 15 libraries + 29 agents + dev tools
 ### With Docker
 
 ```bash
-docker compose up -d         # local Redis, Postgres adapters
+docker compose up -d         # local adapters
 make docker-up
 ```
 
@@ -113,7 +103,7 @@ print(asyncio.run(get_compute_runtime().invoke(req)))
 # Run the full local test pipeline
 uv run pytest tests/unit tests/contract tests/integration -q
 
-# Start the local infrastructure (Redis, Postgres) for adapters
+# Start the local infrastructure for adapters
 docker compose up -d
 ```
 
@@ -121,6 +111,7 @@ docker compose up -d
 
 ```bash
 # Local development (no cloud credentials)
+```
 
 ```bash
 # 1. Install
@@ -128,7 +119,7 @@ git clone https://github.com/sachncs/intelliqx.git
 cd intelliqx
 uv sync --all-packages
 
-# 2. Run the suite (no Docker, no cloud keys required)
+# 2. Run the suite (no Docker, no external credentials required)
 uv run pytest tests/unit -q
 
 # 3. Try a single agent in-process
@@ -142,35 +133,6 @@ from intelliqx_compute.runtime import get_compute_runtime
 req = InvocationRequest(agent_name='smoke', input={'marker': 'hello'}, tenant_id='t1')
 print(asyncio.run(get_compute_runtime().invoke(req)))
 "
-```
-
-### Running on AWS
-
-```bash
-export INTELLIQX_CLOUD=aws
-export AWS_REGION=us-east-1
-export AWS_ACCESS_KEY_ID=...
-export AWS_SECRET_ACCESS_KEY=...
-uv run pytest tests/cross_cloud -q
-```
-
-### Running on GCP
-
-```bash
-export INTELLIQX_CLOUD=gcp
-export INTELLIQX_REGION=us-central1
-export GOOGLE_CLOUD_PROJECT=my-project
-uv run pytest tests/cross_cloud -q
-```
-
-### Running on Modal
-
-```bash
-export INTELLIQX_CLOUD=modal
-export INTELLIQX_VLLM_URL=https://vllm.modal.run
-export MODAL_TOKEN_ID=...
-export MODAL_TOKEN_SECRET=...
-uv run pytest tests/cross_cloud -q
 ```
 
 ### Running against MiniMax
@@ -206,35 +168,21 @@ asyncio.run(main())
 
 | Setting | Env Variable | Default | Description |
 |---------|--------------|---------|-------------|
-| Cloud profile | `INTELLIQX_CLOUD` | `local` | `local`, `aws`, `gcp`, `modal`, or `minimax` |
-| LLM backend | `INTELLIQX_LLM_BACKEND` | `fake` | `fake`, `bedrock`, `vertex`, `vllm`, or `minimax` |
-| Environment tag | `INTELLIQX_ENV` | `dev` | Tag for log routing and metrics |
+| LLM backend | `INTELLIQX_LLM_BACKEND` | `fake` | `fake`, or `minimax` |
 | Object store | `INTELLIQX_OBJECT_STORE` | `memory` | `memory`, or `fs:/path/to/dir` |
+| State backend | `INTELLIQX_STATE_BACKEND` | `memory` | `memory` |
+| Event bus backend | `INTELLIQX_EVENT_BUS_BACKEND` | `memory` | `memory` |
 | Vector backend | `INTELLIQX_VECTOR_BACKEND` | `memory` | `memory`, `sqlite_vec`, or `zvec` |
 | Vector dim | `INTELLIQX_VECTOR_DIM` | `768` | Embedding dimension |
 | OTel tracing | `INTELLIQX_OTEL` | `0` | Set to `1` to enable OTel tracing |
 | JSON logs | `INTELLIQX_LOGS_JSON` | `0` | Set to `1` for JSON log output |
-| vLLM endpoint | `INTELLIQX_VLLM_URL` | — | OpenAI-compatible URL for `vllm` backend |
 | MiniMax API key | `MINIMAX_API_KEY` | — | Required for `minimax` backend |
-
-### Cloud profile matrix
-
-| Profile | Backends |
-|---------|----------|
-| `local` | In-memory events, storage, state, vectors, LLM |
-| `aws` | EventBridge, S3, ElastiCache (Redis), Bedrock |
-| `gcp` | Pub/Sub, GCS, Memorystore (Redis), Vertex AI |
-| `modal` | Modal Queues, Modal Volume, vLLM on Modal GPU |
-| `minimax` | MiniMax via [litellm](https://docs.litellm.ai/docs/providers/minimax) (MiniMax-M2.1, text-embedding-01) |
 
 ### LLM backend behaviour
 
 | `INTELLIQX_LLM_BACKEND` | Behaviour |
 |-------------------------|-----------|
 | `fake` (default) | Deterministic hash-based responses (no network) |
-| `bedrock` | AWS Bedrock (Anthropic Claude, Titan embeddings) |
-| `vertex` | GCP Vertex AI (Gemini, text-embedding-005) |
-| `vllm` | OpenAI-compatible endpoint at `INTELLIQX_VLLM_URL` |
 | `minimax` | [MiniMax](https://api.minimax.io) via litellm — set `MINIMAX_API_KEY` |
 
 See [`.env.example`](.env.example) for a full template.
@@ -246,14 +194,14 @@ See [`.env.example`](.env.example) for a full template.
 | Symbol | Type | Description |
 |--------|------|-------------|
 | `agents.register_all()` | function | Register all 29 agent implementations in the registry |
-| `intelliqx_compute.runtime.get_compute_runtime()` | function | Return the active cloud compute runtime |
+| `intelliqx_compute.runtime.get_compute_runtime()` | function | Return the active compute runtime |
 | `intelliqx_compute.runtime.InvocationRequest` | class | Request payload for agent invocation |
 | `intelliqx_llm.get_llm_client()` | function | Return the active LLM client |
 | `intelliqx_llm.client.CompletionRequest` | class | LLM completion request (model, messages, …) |
 | `intelliqx_llm.client.CompletionResponse` | class | LLM completion response |
-| `intelliqx_storage` | package | Object store abstractions (S3 / GCS / Modal / in-memory) |
-| `intelliqx_events` | package | Event bus abstractions (EventBridge / Pub/Sub / Modal) |
-| `intelliqx_state` | package | Shared-state abstractions (Redis / Modal Dict / in-memory) |
+| `intelliqx_storage` | package | Object store abstractions (in-memory / filesystem) |
+| `intelliqx_events` | package | Event bus abstractions (in-memory) |
+| `intelliqx_state` | package | Shared-state abstractions (in-memory) |
 | `intelliqx_vector` | package | Vector search backend (zvec / sqlite-vec / in-memory) |
 | `intelliqx_kg` | package | Knowledge graph (Parquet + DuckDB) |
 
@@ -261,49 +209,9 @@ See [`.env.example`](.env.example) for a full template.
 
 ## Project Structure
 
-### Cloud profile
-
-The active cloud is selected via `INTELLIQX_CLOUD`. Each profile
-activates the matching adapter at startup.
-
-| Profile   | Backends                                                |
-|-----------|---------------------------------------------------------|
-| `local`   | In-memory events, storage, state, vectors, LLM         |
-| `aws`     | EventBridge, S3, ElastiCache (Redis), Bedrock          |
-| `gcp`     | Pub/Sub, GCS, Memorystore (Redis), Vertex AI            |
-| `modal`   | Modal Queues, Modal Volume, vLLM on Modal GPU           |
-| `minimax` | MiniMax via [litellm](https://docs.litellm.ai/docs/providers/minimax) (MiniMax-M2.1, text-embedding-01) |
-
-### LLM backend
-
-| `INTELLIQX_LLM_BACKEND` | Behaviour                                                |
-|------------------------|----------------------------------------------------------|
-| `fake` (default)        | Deterministic hash-based responses (no network)         |
-| `bedrock`              | AWS Bedrock (Anthropic Claude, Titan embeddings)         |
-| `vertex`               | GCP Vertex AI (Gemini, text-embedding-005)               |
-| `vllm`                 | OpenAI-compatible endpoint at `INTELLIQX_VLLM_URL`       |
-| `minimax`              | [MiniMax](https://api.minimax.io) via litellm — set `MINIMAX_API_KEY` |
-
-### Other environment variables
-
-| Variable                       | Default       | Purpose                                  |
-|--------------------------------|---------------|------------------------------------------|
-| `INTELLIQX_ENV`                | `dev`         | Tag for log routing and metrics         |
-| `INTELLIQX_OBJECT_STORE`       | `memory`      | `memory`, or `fs:/path/to/dir`          |
-| `INTELLIQX_VECTOR_BACKEND`     | `memory`      | `memory`, `sqlite_vec`, or `zvec`        |
-| `INTELLIQX_VECTOR_DIM`         | `768`         | Embedding dimension                     |
-| `INTELLIQX_OTEL`               | `0`           | Set to `1` to enable OTel tracing       |
-| `INTELLIQX_LOGS_JSON`          | `0`           | Set to `1` for JSON log output          |
-
-See [`.env.example`](.env.example) for a full template.
-
----
-
-## Project Structure
-
 ```
 intelliqx/
-├── libs/                15 independent libraries (intelliqx-core, intelliqx-events, ...)
+├── libs/                14 independent libraries (intelliqx-core, intelliqx-events, ...)
 ├── agents/              29 agent implementations, grouped by category
 │   ├── coordination/    Planner, Orchestrator, Memory, Knowledge/RAG, Tool Manager, Smoke
 │   ├── intelligence/    Requirements Intel, Code Intel, Risk, Test Design, Test Data, Coverage, Critic, Learning, Prompt Mgmt
@@ -313,9 +221,8 @@ intelliqx/
 ├── dashboards/          Dashboard definitions
 ├── prompts/             Prompt templates
 ├── services/            HTTP / WebSocket entrypoints
-├── workflows/           Step Functions / LangGraph definitions
-├── infra/               IaC (AWS CDK, GCP cdktf, Modal SDK)
-├── tests/               unit, integration, contract, e2e, cross_cloud
+├── infra/local/         Local Prometheus / LiteLLM config
+├── tests/               unit, integration, contract, e2e
 ├── docs/                ADRs, architecture, per-phase plans
 └── .github/             CI, templates
 ```
@@ -335,7 +242,6 @@ uv run pytest -q                                # All suites
 uv run pytest tests/unit -q                     # Unit only
 uv run pytest tests/contract -q                 # Contract tests
 uv run pytest tests/integration -q              # Integration
-uv run pytest tests/cross_cloud -q              # Cross-cloud parity
 uv run pytest -m e2e -q                         # End-to-end
 ```
 
@@ -368,7 +274,6 @@ uv run pytest -q                                       # All suites
 uv run pytest tests/unit -q                            # Unit only
 uv run pytest tests/contract -q                        # Contract tests
 uv run pytest tests/integration -q                     # Integration
-uv run pytest tests/cross_cloud -q                     # Cross-cloud parity
 uv run pytest -m e2e -q                                 # End-to-end
 
 # Lint, format, type-check
@@ -420,9 +325,9 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 feat: add vector indexer abstraction
 fix: handle missing OTel SDK in test env
-docs: add cross-cloud matrix doc
+docs: add agent catalog doc
 refactor: extract plan templates to a dedicated module
-test: add parity test for AWS and GCP adapters
+test: add parity test for object-store implementations
 chore: update ruff config
 ```
 
@@ -441,10 +346,10 @@ Breaking changes use the `!` suffix (`feat!:`) and are documented in
 | Vector store   | [zvec](https://github.com/alibaba/zvec) (Zilliz embedded) |
 | Local vector   | [sqlite-vec](https://github.com/asg017/sqlite-vec)        |
 | Graph store    | DuckDB + Parquet on object storage                       |
-| State          | Redis-compatible (ElastiCache / Memorystore / Modal Dict) |
-| Events         | EventBridge / Pub/Sub / Modal Queue                      |
-| Storage        | S3 / GCS / Modal Volume                                  |
-| LLM            | [litellm](https://litellm.ai) (Bedrock, Vertex, vLLM, MiniMax) |
+| State          | in-memory state store                                    |
+| Events         | in-process Pub/Sub-style bus                            |
+| Storage        | in-memory + filesystem object store                     |
+| LLM            | [litellm](https://litellm.ai) (Fake, MiniMax)           |
 | Lint           | [ruff](https://docs.astral.sh/ruff/)                    |
 | Format         | [black](https://black.readthedocs.io/)                  |
 | Type Check     | [mypy](https://mypy-lang.org/) (strict)                 |
@@ -455,7 +360,7 @@ Breaking changes use the `!` suffix (`feat!:`) and are documented in
 
 ## Roadmap
 
-- **v1.0** — Cross-cloud parity in production; full agent catalog; observability dashboard.
+- **v1.0** — Full agent catalog; observability dashboard.
 - **v1.1** — Pluggable vector backend SDK; OKF catalog with hybrid retrieval.
 - **v2.0** — Multi-modal agents (visual, a11y, perf); release readiness automation.
 

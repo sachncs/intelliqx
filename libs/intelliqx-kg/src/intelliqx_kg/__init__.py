@@ -7,9 +7,9 @@ managed graph database for three reasons:
 
 1. **No managed DB to operate.** Cold-start is one object-store
    ``get`` plus a DuckDB ``read_parquet``; no cluster, no replicas.
-2. **Serverless-friendly.** Every operation is a single async method
-   that finishes in the same Lambda / Cloud Function / Modal Function
-   invocation.
+2. **Single-shot operations.** Every operation is a single async
+   method that finishes in one invocation without external
+   coordination.
 3. **Partition pruning.** Filtering on ``tenant_id`` happens at the
    DuckDB scan, so tenants never see each other's data.
 

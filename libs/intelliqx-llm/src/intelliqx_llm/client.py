@@ -110,7 +110,7 @@ class LLMClient(ABC):
 
     Subclasses implement :meth:`complete` and :meth:`embed`. The
     platform consumes the abstract type so agent code is portable
-    across cloud providers. Declared as a real :class:`ABC` so the
+    across LLM backends. Declared as a real :class:`ABC` so the
     runtime blocks attempts to instantiate it directly and to
     document the contract for IDE auto-complete.
     """
@@ -127,9 +127,7 @@ class LLMClient(ABC):
         """
 
     @abstractmethod
-    async def embed(
-        self, texts: Sequence[str], *, model: str = "auto"
-    ) -> list[list[float]]:
+    async def embed(self, texts: Sequence[str], *, model: str = "auto") -> list[list[float]]:
         """Embed a batch of strings.
 
         Args:
@@ -247,9 +245,7 @@ class FakeLLMClient(LLMClient):
 SINGLETON: LLMClient | None = None
 
 
-LLM_BACKEND_REGISTRY: dict[str, type[LLMClient]] = {
-    "fake": FakeLLMClient,
-}
+LLM_BACKEND_REGISTRY: dict[str, type[LLMClient]] = {"fake": FakeLLMClient}
 
 
 def register_llm_backend(name: str, factory: type[LLMClient]) -> None:
@@ -261,39 +257,19 @@ def register_llm_backend(name: str, factory: type[LLMClient]) -> None:
     is the intended escape hatch for tests.
 
     Backend name lookup is exact-match; the convention is lowercase
-    short codes (``"fake"``, ``"bedrock"``, ``"vertex"``, ``"vllm"``,
-    ``"minimax"``).
+    short codes (``"fake"``, ``"minimax"``).
     """
     LLM_BACKEND_REGISTRY[name] = factory
 
 
 def _load_default_backends() -> None:
-    """Populate the registry with built-in backend classes.
+    """Populate the registry with the built-in backend classes.
 
-    Lazy + best-effort: classes whose SDK is missing get skipped so
-    the platform still boots. The ``fake`` backend is registered at
-    module-import time above; the cloud backends are imported here.
+    ``MiniMaxLLMClient`` is registered at first use so its SDK
+    imports do not run on platforms that only use ``fake``.
     """
-    if "bedrock" in LLM_BACKEND_REGISTRY:
+    if "minimax" in LLM_BACKEND_REGISTRY:
         return
-    try:
-        from intelliqx_llm.aws import BedrockLLMClient
-
-        LLM_BACKEND_REGISTRY["bedrock"] = BedrockLLMClient
-    except ImportError:
-        pass
-    try:
-        from intelliqx_llm.gcp import VertexLLMClient
-
-        LLM_BACKEND_REGISTRY["vertex"] = VertexLLMClient
-    except ImportError:
-        pass
-    try:
-        from intelliqx_llm.modal import VLLMModalLLMClient
-
-        LLM_BACKEND_REGISTRY["vllm"] = VLLMModalLLMClient
-    except ImportError:
-        pass
     try:
         from intelliqx_llm.minimax import MiniMaxLLMClient
 
@@ -304,6 +280,7 @@ def _load_default_backends() -> None:
 
 def list_llm_backends() -> tuple[str, ...]:
     """Return the names of every registered backend (sorted)."""
+    _load_default_backends()
     return tuple(sorted(LLM_BACKEND_REGISTRY))
 
 
@@ -312,16 +289,13 @@ def get_llm_client() -> LLMClient:
 
     Resolution:
         * ``INTELLIQX_LLM_BACKEND=fake`` (default) → :class:`FakeLLMClient`.
-        * ``bedrock`` → :class:`intelliqx_llm.aws.BedrockLLMClient`.
-        * ``vertex`` → :class:`intelliqx_llm.gcp.VertexLLMClient`.
-        * ``vllm`` → :class:`intelliqx_llm.modal.VLLMModalLLMClient`.
-        * ``minimax`` → :class:`intelliqx_llm.minimax.MiniMaxLLMClient`.
+        * ``minimax`` → :class:`intelliqx_llm.minimax.MiniMaxLLMClient`
+          (when its SDK imports successfully).
         * Anything else raises a clear :class:`RuntimeError`.
 
-    Each cloud adapter implements the same graceful-degradation
-    pattern: if the SDK is missing or credentials are unavailable,
-    the adapter returns a deterministic fallback so the rest of
-    the platform keeps working.
+    Production backends must be registered explicitly via
+    :func:`register_llm_backend` before the first
+    :func:`get_llm_client` call.
     """
     global SINGLETON
     if SINGLETON is None:
@@ -342,9 +316,8 @@ def get_llm_client() -> LLMClient:
 def set_llm_client(client: LLMClient) -> None:
     """Replace the singleton LLM client.
 
-    Used by application bootstrap to install a configured cloud
-    adapter (Bedrock, Vertex, vLLM, or MiniMax) before the first
-    :func:`get_llm_client` call.
+    Used by application bootstrap to install a configured client
+    before the first :func:`get_llm_client` call.
     """
     global SINGLETON
     SINGLETON = client

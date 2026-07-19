@@ -2,20 +2,15 @@
 
 The platform's cross-agent backbone. The :class:`EventBus` interface
 is intentionally small — ``publish`` and ``subscribe`` plus lifecycle
-hooks — and is implemented by:
+hooks — and is currently implemented by:
 
 * :class:`InMemoryEventBus` — same-process pub/sub used in tests and
-  in the local dev mode.
-* :class:`AWSEventBridgeBus` — EventBridge for fan-out, SQS for
-  per-consumer buffering and DLQ.
-* :class:`GCPPubSubBus` — Pub/Sub topics with subscriptions.
-* :class:`ModalQueueBus` — modal.Queue per topic.
+  in local dev mode.
 
 Pub/Sub semantics: every event goes to every subscriber of its topic;
-ordering is best-effort; at-least-once delivery is the cloud
-adapters' contract. Subscribers can opt into a dead-letter topic via
-``subscribe(..., dlq="topic.dlq")``; failed invocations are routed
-there.
+ordering is best-effort; delivery is best-effort with handler errors
+routed to the subscription's DLQ when one is configured via
+``subscribe(..., dlq="topic.dlq")``.
 """
 
 from intelliqx_events.base import EventBus

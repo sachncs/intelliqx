@@ -36,12 +36,11 @@ class InMemoryStateStore(StateStore):
 
     Thread-safety: safe for concurrent use from many async tasks in
     a single event loop. The internal lock is *not* thread-safe across
-    OS threads; if you need that, use the Redis adapter.
+    OS threads; if you need that, swap in an external Redis store.
     """
 
     def __init__(self) -> None:
         self.kv: dict[str, bytes] = {}
-        # expiry[key] = wall-clock absolute deadline
         self.expiry: dict[str, float] = {}
         self.hashes: dict[str, dict[str, str]] = {}
         self.lists: dict[str, list[str]] = {}
@@ -55,8 +54,6 @@ class InMemoryStateStore(StateStore):
     async def get(self, key: str) -> bytes | None:
         async with self.lock:
             if self.expired(key):
-                # Lazy eviction on access so the in-memory store
-                # doesn't leak expired entries indefinitely.
                 self.kv.pop(key, None)
                 self.expiry.pop(key, None)
                 return None
@@ -68,13 +65,10 @@ class InMemoryStateStore(StateStore):
             if ttl_seconds is not None:
                 self.expiry[key] = time.time() + ttl_seconds
             else:
-                # Setting without a TTL clears any previous expiry.
                 self.expiry.pop(key, None)
 
     async def delete(self, key: str) -> None:
         async with self.lock:
-            # Delete from all four maps so a stale hash or list
-            # entry can never outlive its KV key.
             self.kv.pop(key, None)
             self.expiry.pop(key, None)
             self.hashes.pop(key, None)
@@ -92,8 +86,6 @@ class InMemoryStateStore(StateStore):
             self.expiry[key] = time.time() + ttl_seconds
 
     async def keys(self, prefix: str) -> AsyncIterator[str]:
-        # Snapshot under the lock; iterate outside so we don't hold
-        # the lock across the yield.
         async with self.lock:
             snapshot = [k for k in self.kv if not self.expired(k)]
         for k in snapshot:
@@ -138,39 +130,12 @@ class InMemoryStateStore(StateStore):
 SINGLETON: StateStore | None = None
 
 
-STATE_BACKEND_REGISTRY: dict[str, type[StateStore]] = {
-    "memory": InMemoryStateStore,
-}
+STATE_BACKEND_REGISTRY: dict[str, type[StateStore]] = {"memory": InMemoryStateStore}
 
 
 def register_state_backend(name: str, factory: type[StateStore]) -> None:
     """Register or replace a state backend factory."""
     STATE_BACKEND_REGISTRY[name] = factory
-
-
-def _load_default_state_backends() -> None:
-    """Load built-in cloud backend classes when they are importable."""
-    if "aws" not in STATE_BACKEND_REGISTRY:
-        try:
-            from intelliqx_state.aws import ElastiCacheStateStore
-
-            STATE_BACKEND_REGISTRY["aws"] = ElastiCacheStateStore
-        except ImportError:
-            pass
-    if "gcp" not in STATE_BACKEND_REGISTRY:
-        try:
-            from intelliqx_state.gcp import MemorystoreStateStore
-
-            STATE_BACKEND_REGISTRY["gcp"] = MemorystoreStateStore
-        except ImportError:
-            pass
-    if "modal" not in STATE_BACKEND_REGISTRY:
-        try:
-            from intelliqx_state.modal import ModalDictStateStore
-
-            STATE_BACKEND_REGISTRY["modal"] = ModalDictStateStore
-        except ImportError:
-            pass
 
 
 def list_state_backends() -> tuple[str, ...]:
@@ -179,11 +144,15 @@ def list_state_backends() -> tuple[str, ...]:
 
 
 def get_state_store() -> StateStore:
-    """Return the configured singleton state store."""
+    """Return the configured singleton state store.
+
+    Defaults to :class:`InMemoryStateStore`. Selecting a different
+    backend via ``INTELLIQX_STATE_BACKEND`` requires a custom subclass
+    registered through :func:`register_state_backend`.
+    """
     global SINGLETON
     if SINGLETON is None:
         backend = os.environ.get("INTELLIQX_STATE_BACKEND", "memory")
-        _load_default_state_backends()
         factory = STATE_BACKEND_REGISTRY.get(backend)
         if factory is None:
             available = ", ".join(list_state_backends())

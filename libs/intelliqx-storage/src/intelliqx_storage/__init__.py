@@ -1,8 +1,8 @@
 """Object storage abstraction for IntelliqX.
 
-A thin async wrapper over the three cloud object stores (S3, GCS,
-Modal Volume) plus a filesystem-backed implementation for local dev.
-All implementations share the same minimal interface:
+A thin async wrapper over the in-process object stores, plus a
+filesystem-backed implementation for local dev. All implementations
+share the same minimal interface:
 
 * ``put(key, data, *, content_type=None)`` — write bytes
 * ``get(key)`` → ``bytes`` (raises :class:`NotFoundError` if missing)

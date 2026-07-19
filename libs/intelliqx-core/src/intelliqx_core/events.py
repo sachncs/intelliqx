@@ -11,10 +11,9 @@ Key concepts:
   ``"RunStarted"``). The EventRegistry validates published payloads
   against the registered JSON Schema for that topic when ``jsonschema``
   is installed.
-* ``EventEnvelope`` is the wire-level wrapper that adapters (AWS
-  EventBridge, GCP Pub/Sub, Modal Queue) serialize to their native
-  transport. The envelope is a thin shell around the strongly-typed
-  event payload.
+* ``EventEnvelope`` is the wire-level wrapper used to carry a
+  strongly-typed payload around the platform. The envelope is a thin
+  shell around the event payload.
 * ``schema_version`` defaults to ``"1.0"`` and should be bumped when
   the payload shape changes in a breaking way. Consumers are
   responsible for handling older versions.
@@ -69,9 +68,8 @@ class BaseEvent(BaseModel):
 class EventEnvelope(BaseModel, Generic[T]):
     """Generic envelope carrying an event payload.
 
-    The envelope is the wire-level representation used by cloud event-bus
-    adapters. It is intentionally separate from ``BaseEvent`` so the
-    generic parameter can be used to type the payload at the handler
+    It is intentionally separate from ``BaseEvent`` so the generic
+    parameter can be used to type the payload at the handler
     boundary while the envelope itself remains uniform.
     """
 

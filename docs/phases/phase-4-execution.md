@@ -8,33 +8,34 @@
 
 ## 4.1 Scope
 
-| Agent | Compute | Inputs | Outputs |
-|---|---|---|---|
-| Environment | Lambda | Plan, infra config | `env.ready` event + env handle |
-| Design Intelligence | Lambda | DOM snapshot, a11y tree | UI semantic graph |
-| Execution | Fargate / Cloud Run / modal.Function (browser session) | Test spec, env handle | Test results + artifacts (S3) |
-| Self-Healing | Lambda | Failed selector + DOM | New selector + confidence score |
-| Failure Analysis | Lambda | Failure record + history | Root cause + classification (infra/product/flake) |
+| Agent | Inputs | Outputs |
+|---|---|---|
+| Environment | Plan, infra config | `env.ready` event + env handle |
+| Design Intelligence | DOM snapshot, a11y tree | UI semantic graph |
+| Execution | Test spec, env handle | Test results + artifacts |
+| Self-Healing | Failed selector + DOM | New selector + confidence score |
+| Failure Analysis | Failure record + history | Root cause + classification (infra/product/flake) |
 
 Deferred to Phase 6: Visual Regression, Accessibility, Performance, Security.
 
 ## 4.2 Architecture
 
-- **Environment** provisions ephemeral envs via Terraform modules + Docker images.
-- **Execution** uses Playwright in a long-lived Fargate/Cloud Run/Modal container with `@enter`-snapshot browser reuse (Modal) or warm-pool (Fargate).
-- **Self-Healing** is a fast-path Lambda invoked on Execution failure.
-- **Failure Analysis** invoked on unhealable failures; writes classification to KG.
+- **Environment** boots the reference FastAPI app on a free local port.
+- **Execution** runs Playwright against that app and uploads artifacts
+  to the in-process object store.
+- **Self-Healing** is a fast-path invoked on Execution failure.
+- **Failure Analysis** invoked on unhealable failures; writes
+  classification to KG.
 
 ## 4.3 Deliverables
 
-- [ ] `agents/execution/environment/` — env provisioner (k8s manifest generator + terraform).
-- [ ] `agents/execution/design_intel/` — DOM/a11y tree semantic extractor.
-- [ ] `agents/execution/execution/` — Playwright runner; artifact uploader; event emitter.
-- [ ] `agents/execution/self_healing/` — selector repair (LLM + heuristics).
-- [ ] `agents/execution/failure_analysis/` — root cause classifier.
-- [ ] `workflows/full_qa_workflow.asl.json` updated to include Execution agents.
-- [ ] Reference web app under `tests/fixtures/reference_app/` (multi-page, accessible, intentionally broken in places for healing tests).
-- [ ] E2E test: full pipeline runs against reference app locally; ≥ 80% of "broken" tests heal successfully.
+- [x] `agents/execution/environment/` — local env provisioner.
+- [x] `agents/execution/design_intel/` — DOM/a11y tree semantic extractor.
+- [x] `agents/execution/execution/` — Playwright runner; artifact uploader; event emitter.
+- [x] `agents/execution/self_healing/` — selector repair (LLM + heuristics).
+- [x] `agents/execution/failure_analysis/` — root cause classifier.
+- [x] Reference web app under `tests/fixtures/reference_app/` (multi-page, accessible, intentionally broken in places for healing tests).
+- [x] E2E test: full pipeline runs against reference app locally; ≥ 80% of "broken" tests heal successfully.
 
 ## 4.4 Test/verification criteria
 
@@ -48,7 +49,6 @@ Deferred to Phase 6: Visual Regression, Accessibility, Performance, Security.
 
 ## 4.5 Out of scope
 
-- Real browsers in CI (use Playwright headless locally; CI runs with `--workers=2` and `--headed=false`).
 - iOS/Android execution (deferred to v3 enterprise).
 
 ## 4.6 Risks
@@ -57,4 +57,3 @@ Deferred to Phase 6: Visual Regression, Accessibility, Performance, Security.
 |---|---|
 | Playwright flakiness on local macOS | Retry policy in Execution; lock browsers via Playwright version pin |
 | Self-Healing LLM cost on every retry | Cache healing attempts per selector; escalate only on miss |
-| Long browser sessions leak memory | `@modal.enter()` snapshot reload; Fargate task recycling every N runs |

@@ -15,9 +15,8 @@ bindings). The :class:`ZvecIndex` adapter:
   callers with specific latency/recall trade-offs.)
 
 The class uses ``VECTOR_FP32`` storage and 32-bit floats throughout
-because (a) the embeddings IntelliqX produces (Bedrock Titan, vLLM Qwen,
-etc.) are fp32, and (b) the storage cost stays manageable even at
-millions of vectors.
+because (a) the embeddings IntelliqX produces are fp32, and (b) the
+storage cost stays manageable even at millions of vectors.
 """
 
 from __future__ import annotations

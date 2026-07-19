@@ -7,13 +7,11 @@ dependencies = [
     "pydantic>=2.8",
     "httpx>=0.27",
     "intelliqx-core",
-    "intelliqx-portability",
     "intelliqx-state",
 ]
 
 [tool.uv.sources]
 intelliqx-core = { workspace = true }
-intelliqx-portability = { workspace = true }
 intelliqx-state = { workspace = true }
 
 [build-system]

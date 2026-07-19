@@ -8,7 +8,7 @@ expected) do so explicitly via ``ConfigDict(extra="ignore")``.
 
 Models documented here:
 
-* Enums: :class:`CloudProvider`, :class:`RunStatus`, :class:`HealthStatus`
+* Enums: :class:`RunStatus`, :class:`HealthStatus`
 * Capability contracts: :class:`AgentCapability`, :class:`AgentRef`
 * Runtime context: :class:`TenantContext` (frozen)
 * Workflow input/output: :class:`Goal`, :class:`PlanNode`
@@ -21,24 +21,6 @@ from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-
-class CloudProvider(str, Enum):
-    """Supported cloud providers.
-
-    Values:
-        AWS:    Amazon Web Services (Lambda + S3 + EventBridge + ElastiCache).
-        GCP:    Google Cloud Platform (Cloud Functions + GCS + Pub/Sub +
-                Memorystore).
-        MODAL:  Modal.com serverless (Functions + Queues + Volumes + Dicts).
-        LOCAL:  In-process adapters used for local dev and tests. Never
-                used in production.
-    """
-
-    AWS = "aws"
-    GCP = "gcp"
-    MODAL = "modal"
-    LOCAL = "local"
 
 
 class RunStatus(str, Enum):

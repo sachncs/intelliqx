@@ -1,12 +1,10 @@
 # Multi-stage Dockerfile for IntelliqX agents.
-# Used by AWS Lambda (container image), GCP Cloud Run / Functions, and Modal.
 
 FROM python:3.12-slim AS base
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    INTELLIQX_CLOUD=aws
+    PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
@@ -23,7 +21,6 @@ COPY --from=ghcr.io/astral-sh/uv:0.11.24 /uv /uvx /usr/local/bin/
 COPY pyproject.toml uv.lock* ./
 COPY libs ./libs
 COPY agents ./agents
-COPY workflows ./workflows
 
 # Install dependencies into the system environment
 RUN uv sync --frozen --no-dev --all-packages || uv sync --no-dev --all-packages

@@ -17,15 +17,6 @@ class IntelliqxError(Exception):
     """
 
 
-class CloudConfigError(IntelliqxError):
-    """Raised when the cloud adapter cannot resolve its configuration.
-
-    Examples: missing ``INTELLIQX_CLOUD`` env var, unrecognised provider string,
-    or a ``CloudConfig`` that is missing required fields for the chosen
-    provider (e.g. GCP without ``project_id``).
-    """
-
-
 class ContractError(IntelliqxError):
     """Raised when a contract — event schema, MCP tool interface, or
     marketplace manifest — is violated.
@@ -40,8 +31,8 @@ class NotFoundError(IntelliqxError):
     """Raised when a requested resource does not exist.
 
     Object-store and state-store adapters translate backend-specific
-    "not found" errors (S3 NoSuchKey, Redis nil, GCS 404) into this
-    exception so callers can use a single ``except`` clause.
+    "not found" errors into this exception so callers can use a
+    single ``except`` clause.
     """
 
 

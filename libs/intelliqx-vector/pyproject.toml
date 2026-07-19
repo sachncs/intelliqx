@@ -9,13 +9,11 @@ dependencies = [
     "zvec>=0.5",
     "sqlite-vec>=0.1.9",
     "intelliqx-core",
-    "intelliqx-portability",
     "intelliqx-storage",
 ]
 
 [tool.uv.sources]
 intelliqx-core = { workspace = true }
-intelliqx-portability = { workspace = true }
 intelliqx-storage = { workspace = true }
 
 [build-system]

@@ -9,7 +9,7 @@ from agents.execution.security import SecurityAgent
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_security_finds_aws_access_key():
+async def test_security_finds_akia_access_key():
     register_all()
     register_compute_handlers()
     agent = SecurityAgent()
@@ -18,12 +18,12 @@ async def test_security_finds_aws_access_key():
             agent_name="security",
             input={
                 "tenant_id": "t1",
-                "source_files": {"config.py": "AWS_KEY = 'AKIAIOSFODNN7EXAMPLE'\n"},
+                "source_files": {"config.py": "ACCESS_KEY = 'AKIAIOSFODNN7EXAMPLE'\n"},
             },
             tenant_id="t1",
         )
     )
-    assert any(f["type"] == "secret" and "AWS" in f["message"] for f in out["findings"])
+    assert any(f["type"] == "secret" and "Access Key" in f["message"] for f in out["findings"])
 
 
 @pytest.mark.unit
@@ -131,7 +131,7 @@ async def test_security_counts_critical_and_high():
                 "tenant_id": "t1",
                 "source_files": {
                     "app.py": (
-                        "AWS_KEY = 'AKIAIOSFODNN7EXAMPLE'\n"
+                        "ACCESS_KEY = 'AKIAIOSFODNN7EXAMPLE'\n"
                         "x = eval(input())\n"
                         "data = pickle.loads(blob)\n"
                     )
@@ -140,5 +140,5 @@ async def test_security_counts_critical_and_high():
             tenant_id="t1",
         )
     )
-    assert out["critical"] >= 2  # AWS key + pickle
+    assert out["critical"] >= 2  # access key + pickle
     assert out["high"] >= 1  # eval

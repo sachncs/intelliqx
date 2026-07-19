@@ -1,1 +1,0 @@
-"""IntelliqX AWS CDK package."""

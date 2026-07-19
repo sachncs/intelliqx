@@ -6,12 +6,10 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.8",
     "intelliqx-core",
-    "intelliqx-portability",
 ]
 
 [tool.uv.sources]
 intelliqx-core = { workspace = true }
-intelliqx-portability = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

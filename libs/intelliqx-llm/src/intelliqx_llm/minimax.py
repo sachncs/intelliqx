@@ -36,9 +36,9 @@ Error handling pattern (``try_init`` / ``available``):
   response so callers can tell which path produced the answer.
 * When ``available`` is ``True`` but a MiniMax API call fails at
   request time (rate limit, transient network error, etc.), the
-  exception is caught and a fallback response is returned. This
-  mirrors the permissiveness of the Vertex AI adapter because
-  MiniMax transient errors are common during cold-start.
+  exception is caught and a fallback response is returned. MiniMax
+  transient errors are common during cold-start, so the adapter
+  prefers one extra graceful fallback over an upstream retry.
 
 Thread safety: litellm's :func:`acompletion` and
 :func:`aembedding` are async-safe, so a single

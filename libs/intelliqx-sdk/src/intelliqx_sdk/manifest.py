@@ -37,8 +37,8 @@ class AgentManifest(BaseModel):
     """A third-party agent's public contract.
 
     The manifest is intentionally serialisable to plain JSON so
-    publishers can hand it to the marketplace via git, S3, or any
-    other transport.
+    publishers can hand it to the marketplace via git, an object
+    store, or any other transport.
     """
 
     model_config = ConfigDict(extra="forbid")

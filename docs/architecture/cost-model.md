@@ -2,11 +2,11 @@
 
 Per-invocation USD cost estimates used by the Planner to enforce
 the ``cost_ceiling_usd`` goal constraint. Values live in
-`node_cost` in `agents/coordination/planner.py`; they are tuned for AWS
-Bedrock + Lambda pricing and are *estimates*, not billable
-amounts. MiniMax-M2.1 sits at a similar price band
+`node_cost` in `agents/coordination/planner.py`; they are tuned
+for typical LLM pricing and are *estimates*, not billable
+amounts. MiniMax-M2.1 sits at the same price band
 (per the [litellm MiniMax provider docs](https://docs.litellm.ai/docs/providers/minimax))
-so the same estimates are reasonable when
+so the same estimates apply when
 `INTELLIQX_LLM_BACKEND=minimax`.
 
 ## Reference table

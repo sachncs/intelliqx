@@ -6,7 +6,6 @@ import pytest
 
 LIBS = [
     "intelliqx_core",
-    "intelliqx_portability",
     "intelliqx_events",
     "intelliqx_storage",
     "intelliqx_vector",

@@ -8,10 +8,6 @@ model_list:
     litellm_params:
       model: gpt-4o-mini
       api_key: ${OPENAI_API_KEY}
-  - model_name: claude-3-5-sonnet
-    litellm_params:
-      model: bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0
-      aws_region_name: us-east-1
   - model_name: minimax/MiniMax-M2.1
     litellm_params:
       model: minimax/MiniMax-M2.1

@@ -4,8 +4,8 @@ Runs four checks against a set of source files and (optionally) a
 live target URL:
 
 1. **Secret detection.** A small subset of gitleaks patterns:
-   AWS access keys, bearer tokens, private-key headers, hard-coded
-   passwords.
+   common access-key prefixes, bearer tokens, private-key headers,
+   hard-coded passwords.
 2. **SAST.** A small subset of Semgrep rules: ``eval``, ``exec``,
    ``subprocess shell=True``, ``pickle.loads``, disabled TLS
    verification.
@@ -78,7 +78,7 @@ class SecurityOutput(BaseModel):
 
 # Patterns for secret detection (subset of gitleaks defaults).
 SECRET_PATTERNS = [
-    (re.compile(r"AKIA[0-9A-Z]{16}"), "AWS Access Key ID"),
+    (re.compile(r"AKIA[0-9A-Z]{16}"), "Access Key ID (AKIA-prefixed)"),
     (re.compile(r"(?i)bearer\s+[a-z0-9_\-]{20,}"), "Bearer token"),
     (re.compile(r"-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----"), "Private key"),
     (re.compile(r"(?i)password\s*[=:]\s*['\"][^'\"]+['\"]"), "Hard-coded password"),

@@ -22,19 +22,12 @@ Design notes:
   distinguish specific failure modes by their concrete type.
 """
 
-from intelliqx_core.errors import (
-    CloudConfigError,
-    ContractError,
-    IntelliqxError,
-    NotFoundError,
-    ValidationError,
-)
+from intelliqx_core.errors import ContractError, IntelliqxError, NotFoundError, ValidationError
 from intelliqx_core.events import BaseEvent, EventEnvelope, EventMetadata
 from intelliqx_core.ids import is_valid_id, new_id, parse_id
 from intelliqx_core.models import (
     AgentCapability,
     AgentRef,
-    CloudProvider,
     Goal,
     HealthStatus,
     PlanNode,
@@ -46,8 +39,6 @@ __all__ = [
     "AgentCapability",
     "AgentRef",
     "BaseEvent",
-    "CloudConfigError",
-    "CloudProvider",
     "ContractError",
     "EventEnvelope",
     "EventMetadata",

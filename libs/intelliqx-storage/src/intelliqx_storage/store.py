@@ -1,8 +1,7 @@
 """Object store interface and in-memory / filesystem implementations.
 
 The :class:`ObjectStore` interface is intentionally minimal — just
-the five methods the platform actually uses. Cloud adapters
-(``aws.py``, ``gcp.py``, ``modal.py``) implement the same surface.
+the five methods the platform actually uses.
 
 Implementations:
 
@@ -20,7 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import os
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from pathlib import Path
 from typing import Any
 
@@ -113,8 +112,8 @@ class LocalFileSystemObjectStore(ObjectStore):
     """Filesystem-backed object store for local dev.
 
     Keys are interpreted as paths relative to ``root``. Leading ``"/"``
-    is stripped to keep keys consistent with cloud adapters. All
-    blocking I/O is offloaded to a worker thread.
+    is stripped to keep keys portable across the two local
+    implementations. All blocking I/O is offloaded to a worker thread.
 
     Args:
         root: Local directory to use. Created on first use if it
@@ -172,19 +171,15 @@ class LocalFileSystemObjectStore(ObjectStore):
             return
         for p in sorted(base.rglob("*")):
             if p.is_file():
-                # Keys are stored relative to the root so callers
-                # get the same form as cloud adapters return.
                 yield str(p.relative_to(self.root))
 
 
 SINGLETON: ObjectStore | None = None
 
-STORAGE_BACKEND_REGISTRY: dict[str, type[ObjectStore]] = {
-    "memory": InMemoryObjectStore,
-}
+STORAGE_BACKEND_REGISTRY: dict[str, Callable[..., ObjectStore]] = {"memory": InMemoryObjectStore}
 
 
-def register_storage_backend(name: str, factory: type[ObjectStore]) -> None:
+def register_storage_backend(name: str, factory: Callable[..., ObjectStore]) -> None:
     """Register or replace an object storage backend."""
     STORAGE_BACKEND_REGISTRY[name] = factory
 

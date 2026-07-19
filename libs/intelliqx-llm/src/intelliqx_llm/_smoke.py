@@ -13,9 +13,6 @@ Examples:
     INTELLIQX_LLM_BACKEND=minimax MINIMAX_API_KEY=sk-... \\
         intelliqx-llm-smoke --prompt "Hello from MiniMax!"
 
-    # AWS Bedrock
-    INTELLIQX_LLM_BACKEND=bedrock intelliqx-llm-smoke
-
 The CLI prints the raw response content plus a one-line
 per-call latency report. A non-zero exit code is returned when
 the configured backend raises an exception that the adapter

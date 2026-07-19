@@ -2,11 +2,10 @@
 
 The :class:`EventBus` is the contract every adapter fulfils. Its
 publish, subscribe, unsubscribe, and dead-letter operations share the
-same interface across in-memory and cloud backends.
+same interface across in-memory and any registered adapter.
 
-Plus lifecycle hooks (``start`` / ``stop``) that cloud adapters use to
-flush background workers; the in-memory implementation treats them
-as no-ops.
+Plus lifecycle hooks (``start`` / ``stop``); the in-memory
+implementation treats them as no-ops.
 """
 
 from __future__ import annotations
@@ -137,9 +136,7 @@ class InMemoryEventBus(EventBus):
         self.started = False
 
 
-EVENT_BUS_REGISTRY: dict[str, type[EventBus]] = {
-    "memory": InMemoryEventBus,
-}
+EVENT_BUS_REGISTRY: dict[str, type[EventBus]] = {"memory": InMemoryEventBus}
 
 
 def register_event_bus_backend(name: str, factory: type[EventBus]) -> None:

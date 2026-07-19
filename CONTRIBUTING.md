@@ -20,13 +20,13 @@ cd intelliqx
 uv sync --all-packages
 ```
 
-The workspace installs all 15 libraries, the 29 agent implementations,
+The workspace installs all 14 libraries, the 29 agent implementations,
 and the dev dependency group (ruff, mypy, black, vulture, pytest).
 
 ### Verify the install
 
 ```bash
-# Run the unit suite (no cloud credentials required)
+# Run the unit suite (no external credentials required)
 uv run pytest tests/unit -q
 
 # Run the four CI checks
@@ -42,9 +42,9 @@ All four must pass before you open a PR.
 
 ```
 intelliqx/
-├── libs/                  15 independent libraries (one package per concern)
+├── libs/                  14 independent libraries (one package per concern)
 ├── agents/                29 agent implementations
-├── tests/                 unit, integration, contract, e2e, cross_cloud
+├── tests/                 unit, integration, contract, e2e
 ├── docs/                  ADRs, architecture, per-phase plans
 ├── .github/workflows/     CI definitions
 └── pyproject.toml         Workspace + dev dependency definitions
@@ -92,9 +92,9 @@ declared as a workspace dependency in the importer's `pyproject.toml`.
   (`__name`).
 - **Async first:** every public I/O method is `async def`. Blocking
   SDK calls are offloaded via `asyncio.to_thread`.
-- **Frozen where possible:** value objects (e.g. `TenantContext`,
-  `CloudConfig`) use `ConfigDict(frozen=True)` so they cannot be
-  mutated mid-flight.
+- **Frozen where possible:** value objects (e.g. `TenantContext`)
+  use `ConfigDict(frozen=True)` so they cannot be mutated
+  mid-flight.
 
 ### Lint and type-check
 
@@ -117,15 +117,16 @@ every input/output model. See any agent file (e.g.
 
 - Unit tests live under `tests/unit/` and follow the
   `test_<module>.py` naming convention.
-- Cross-cloud parity tests live under `tests/cross_cloud/`.
+- Contract tests live under `tests/contract/` and assert every
+  adapter implementation honours its interface.
 - Every agent has at least one unit test (an `AgentMeta` check plus a
   smoke test that calls the `run` method with a minimal payload).
-- All 415 tests must pass before merge.
+- All tests must pass before merge.
 
 ## Pull request process
 
 1. **Branch from `master`.** Use a descriptive branch name
-   (`feat/vector-cosine`, `fix/mypy-redis`, `docs/agent-catalog`).
+   (`feat/vector-cosine`, `fix/mypy-state`, `docs/agent-catalog`).
 2. **Keep commits atomic.** Each commit should compile and pass
    tests in isolation. Use the Conventional Commits style
    (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`);

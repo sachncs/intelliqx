@@ -24,8 +24,7 @@ hooks when those are configured.
 Topics use a dotted ``"<noun>.<verb>(.<modifier>)"`` pattern with the
 verb last. This makes wildcards natural — ``"plan.node.*"`` would
 match both started and completed events for plan nodes — and aligns
-with how the cloud event buses (EventBridge, Pub/Sub, Modal
-Queue) treat topics.
+with how the in-process event bus treats topics.
 
 ## Envelope
 

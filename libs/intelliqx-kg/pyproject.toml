@@ -8,13 +8,11 @@ dependencies = [
     "duckdb>=1.1",
     "pyarrow>=17",
     "intelliqx-core",
-    "intelliqx-portability",
     "intelliqx-storage",
 ]
 
 [tool.uv.sources]
 intelliqx-core = { workspace = true }
-intelliqx-portability = { workspace = true }
 intelliqx-storage = { workspace = true }
 
 [build-system]

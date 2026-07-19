@@ -6,7 +6,6 @@ requires-python = ">=3.12,<3.13"
 readme = "README.md"
 dependencies = [
     "intelliqx-core",
-    "intelliqx-portability",
     "intelliqx-events",
     "intelliqx-storage",
     "intelliqx-vector",
@@ -25,7 +24,6 @@ dependencies = [
 
 [tool.uv.sources]
 intelliqx-core = { workspace = true }
-intelliqx-portability = { workspace = true }
 intelliqx-events = { workspace = true }
 intelliqx-storage = { workspace = true }
 intelliqx-vector = { workspace = true }
@@ -45,7 +43,6 @@ intelliqx-graph = { workspace = true }
 [tool.uv.workspace]
 members = [
     "libs/intelliqx-core",
-    "libs/intelliqx-portability",
     "libs/intelliqx-events",
     "libs/intelliqx-storage",
     "libs/intelliqx-vector",
@@ -91,7 +88,6 @@ markers = [
     "integration: integration tests",
     "contract: contract tests",
     "e2e: end-to-end tests",
-    "cross_cloud: cross-cloud parity tests",
     "slow: slow tests",
 ]
 

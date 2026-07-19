@@ -4,10 +4,9 @@ Coordinates execution of a plan: invokes agents via the compute
 runtime in dependency order, retries on failure with exponential
 backoff, persists run status, emits events.
 
-This module implements the in-process equivalent of a Step Functions
-state machine. In production (AWS), the same Python logic is run by
-a Step Functions Express workflow using ``asl.json`` (see
-``workflows/orchestrator.asl.json``).
+This module implements the platform's run coordinator. The
+in-process ``ComputeRuntime`` is the default adapter; external
+runners can plug in via :func:`intelliqx_compute.runtime.set_compute_runtime`.
 """
 
 from __future__ import annotations

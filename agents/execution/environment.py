@@ -1,11 +1,8 @@
 """Environment Agent (Execution).
 
-Provisions an ephemeral test environment. In local/dev runs the
-agent starts the in-process FastAPI "reference app" (a tiny
-purpose-built HTTP service used by the Execution tests). In
-production the agent would call a cloud provisioning path
-(ECS, Cloud Run, Terraform …) — that wiring is deliberately left
-out of the scaffold.
+Provisions an ephemeral test environment by starting the
+in-process FastAPI "reference app" (a tiny purpose-built HTTP
+service used by the Execution tests) on a free local port.
 
 The agent runs uvicorn in a **separate thread** rather than as an
 asyncio task. The reason is uvicorn's startup path: when binding
@@ -76,8 +73,7 @@ class EnvironmentAgent(AgentBase):
     @traced_agent("environment")
     async def run(self, ctx: AgentContext, input: EnvironmentInput) -> EnvironmentOutput:
         # Lazy imports keep ``intelliqx-agents`` importable on machines
-        # without FastAPI installed (e.g. the Lambda Layer that
-        # only runs the Orchestrator).
+        # without FastAPI installed (e.g. minimal CI runners).
         import httpx
 
         from tests.fixtures.reference_app.app import app as ref_app

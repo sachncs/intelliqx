@@ -12,7 +12,6 @@ import pytest
 
 # Set sane defaults before any application code is imported so the
 # in-process adapters behave the same way in every test session.
-os.environ.setdefault("INTELLIQX_CLOUD", "local")
 os.environ.setdefault("INTELLIQX_LLM_BACKEND", "fake")
 os.environ.setdefault("INTELLIQX_OBJECT_STORE", "memory")
 os.environ.setdefault("INTELLIQX_OTEL", "0")
@@ -34,7 +33,6 @@ def reset_singletons():
     from intelliqx_observability.metrics import reset_metrics
     from intelliqx_observability.tracing import reset_tracer
     from intelliqx_okf.catalog import reset_catalog
-    from intelliqx_portability.adapter import reset_adapter_cache
     from intelliqx_state.store import reset_state_store
     from intelliqx_storage.store import reset_object_store
     from intelliqx_tools.manager import reset_tool_manager
@@ -46,7 +44,6 @@ def reset_singletons():
     reset_llm_client()
     reset_metrics()
     reset_tracer()
-    reset_adapter_cache()
     reset_state_store()
     reset_object_store()
     reset_tool_manager()
