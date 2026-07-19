@@ -1,14 +1,18 @@
-"""Tracing for IntelliqX.
+"""OpenTelemetry tracing for IntelliqX.
 
-The platform uses OpenTelemetry for distributed tracing and provides a
-thin Pythonic wrapper (:class:`Tracer` / :class:`SpanProxy`) so agent
-code never imports ``opentelemetry.*`` types directly. The wrapper
-exposes only two operations on a span — ``set_attribute`` and
-``add_event`` — which covers the vast majority of use cases.
+Thin ``Tracer`` / ``SpanProxy`` wrapper so agent code does not
+import ``opentelemetry.*`` types directly. Spans use
+``start_as_current_span`` so nested calls inherit trace context,
+record wall-clock ``duration_ms`` in ``finally``, and mark the span
+``ERROR`` when :meth:`SpanProxy.set_status_error` is called or an
+exception escapes the ``with`` block.
 
-Configuration is opt-in: by default the tracer is a no-op. Set
-``INTELLIQX_OTEL=1`` to enable the console exporter, or call
-:func:`configure_tracing` explicitly at startup.
+Span export is opt-in: when ``OTEL_EXPORTER_OTLP_ENDPOINT`` is set,
+the SDK is configured with an OTLP/HTTP exporter +
+``BatchSpanProcessor``. Without an endpoint spans are recorded
+in-memory only. ``opentelemetry-instrumentation-logging`` is
+deliberately not wired up — correlation flows through the
+``trace_id`` / ``span_id`` injected by the logging stack.
 """
 
 from __future__ import annotations
@@ -19,150 +23,93 @@ from contextlib import contextmanager
 from typing import Any
 
 from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    BatchSpanProcessor,
-    ConsoleSpanExporter,
-    SimpleSpanProcessor,
-)
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+OTLP_ENDPOINT_ENV = "OTEL_EXPORTER_OTLP_ENDPOINT"
 
 
-def configure_tracing(service_name: str = "intelliqx", exporter: str = "console") -> None:
-    """Configure OpenTelemetry tracing.
-
-    Args:
-        service_name: The ``service.name`` resource attribute attached
-            to every span.
-        exporter: One of ``"console"`` (default; prints spans to
-            stdout), ``"none"`` (no exporter; spans are still
-            recorded in memory but never serialised), or anything
-            else (falls back to ``BatchSpanProcessor`` with a console
-            exporter).
-    """
-    resource = Resource.create({"service.name": service_name})
-    provider = TracerProvider(resource=resource)
-    if exporter == "console":
-        # SimpleSpanProcessor flushes synchronously — ideal for tests
-        # where we want to see spans immediately.
-        provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
-    elif exporter == "none":
-        pass
-    else:
-        # BatchSpanProcessor is the production default; spans are
-        # buffered and flushed on a background thread.
-        provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+def configure_tracing(service_name: str = "intelliqx", *, otlp_endpoint: str | None = None) -> None:
+    """Configure the OTel SDK. OTLP/HTTP only fires when an endpoint is supplied."""
+    endpoint = otlp_endpoint or os.environ.get(OTLP_ENDPOINT_ENV)
+    provider = TracerProvider(resource=Resource.create({"service.name": service_name}))
+    if endpoint:
+        provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint)))
     trace.set_tracer_provider(provider)
 
 
 class Tracer:
-    """Lightweight wrapper around an OpenTelemetry tracer.
-
-    The wrapper hides the OTel span object behind a small proxy so
-    agent code does not need to know the OTel API surface. The
-    ``span`` context manager records the wall-clock duration in
-    ``duration_ms`` for every span automatically.
-
-    Example:
-        >>> with tracer.span("agent.planner.run") as span:
-        ...     span.set_attribute("tenant_id", "t1")
-    """
+    """Wrapper around the SDK tracer."""
 
     def __init__(self) -> None:
+        if os.environ.get("INTELLIQX_OTEL") == "1":
+            configure_tracing()
         self.tracer = trace.get_tracer("intelliqx")
 
     @contextmanager
     def span(self, name: str, **attrs: Any):
-        """Open a span and yield a proxy for attribute/event access.
-
-        Args:
-            name: Span name. By convention, agent spans use
-                ``"agent.<agent_name>.run"`` and runtime spans use
-                ``"agent.<agent_name>.invoke"``.
-            **attrs: Attributes attached to the span at open time.
-
-        Yields:
-            A :class:`SpanProxy` for setting additional attributes
-            and adding events.
-        """
-        span = self.tracer.start_span(name, attributes=to_otel_attrs(attrs))
-        start = time.monotonic()
-        try:
-            yield SpanProxy(span)
-        except Exception as e:
-            # Mark the span as failed so backends render it red.
-            span.record_exception(e)
-            span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
-            raise
-        finally:
-            # Always record the wall-clock duration, even on error.
-            span.set_attribute("duration_ms", int((time.monotonic() - start) * 1000))
-            span.end()
+        with self.tracer.start_as_current_span(name, attributes=_otel_attrs(attrs)) as span:
+            start = time.monotonic()
+            try:
+                yield SpanProxy(span)
+            except Exception as exc:
+                span.record_exception(exc)
+                span.set_status(trace.Status(trace.StatusCode.ERROR, str(exc)))
+                raise
+            finally:
+                span.set_attribute("duration_ms", int((time.monotonic() - start) * 1000))
 
 
 class SpanProxy:
-    """Proxy that lets callers set attributes/events without importing OTel.
+    """Tiny proxy that hides OTel types from application code."""
 
-    The proxy is intentionally tiny: a span has many more methods in
-    OTel (``set_status``, ``add_link``, ``update_name`` …) but
-    IntelliqX's needs are limited to attributes and events.
-    """
+    __slots__ = ("span",)
 
     def __init__(self, span: Any) -> None:
         self.span = span
 
     def set_attribute(self, key: str, value: Any) -> None:
-        """Attach a typed attribute to the span.
-
-        Args:
-            key: Attribute name (e.g. ``"tenant_id"``).
-            value: Value; non-trivial types are stringified.
-        """
-        self.span.set_attribute(key, to_otel_value(value))
+        self.span.set_attribute(key, _otel_value(value))
 
     def add_event(self, name: str, **attrs: Any) -> None:
-        """Add a timestamped event to the span.
+        self.span.add_event(name, attributes=_otel_attrs(attrs))
 
-        Args:
-            name: Event name (e.g. ``"node_failed"``).
-            **attrs: Event attributes.
-        """
-        self.span.add_event(name, attributes=to_otel_attrs(attrs))
-
-
-def to_otel_attrs(attrs: dict[str, Any]) -> dict[str, Any]:
-    """Coerce every attribute to an OTel-compatible primitive."""
-    return {k: to_otel_value(v) for k, v in attrs.items()}
+    def set_status_error(self, message: str = "error") -> None:
+        """Mark the active span as failed without raising."""
+        self.span.set_status(trace.Status(trace.StatusCode.ERROR, message))
+        self.span.record_exception(RuntimeError(message))
 
 
-def to_otel_value(v: Any) -> Any:
-    """Coerce a value to an OTel-allowed primitive (str|int|float|bool)."""
-    if isinstance(v, (str, int, float, bool)):
-        return v
-    # Fallback: stringify complex values. Acceptable for tracing,
-    # which is mostly observational.
-    return str(v)
+def _otel_value(v: Any) -> Any:
+    return v if isinstance(v, (str, int, float, bool)) else str(v)
 
 
-SINGLETON: Tracer | None = None
+def _otel_attrs(attrs: dict[str, Any]) -> dict[str, Any]:
+    return {k: _otel_value(v) for k, v in attrs.items()}
+
+
+_SINGLETON: Tracer | None = None
 
 
 def get_tracer() -> Tracer:
-    """Return the process-wide :class:`Tracer`.
-
-    If the ``INTELLIQX_OTEL`` env var is set, the underlying OTel SDK is
-    configured on first call. Otherwise the tracer is a thin no-op
-    wrapper that still records ``duration_ms`` on every span.
-    """
-    global SINGLETON
-    if SINGLETON is None:
-        if os.environ.get("INTELLIQX_OTEL") == "1":
-            configure_tracing()
-        SINGLETON = Tracer()
-    return SINGLETON
+    global _SINGLETON
+    if _SINGLETON is None:
+        _SINGLETON = Tracer()
+    return _SINGLETON
 
 
 def reset_tracer() -> None:
-    """Clear the singleton tracer (for tests)."""
-    global SINGLETON
-    SINGLETON = None
+    global _SINGLETON
+    _SINGLETON = None
+
+
+__all__ = [
+    "OTLP_ENDPOINT_ENV",
+    "SpanProxy",
+    "Tracer",
+    "configure_tracing",
+    "get_tracer",
+    "reset_tracer",
+]

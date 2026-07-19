@@ -1,16 +1,19 @@
 """Tests for intelliqx-observability."""
 
 import pytest
-from intelliqx_observability.logging import get_logger
+from intelliqx_observability.logging import configure_logging, get_logger, reset_logging
 from intelliqx_observability.metrics import Counter, Gauge, Histogram, MetricsRegistry
-from intelliqx_observability.tracing import Tracer, get_tracer
+from intelliqx_observability.tracing import Tracer, get_tracer, reset_tracer
 
 
 @pytest.mark.unit
-def test_logger():
+def test_logger_smoke():
+    reset_logging()
+    configure_logging(level="INFO", json_logs=True, enqueue=False)
     log = get_logger("test")
     assert log is not None
     log.info("hello", k=1)
+    reset_logging()
 
 
 @pytest.mark.unit
@@ -61,15 +64,16 @@ def test_metrics_registry():
 
 @pytest.mark.unit
 def test_tracer_span():
+    reset_tracer()
     t = Tracer()
     with t.span("test.span") as s:
         s.set_attribute("k", "v")
         s.add_event("ev")
-    # No exceptions = success
 
 
 @pytest.mark.unit
 def test_tracer_records_exception():
+    reset_tracer()
     t = Tracer()
     with pytest.raises(RuntimeError), t.span("err.span") as s:
         s.set_attribute("k", "v")
@@ -78,6 +82,7 @@ def test_tracer_records_exception():
 
 @pytest.mark.unit
 def test_get_tracer_singleton():
+    reset_tracer()
     a = get_tracer()
     b = get_tracer()
     assert a is b

@@ -12,6 +12,12 @@ Status values:
 * ``"timeout"``   — ``asyncio.wait_for`` fired.
 * ``"error"``     — handler raised any other exception.
 * ``"not_found"`` — no handler was registered for the agent name.
+
+Errors are kept concise on the wire: only ``"{ExceptionType}: {msg}"``
+goes into :attr:`InvocationResponse.error`. Full tracebacks are
+captured once in the structured logger, with the active OTel span
+correlation, so callers do not have to parse formatted tracebacks to
+branch on the failure.
 """
 
 from __future__ import annotations
@@ -19,10 +25,10 @@ from __future__ import annotations
 import abc
 import asyncio
 import time
-import traceback
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from intelliqx_observability.logging import get_logger
 from intelliqx_observability.tracing import get_tracer
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -38,6 +44,8 @@ __all__ = [
     "reset_compute_runtime",
     "set_compute_runtime",
 ]
+
+_logger = get_logger(__name__)
 
 
 class InvocationRequest(BaseModel):
@@ -71,7 +79,11 @@ class InvocationResponse(BaseModel):
         duration_ms: Wall-clock duration of the invocation.
         status: One of ``"ok"``, ``"timeout"``, ``"error"``,
             ``"not_found"``.
-        error: Human-readable error message (when ``status != "ok"``).
+        error: Human-readable error message of the form
+            ``"{ExceptionType}: {msg}"`` when ``status != "ok"``.
+            Full tracebacks are not included on the wire — they are
+            emitted to the structured logger under the active OTel
+            span context.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -137,8 +149,6 @@ class InProcessComputeRuntime(ComputeRuntime):
         self.handlers[agent_name] = handler
 
     async def invoke(self, request: InvocationRequest) -> InvocationResponse:
-        # Wrap the whole call in a tracer span so every agent
-        # invocation shows up in the OTel trace.
         tracer = get_tracer()
         with tracer.span(f"agent.{request.agent_name}.invoke") as span:
             span.set_attribute("tenant_id", request.tenant_id)
@@ -157,7 +167,14 @@ class InProcessComputeRuntime(ComputeRuntime):
                 output = await asyncio.wait_for(handler(request), timeout=request.timeout_seconds)
             except TimeoutError:
                 duration_ms = int((time.monotonic() - start) * 1000)
-                span.set_attribute("error", "timeout")
+                span.set_status_error("timeout")
+                _logger.warning(
+                    "compute_invoke_timeout",
+                    agent_name=request.agent_name,
+                    tenant_id=request.tenant_id,
+                    duration_ms=duration_ms,
+                    timeout_seconds=request.timeout_seconds,
+                )
                 return InvocationResponse(
                     agent_name=request.agent_name,
                     output={},
@@ -167,13 +184,19 @@ class InProcessComputeRuntime(ComputeRuntime):
                 )
             except Exception as e:
                 duration_ms = int((time.monotonic() - start) * 1000)
-                span.set_attribute("error", "exception")
+                span.set_status_error("exception")
+                _logger.exception(
+                    "compute_invoke_error",
+                    agent_name=request.agent_name,
+                    tenant_id=request.tenant_id,
+                    duration_ms=duration_ms,
+                )
                 return InvocationResponse(
                     agent_name=request.agent_name,
                     output={},
                     duration_ms=duration_ms,
                     status="error",
-                    error=f"{type(e).__name__}: {e}\n{traceback.format_exc()}",
+                    error=f"{type(e).__name__}: {e}",
                 )
             duration_ms = int((time.monotonic() - start) * 1000)
             span.set_attribute("duration_ms", duration_ms)

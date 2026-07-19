@@ -17,16 +17,16 @@ Usage::
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 from intelliqx_llm.client import get_llm_client
+from intelliqx_observability.logging import get_logger
 from intelliqx_vector.index import VectorDoc, get_vector_index
 
 from intelliqx_okf.bundle import load_bundle
 from intelliqx_okf.catalog import OKFCatalog, get_catalog, set_catalog
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 CONCEPT_EMBED_BATCH = 32  # Embed this many concepts per LLM call.
 
@@ -73,15 +73,15 @@ async def bootstrap_okf_retrieval(
     total_embedded = 0
 
     for tenant_id, bundle_path in tenant_bundles.items():
-        logger.info("Loading OKF bundle for tenant %s from %s", tenant_id, bundle_path)
+        logger.info("Loading OKF bundle for tenant {} from {}", tenant_id, bundle_path)
         bundle = load_bundle(bundle_path)
 
         if bundle.errors:
             for path, error in bundle.errors:
-                logger.warning("Bundle parse error for %s: %s", path, error)
+                logger.warning("Bundle parse error for {}: {}", str(path), str(error))
 
         count = cat.build_catalog(bundle, tenant_id=tenant_id)
-        logger.info("Built catalog for tenant %s: %d concepts", tenant_id, count)
+        logger.info("Built catalog for tenant {}: {} concepts", tenant_id, count)
 
         concepts_to_embed = [c for cid, c in bundle.concepts.items() if cid not in bundle.reserved]
 
@@ -123,5 +123,5 @@ async def bootstrap_okf_retrieval(
                 )
                 total_embedded += 1
 
-    logger.info("OKF bootstrap complete: %d concepts embedded", total_embedded)
+    logger.info("OKF bootstrap complete: {} concepts embedded", total_embedded)
     return total_embedded

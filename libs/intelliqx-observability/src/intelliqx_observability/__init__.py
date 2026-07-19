@@ -1,20 +1,19 @@
 """Observability for IntelliqX.
 
-The observability stack has three pillars:
-
-* **Logs** (structlog) — structured, JSON-or-console, with
-  per-context fields merged in via ``structlog.contextvars``.
-* **Metrics** (counter / gauge / histogram) — in-process, thread-safe,
-  and exported as plain dicts for tests and simple scrape endpoints.
-* **Traces** (OpenTelemetry) — span-based, with a thin Pythonic
-  wrapper that keeps agent code free of OTel types in call sites.
-
-Singletons are exposed by ``get_logger``, ``get_metrics``, and
-``get_tracer``. Tests reset them via the matching ``reset_*`` helpers
-to guarantee a clean world per test.
+Three pillars: structured logs (Loguru), in-process metrics
+(counter / gauge / histogram), distributed traces
+(OpenTelemetry with start_as_current_span and an optional OTLP/HTTP
+exporter). Singletons expose ``get_logger`` / ``get_metrics`` /
+``get_tracer``; tests use ``reset_logging`` / ``reset_tracer`` to
+return to a clean world.
 """
 
-from intelliqx_observability.logging import configure_logging, get_logger
+from intelliqx_observability.logging import (
+    bind_context,
+    configure_logging,
+    get_logger,
+    reset_logging,
+)
 from intelliqx_observability.metrics import Counter, Gauge, Histogram, MetricsRegistry, get_metrics
 from intelliqx_observability.tracing import Tracer, configure_tracing, get_tracer
 
@@ -24,9 +23,11 @@ __all__ = [
     "Histogram",
     "MetricsRegistry",
     "Tracer",
+    "bind_context",
     "configure_logging",
     "configure_tracing",
     "get_logger",
     "get_metrics",
     "get_tracer",
+    "reset_logging",
 ]
