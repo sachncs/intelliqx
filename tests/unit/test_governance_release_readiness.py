@@ -29,6 +29,7 @@ async def test_release_readiness_go_for_healthy_inputs():
             tenant_id="t1",
         )
     )
+    assert out["outcome"] == "passed"
     assert out["recommendation"] == "go"
 
 
@@ -51,6 +52,7 @@ async def test_release_readiness_no_go_for_critical_security():
             tenant_id="t1",
         )
     )
+    assert out["outcome"] == "failed"
     assert out["recommendation"] == "no_go"
 
 
@@ -144,6 +146,7 @@ async def test_release_readiness_low_coverage_no_go():
             tenant_id="t1",
         )
     )
+    assert out["outcome"] == "failed"
     assert out["recommendation"] == "no_go"
 
 

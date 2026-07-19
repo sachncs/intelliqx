@@ -41,6 +41,7 @@ async def test_execution_runs_passing_test():
             tenant_id="t1",
         )
     )
+    assert out["outcome"] == "passed"
     assert out["passed"] == 1
     assert out["failed"] == 0
     assert out["results"][0]["status"] == "passed"
@@ -78,6 +79,7 @@ async def test_execution_reports_failure_on_bad_status():
             tenant_id="t1",
         )
     )
+    assert out["outcome"] == "failed"
     assert out["failed"] == 1
     assert out["results"][0]["status"] == "failed"
 

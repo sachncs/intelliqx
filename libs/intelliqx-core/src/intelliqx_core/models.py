@@ -18,9 +18,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+
+type DomainOutcome = Literal["passed", "failed", "blocked"]
 
 
 class RunStatus(str, Enum):
@@ -149,9 +151,10 @@ class PlanNode(BaseModel):
     """A single node in an execution-plan DAG.
 
     Nodes form a DAG via ``depends_on``; the Orchestrator performs a
-    Kahn-style topological sort and runs independent nodes in parallel
-    up to ``max_parallel``. ``timeout_seconds`` and ``retry_policy`` are
-    enforced per-node, not per-plan.
+    Kahn-style topological sort and runs independent nodes in parallel.
+    ``timeout_seconds`` is enforced per node. ``retry_policy`` is reserved
+    for a future typed policy; the Orchestrator currently uses its bounded
+    run-level retry count.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -160,5 +163,5 @@ class PlanNode(BaseModel):
     agent: str
     inputs: dict[str, Any] = Field(default_factory=dict)
     depends_on: tuple[str, ...] = ()
-    timeout_seconds: int = 300
+    timeout_seconds: int = Field(default=300, gt=0, le=3600)
     retry_policy: dict[str, Any] = Field(default_factory=dict)

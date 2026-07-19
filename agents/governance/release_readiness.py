@@ -32,7 +32,7 @@ from __future__ import annotations
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
 from intelliqx_core.ids import new_id
-from intelliqx_core.models import AgentCategory
+from intelliqx_core.models import AgentCategory, DomainOutcome
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -53,6 +53,7 @@ class ReleaseReadinessOutput(BaseModel):
     """Output payload for the Release Readiness agent.
 
     Attributes:
+        outcome: ``"failed"`` for a no-go decision, otherwise ``"passed"``.
         recommendation: One of ``"go"``, ``"conditional_go"``,
             ``"no_go"``.
         confidence: Calibrated confidence in the recommendation, in
@@ -67,6 +68,7 @@ class ReleaseReadinessOutput(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    outcome: DomainOutcome
     recommendation: str  # go | conditional_go | no_go
     confidence: float  # 0..1
     explanation: list[str] = Field(default_factory=list)
@@ -155,6 +157,7 @@ class ReleaseReadinessAgent(AgentBase):
             recommendation = "no_go"
 
         return ReleaseReadinessOutput(
+            outcome="failed" if recommendation == "no_go" else "passed",
             recommendation=recommendation,
             confidence=conf,
             explanation=explanation,

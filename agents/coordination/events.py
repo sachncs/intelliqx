@@ -2,7 +2,7 @@
 
 A small set of strongly-typed event payloads exchanged by the
 Coordination agents. Every event carries :class:`intelliqx_core.events.EventMetadata`
-so the platform can correlate them across processes and clouds.
+so the platform can correlate them across runtime and process boundaries.
 
 Topic names are ``"<noun>.<verb>(.<modifier>)"`` — verb last so
 publishers and subscribers line up under the same prefix. Examples:
@@ -15,10 +15,10 @@ The :func:`make_metadata` helper is the only call site most agents need.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from intelliqx_core.events import BaseEvent, EventMetadata
-from intelliqx_core.models import RunStatus
+from intelliqx_core.models import DomainOutcome, RunStatus
 from pydantic import Field
 
 
@@ -45,8 +45,11 @@ class PlanNodeCompleted(BaseEvent):
     """Emitted when the Orchestrator finishes invoking a plan node.
 
     Attributes:
-        status: ``"ok"``, ``"timeout"``, ``"error"``, or ``"not_found"``.
-        duration_ms: Wall-clock duration of the invocation.
+        status: Transport status: ``"ok"``, ``"timeout"``, ``"error"``,
+            ``"not_found"``, or ``"not_invoked"``.
+        outcome: Domain outcome independent of transport status.
+        attempts: Number of transport invocation attempts.
+        duration_ms: Wall-clock duration of the final invocation.
         output: The agent's serialised output.
         error: Human-readable error message on failure.
     """
@@ -56,7 +59,9 @@ class PlanNodeCompleted(BaseEvent):
     plan_id: str
     node_id: str
     agent: str
-    status: str
+    status: Literal["ok", "timeout", "error", "not_found", "not_invoked"]
+    outcome: DomainOutcome
+    attempts: int = Field(default=0, ge=0, le=6)
     duration_ms: int = 0
     output: dict[str, Any] = Field(default_factory=dict)
     error: str | None = None

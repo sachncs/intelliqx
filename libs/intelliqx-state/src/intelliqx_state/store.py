@@ -51,11 +51,18 @@ class InMemoryStateStore(StateStore):
         exp = self.expiry.get(key)
         return exp is not None and exp <= time.time()
 
+    def purge_expired(self, key: str) -> bool:
+        if not self.expired(key):
+            return False
+        self.kv.pop(key, None)
+        self.hashes.pop(key, None)
+        self.lists.pop(key, None)
+        self.expiry.pop(key, None)
+        return True
+
     async def get(self, key: str) -> bytes | None:
         async with self.lock:
-            if self.expired(key):
-                self.kv.pop(key, None)
-                self.expiry.pop(key, None)
+            if self.purge_expired(key):
                 return None
             return self.kv.get(key)
 
@@ -94,14 +101,19 @@ class InMemoryStateStore(StateStore):
 
     async def hset(self, key: str, field: str, value: str) -> None:
         async with self.lock:
+            self.purge_expired(key)
             self.hashes.setdefault(key, {})[field] = value
 
     async def hgetall(self, key: str) -> dict[str, str]:
         async with self.lock:
+            if self.purge_expired(key):
+                return {}
             return dict(self.hashes.get(key, {}))
 
     async def hkeys(self, key: str) -> list[str]:
         async with self.lock:
+            if self.purge_expired(key):
+                return []
             return list(self.hashes.get(key, {}))
 
     async def lpush(self, key: str, value: str) -> int:

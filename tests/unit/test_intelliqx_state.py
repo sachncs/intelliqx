@@ -43,6 +43,15 @@ async def test_hash():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
+async def test_hash_ttl_expiration():
+    s = InMemoryStateStore()
+    await s.hset("h", "f", "v")
+    await s.expire("h", 0)
+    assert await s.hgetall("h") == {}
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_list_queue():
     s = InMemoryStateStore()
     await s.lpush("q", "a")

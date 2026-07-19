@@ -82,7 +82,8 @@ async def test_full_pipeline_goal_to_failure_analysis():
             tenant_id="t1",
         )
     )
-    assert run_out["status"] == RunStatus.SUCCEEDED.value
+    assert run_out["status"] == RunStatus.FAILED.value
+    assert [result["outcome"] for result in run_out["node_results"]] == ["failed", "blocked"]
     assert len(run_out["node_results"]) == 2
 
 

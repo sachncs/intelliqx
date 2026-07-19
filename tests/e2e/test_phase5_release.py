@@ -86,6 +86,7 @@ async def test_v1_release_scenario_no_go():
             tenant_id="t1",
         )
     )
+    assert out["outcome"] == "failed"
     assert out["recommendation"] == "no_go"
 
 

@@ -31,7 +31,7 @@ from typing import Any, ClassVar
 import httpx
 from intelliqx_agents.base import AgentBase, AgentContext, AgentMeta
 from intelliqx_agents.decorators import traced_agent
-from intelliqx_core.models import AgentCategory
+from intelliqx_core.models import AgentCategory, DomainOutcome
 from intelliqx_storage.store import get_object_store
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -141,6 +141,7 @@ class ExecutionOutput(BaseModel):
     """Output payload for the Execution agent.
 
     Attributes:
+        outcome: ``"passed"`` when every test passed, otherwise ``"failed"``.
         results: Per-test results in execution order.
         passed: Count of tests with status ``"passed"``.
         failed: Count of tests with status ``"failed"``.
@@ -150,6 +151,7 @@ class ExecutionOutput(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    outcome: DomainOutcome
     results: list[TestResult] = Field(default_factory=list)
     passed: int = 0
     failed: int = 0
@@ -193,7 +195,11 @@ class ExecutionAgent(AgentBase):
                 await store.put(key, blob, content_type="application/json")
                 artifact_keys.append(key)
         return ExecutionOutput(
-            results=results, passed=passed, failed=failed, artifact_keys=artifact_keys
+            outcome="failed" if failed else "passed",
+            results=results,
+            passed=passed,
+            failed=failed,
+            artifact_keys=artifact_keys,
         )
 
 
