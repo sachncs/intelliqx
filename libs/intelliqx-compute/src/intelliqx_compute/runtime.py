@@ -149,8 +149,19 @@ class InProcessComputeRuntime(ComputeRuntime):
         self.handlers[agent_name] = handler
 
     async def invoke(self, request: InvocationRequest) -> InvocationResponse:
+        from intelliqx_agents.base import RunContext, bind_run
+
+        run_id = request.metadata.get("run_id", "ad-hoc")
+        plan_id = request.metadata.get("plan_id", "")
+        run_ctx = RunContext(
+            run_id=run_id,
+            plan_id=plan_id,
+            tenant_id=request.tenant_id,
+            agent_name=request.agent_name,
+            node_id=request.metadata.get("node_id"),
+        )
         tracer = get_tracer()
-        with tracer.span(f"agent.{request.agent_name}.invoke") as span:
+        with tracer.span(f"agent.{request.agent_name}.invoke") as span, bind_run(run_ctx):
             span.set_attribute("tenant_id", request.tenant_id)
             span.set_attribute("agent_name", request.agent_name)
             handler = self.handlers.get(request.agent_name)

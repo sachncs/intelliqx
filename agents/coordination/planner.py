@@ -139,7 +139,6 @@ def node_cost(n: PlanNode) -> float:
     base = {
         "planner": 0.05,
         "orchestrator": 0.02,
-        "memory_manager": 0.01,
         "knowledge_rag": 0.08,
         "tool_manager": 0.02,
         "requirements_intel": 0.20,

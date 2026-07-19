@@ -7,6 +7,7 @@ These are the public entry points the SGIR pipeline exposes:
 * :func:`build_software_graph` — software graph from parsed entities
 * :func:`optimize_graph` — optimization pass over a software graph
 * :func:`generate_code` — code generation from a software graph
+* :func:`ingest_graph` — write parsed entities into an OKF :class:`Index`
 
 Plain callables that return JSON strings or dicts.
 """
@@ -115,3 +116,59 @@ def generate_code(software_graph_json: str, target_language: str = "python") -> 
     sg = graph_from_json(software_graph_json)
     backend = get_backend(target_language)
     return backend.generate(sg)
+
+
+def ingest_graph(parsed_entities: list[dict[str, Any]], *, index: Any) -> int:
+    """Project parsed entities into OKF concepts and write them to ``index``.
+
+    Each :class:`ParsedEntity` becomes one :class:`OKFConcept` whose
+    ``concept_id`` is the entity's ``graph::<file>::<kind>::<name>``
+    (or its existing ``id`` if it already follows the OKF scheme)
+    and whose body contains the entity's full source segment. The
+    embedded vector enables hybrid FTS+vector retrieval through the
+    same :class:`Index` that holds OKF knowledge.
+
+    Args:
+        parsed_entities: Output of :func:`parse_repository`.
+        index: An open :class:`intelliqx_okf.index.Index` instance.
+
+    Returns:
+        Number of concepts successfully written.
+    """
+    from intelliqx_okf.concept import OKFConcept
+    from intelliqx_okf.frontmatter import OKFFrontmatter
+
+    written = 0
+    for raw in parsed_entities:
+        entity = ParsedEntity.model_validate(raw)
+        frontmatter = OKFFrontmatter(
+            type=f"code.{entity.entity_type}",
+            title=entity.name,
+            description=(f"{entity.entity_type} {entity.name} in {entity.file_path}"),
+            tags=[
+                tag for tag in (entity.file_path, entity.entity_type, entity.parent or "") if tag
+            ],
+            extra_fields={
+                "source": "ast-graph",
+                "file_path": entity.file_path,
+                "line_start": entity.line_start,
+                "line_end": entity.line_end,
+                "parent": entity.parent or "",
+                "language": entity.language,
+                "is_async": entity.is_async,
+                "is_generator": entity.is_generator,
+            },
+        )
+        concept = OKFConcept(
+            concept_id=f"code::{entity.file_path}::{entity.entity_type}::{entity.name}",
+            frontmatter=frontmatter,
+            body=(
+                f"# {entity.name}\n\n"
+                f"`{entity.entity_type}` declared in `{entity.file_path}` "
+                f"at lines {entity.line_start}-{entity.line_end}.\n\n"
+                f"```\n{entity.parameters}\n```"
+            ),
+        )
+        index.write(concept)
+        written += 1
+    return written

@@ -16,7 +16,10 @@ agent for an example.
 from __future__ import annotations
 
 import abc
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar, Token
+from dataclasses import dataclass, field
 from typing import Any, ClassVar, Generic, TypeVar
 
 from intelliqx_compute.runtime import InvocationRequest
@@ -75,6 +78,55 @@ class AgentContext(BaseModel):
     tenant: TenantContext
     run_id: str
     trace_id: str | None = None
+
+
+@dataclass
+class RunContext:
+    """Process-transient context for a single orchestrator run.
+
+    The run context is intentionally ephemeral: it lives in a
+    :class:`contextvars.ContextVar` so concurrent tasks each see their
+    own values, and it is dropped (along with the captured messages,
+    retrieved knowledge snippets, and intermediate reasoning) the
+    moment the run exits. Nothing here is persisted to disk or the
+    state store — durable knowledge goes through the OKF index, not
+    through run memory.
+
+    Use :func:`current_run` from any agent or tool to read the active
+    run, or :func:`bind_run` to scope a new run for a block.
+    """
+
+    run_id: str
+    plan_id: str
+    tenant_id: str
+    agent_name: str | None = None
+    node_id: str | None = None
+    messages: list[str] = field(default_factory=list)
+    recent_hits: list[Any] = field(default_factory=list)
+
+    def push_message(self, message: str) -> None:
+        self.messages.append(message)
+
+
+_RUN: ContextVar[RunContext | None] = ContextVar("intelliqx_run_ctx", default=None)
+
+
+def current_run() -> RunContext | None:
+    """Return the active :class:`RunContext`, or ``None`` if none is bound."""
+    return _RUN.get()
+
+
+@contextmanager
+def bind_run(run: RunContext) -> Iterator[RunContext]:
+    """Bind a :class:`RunContext` for the duration of the block.
+
+    The context var is restored on exit, even when the block raises.
+    """
+    token: Token[RunContext | None] = _RUN.set(run)
+    try:
+        yield run
+    finally:
+        _RUN.reset(token)
 
 
 class AgentBase(abc.ABC, Generic[InputT, OutputT]):

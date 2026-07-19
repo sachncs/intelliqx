@@ -640,12 +640,16 @@ name = "intelliqx-graph"
 version = "0.2.0"
 source = { editable = "libs/intelliqx-graph" }
 dependencies = [
+    { name = "intelliqx-core" },
+    { name = "intelliqx-okf" },
     { name = "networkx" },
     { name = "pydantic" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "intelliqx-core", editable = "libs/intelliqx-core" },
+    { name = "intelliqx-okf", editable = "libs/intelliqx-okf" },
     { name = "networkx", specifier = ">=3.4" },
     { name = "pydantic", specifier = ">=2.8" },
 ]

@@ -85,15 +85,6 @@ async def test_falls_back_to_fts_when_embedding_dim_mismatches(env) -> None:
 
 
 @pytest.mark.asyncio
-async def test_lexical_returns_episodic_hits(env) -> None:
-    index, _, store = env
-    await store.put("t1/episodic/notes", b"this is the unique-keynote string")
-    agent = KnowledgeRAGAgent(index)
-    out = await agent.run(_ctx("t1"), KnowledgeRAGInput(query="keynote", tenant_id="t1", top_k=3))
-    assert any(d.source == "lexical" and "unique-keynote" in d.text for d in out.documents)
-
-
-@pytest.mark.asyncio
 async def test_kg_returns_node_hits(env) -> None:
     index, kg, _ = env
     await kg.add_nodes([Node(id="n1", type="doc", attrs={"text": "alpha bravo"}, tenant_id="t1")])

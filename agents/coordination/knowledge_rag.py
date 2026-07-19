@@ -1,17 +1,15 @@
 """Knowledge / RAG Agent (Coordination).
 
-Three-source hybrid retriever:
+Two-source hybrid retriever:
 
 1. **Index** — FTS5 keyword + sqlite-vec vector search through the
    single :class:`intelliqx_okf.index.Index`. The same index covers
    OKF concepts, AST-graph nodes, and any ingested knowledge chunk.
 2. **KG** — find knowledge-graph nodes whose attributes contain the
    query tokens (SQL ``LIKE``).
-3. **Lexical** — scan the tenant's episodic memory in the object store
-   and rank by term frequency.
 
-The three lists are combined via weighted reciprocal-rank fusion
-(RRF, ``k=60``) and deduplicated by document id.
+The lists are combined via weighted reciprocal-rank fusion (RRF,
+``k=60``) and deduplicated by document id.
 """
 
 from __future__ import annotations
@@ -24,7 +22,6 @@ from intelliqx_core.models import AgentCategory
 from intelliqx_kg.graph import get_kg
 from intelliqx_llm.client import get_llm_client
 from intelliqx_okf import EmbeddingMismatchError, Hit, Index
-from intelliqx_storage.store import get_object_store
 from pydantic import BaseModel, ConfigDict, Field
 
 RRF_K = 60
@@ -82,7 +79,7 @@ class KnowledgeRAGAgent(AgentBase):
     INPUT_MODEL = KnowledgeRAGInput
     OUTPUT_MODEL = KnowledgeRAGOutput
 
-    SOURCE_WEIGHTS: ClassVar[dict[str, float]] = {"index": 1.2, "kg": 0.5, "lexical": 0.3}
+    SOURCE_WEIGHTS: ClassVar[dict[str, float]] = {"index": 1.2, "kg": 0.5}
 
     def __init__(self, index: Index | None = None) -> None:
         super().__init__()
@@ -107,7 +104,6 @@ class KnowledgeRAGAgent(AgentBase):
         tenant_id = ctx.tenant.tenant_id
         llm = get_llm_client()
         kg = get_kg()
-        store = get_object_store()
 
         query_vec: list[float] | None = None
         try:
@@ -159,34 +155,8 @@ class KnowledgeRAGAgent(AgentBase):
                         )
                     )
 
-        lexical_hits: list[KnowledgeRAGDocument] = []
-        terms = [t.lower() for t in input.query.split() if t]
-        if terms:
-            try:
-                async for key in store.list(f"{tenant_id}/episodic/"):
-                    try:
-                        blob = await store.get(key)
-                    except Exception:
-                        continue
-                    text = blob.decode("utf-8", errors="ignore")
-                    hits = sum(text.lower().count(t) for t in terms)
-                    if hits > 0:
-                        lexical_hits.append(
-                            KnowledgeRAGDocument(
-                                id=key, text=text[:400], score=float(hits), source="lexical"
-                            )
-                        )
-            except Exception:
-                lexical_hits = []
-            lexical_hits.sort(key=lambda r: -r.score)
-            lexical_hits = lexical_hits[: input.top_k * 3]
-
         merged: dict[str, dict[str, Any]] = {}
-        for source, candidates in (
-            ("index", index_hits),
-            ("kg", kg_hits),
-            ("lexical", lexical_hits),
-        ):
+        for source, candidates in (("index", index_hits), ("kg", kg_hits)):
             weight = self.SOURCE_WEIGHTS[source]
             for rank, doc in enumerate(candidates):
                 bucket = merged.setdefault(doc.id, {"doc": doc, "rrf": 0.0})

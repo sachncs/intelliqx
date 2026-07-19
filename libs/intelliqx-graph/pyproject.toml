@@ -6,7 +6,13 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.8",
     "networkx>=3.4",
+    "intelliqx-core",
+    "intelliqx-okf",
 ]
+
+[tool.uv.sources]
+intelliqx-core = { workspace = true }
+intelliqx-okf = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

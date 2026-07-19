@@ -15,12 +15,7 @@ from typing import Any
 
 from intelliqx_agents.base import AgentBase, AgentFactory
 
-__all__ = [
-    "AgentRegistry",
-    "get_agent_registry",
-    "register_agent",
-    "reset_agent_registry",
-]
+__all__ = ["AgentRegistry", "get_agent_registry", "register_agent", "reset_agent_registry"]
 
 
 class AgentRegistry:

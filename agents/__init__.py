@@ -50,7 +50,6 @@ def build_catalog() -> list[tuple[str, Any]]:
     if AGENT_CATALOG:
         return AGENT_CATALOG
     from agents.coordination.knowledge_rag import KnowledgeRAGAgent
-    from agents.coordination.memory_manager import MemoryManagerAgent
     from agents.coordination.orchestrator import OrchestratorAgent
     from agents.coordination.planner import PlannerAgent
     from agents.coordination.smoke import SmokeAgent
@@ -82,7 +81,6 @@ def build_catalog() -> list[tuple[str, Any]]:
     AGENT_CATALOG.extend([
         ("planner", PlannerAgent),
         ("orchestrator", OrchestratorAgent),
-        ("memory_manager", MemoryManagerAgent),
         ("knowledge_rag", KnowledgeRAGAgent),
         ("tool_manager", ToolManagerAgent),
         ("smoke", SmokeAgent),
