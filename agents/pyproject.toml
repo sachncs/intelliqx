@@ -12,7 +12,6 @@ dependencies = [
     "intelliqx-compute",
     "intelliqx-agents",
     "intelliqx-tools",
-    "intelliqx-vector",
     "intelliqx-kg",
     "intelliqx-storage",
     "intelliqx-okf",
@@ -30,7 +29,6 @@ intelliqx-observability = { workspace = true }
 intelliqx-compute = { workspace = true }
 intelliqx-agents = { workspace = true }
 intelliqx-tools = { workspace = true }
-intelliqx-vector = { workspace = true }
 intelliqx-kg = { workspace = true }
 intelliqx-storage = { workspace = true }
 intelliqx-okf = { workspace = true }

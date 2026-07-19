@@ -8,7 +8,6 @@ dependencies = [
     "intelliqx-core",
     "intelliqx-events",
     "intelliqx-storage",
-    "intelliqx-vector",
     "intelliqx-kg",
     "intelliqx-state",
     "intelliqx-llm",
@@ -27,7 +26,6 @@ dependencies = [
 intelliqx-core = { workspace = true }
 intelliqx-events = { workspace = true }
 intelliqx-storage = { workspace = true }
-intelliqx-vector = { workspace = true }
 intelliqx-kg = { workspace = true }
 intelliqx-state = { workspace = true }
 intelliqx-llm = { workspace = true }
@@ -46,7 +44,6 @@ members = [
     "libs/intelliqx-core",
     "libs/intelliqx-events",
     "libs/intelliqx-storage",
-    "libs/intelliqx-vector",
     "libs/intelliqx-kg",
     "libs/intelliqx-state",
     "libs/intelliqx-llm",

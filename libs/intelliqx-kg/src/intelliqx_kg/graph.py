@@ -330,39 +330,22 @@ class KnowledgeGraph:
         )
 
         if direction == "out":
-            sql = base_select.format(
-                join_on="e.dst = n.id",
-                endpoint_clause="e.src = ?",
-            )
+            sql = base_select.format(join_on="e.dst = n.id", endpoint_clause="e.src = ?")
             return self.query(sql, params=[node_id, *params])
 
         if direction == "in":
-            sql = base_select.format(
-                join_on="e.src = n.id",
-                endpoint_clause="e.dst = ?",
-            )
+            sql = base_select.format(join_on="e.src = n.id", endpoint_clause="e.dst = ?")
             return self.query(sql, params=[node_id, *params])
 
         # "both": the parameter list appears twice because UNION
         # binds each SELECT to its own parameter set.
-        sql_out = base_select.format(
-            join_on="e.dst = n.id",
-            endpoint_clause="e.src = ?",
-        )
-        sql_in = base_select.format(
-            join_on="e.src = n.id",
-            endpoint_clause="e.dst = ?",
-        )
+        sql_out = base_select.format(join_on="e.dst = n.id", endpoint_clause="e.src = ?")
+        sql_in = base_select.format(join_on="e.src = n.id", endpoint_clause="e.dst = ?")
         full_params = [node_id, *params]
-        return self.query(
-            f"{sql_out} UNION {sql_in}",
-            params=full_params + full_params,
-        )
+        return self.query(f"{sql_out} UNION {sql_in}", params=full_params + full_params)
 
     def _build_edge_filter(
-        self,
-        tenant_id: str | None,
-        edge_type: str | None,
+        self, tenant_id: str | None, edge_type: str | None
     ) -> tuple[str, list[Any]]:
         """Return the shared WHERE clause + bind parameters for edge queries.
 
@@ -421,6 +404,18 @@ def get_kg() -> KnowledgeGraph:
     if SINGLETON is None:
         SINGLETON = KnowledgeGraph()
     return SINGLETON
+
+
+def set_kg(graph: KnowledgeGraph | None) -> None:
+    """Replace the singleton knowledge graph.
+
+    ``None`` clears the singleton so the next :func:`get_kg` call
+    rebuilds the default in-memory instance. Used by application
+    bootstrap to inject a configured graph before the first agent
+    invocation.
+    """
+    global SINGLETON
+    SINGLETON = graph
 
 
 def reset_kg() -> None:

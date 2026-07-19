@@ -8,7 +8,6 @@ LIBS = [
     "intelliqx_core",
     "intelliqx_events",
     "intelliqx_storage",
-    "intelliqx_vector",
     "intelliqx_kg",
     "intelliqx_state",
     "intelliqx_llm",
