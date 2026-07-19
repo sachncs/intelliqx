@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import os
 from pathlib import Path
-from typing import Any
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -26,6 +25,8 @@ def app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("INTELLIQX_STATE_DB", str(db))
     monkeypatch.setenv("INTELLIQX_OKF_DB", str(okf))
     monkeypatch.setenv("INTELLIQX_WORKERS", "1")
+    monkeypatch.setenv("INTELLIQX_OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("INTELLIQX_OPENAI_BASE_URL", "http://localhost")
     reset_logging()
     from intelliqx_compute.runtime import reset_compute_runtime
 
@@ -76,11 +77,7 @@ async def test_full_run_lifecycle(app) -> None:
     build_catalog()
     for role in AGENT_CATALOG:
         if role.name == "smoke":
-
-            def make_test_agent(*args: Any, **kwargs: Any) -> Any:
-                return test_agent
-
-            object.__setattr__(role, "builder", make_test_agent)
+            object.__setattr__(role, "factory", lambda *args, **kwargs: test_agent)
             break
 
     async with app.router.lifespan_context(app):

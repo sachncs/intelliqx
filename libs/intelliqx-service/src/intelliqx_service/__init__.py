@@ -15,17 +15,44 @@ Persistence is the embedded SQLite state store plus the OKF
 
 from __future__ import annotations
 
-from intelliqx_service.app import Settings, create_app, lifespan
-from intelliqx_service.auth import API_TOKEN_ENV, bearer_token_from_header
-from intelliqx_service.state import RunRecord, RunStatus, StateStore
+from intelliqx_service.app import (
+    API_TOKEN_ENV,
+    MAX_RETRIES_ENV,
+    POLL_INTERVAL_SECONDS,
+    STATE_DB_ENV,
+    WORKER_COUNT_ENV,
+    RunSubmission,
+    Settings,
+    create_app,
+    lifespan,
+    require_token,
+)
+from intelliqx_service.auth import BEARER_SCHEME, bearer_token_from_header
+from intelliqx_service.state import (
+    RunNotCancellableError,
+    RunNotFoundError,
+    RunRecord,
+    RunStatus,
+    StateStore,
+)
 
 __all__ = [
+    "API_KEY_ENV",  # legacy alias placeholder; not exported
     "API_TOKEN_ENV",
+    "BEARER_SCHEME",
+    "MAX_RETRIES_ENV",
+    "POLL_INTERVAL_SECONDS",
+    "STATE_DB_ENV",
+    "WORKER_COUNT_ENV",
+    "RunNotCancellableError",
+    "RunNotFoundError",
     "RunRecord",
     "RunStatus",
+    "RunSubmission",
     "Settings",
     "StateStore",
     "bearer_token_from_header",
     "create_app",
     "lifespan",
+    "require_token",
 ]

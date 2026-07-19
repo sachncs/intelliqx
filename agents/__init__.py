@@ -1,19 +1,20 @@
 """IntelliqX agent roles.
 
-Every role is a single Pydantic AI ``Agent`` produced by the helpers
-in :mod:`agents.ai._roles`. The :func:`register_all` and
-:func:`register_compute_handlers` shims keep the runtime and
-existing tests working while we phase out the legacy framework.
+Every role is a single Pydantic AI :class:`Agent` produced by the
+helpers in :mod:`agents.ai.roles`. The two functions exported here
+(:func:`register_all` and :func:`register_compute_handlers`) wire
+the catalog into the agent registry and the in-process compute
+runtime.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
 from typing import Any
 
 from pydantic_ai import Agent
 
-from agents.ai import _roles
+from agents.ai import roles
 
 __all__ = [
     "AGENT_CATALOG",
@@ -23,93 +24,71 @@ __all__ = [
     "register_compute_handlers",
 ]
 
-AGENT_CATALOG: list[AgentRole] = []
+AGENT_CATALOG: list[roles.AgentRole] = []
 
 
-@dataclass(frozen=True)
-class AgentRole:
-    """A registered agent role.
-
-    Attributes:
-        name: Unique registry key.
-        category: Coordination, intelligence, execution, or
-            governance.
-        description: One-line summary used for marketplace listings
-            and logs.
-        builder: Zero-arg factory that returns a fully-configured
-            Pydantic AI ``Agent``.
-    """
-
-    name: str
-    category: str
-    description: str
-    builder: type[Agent[Any, Any]]
-
-
-def build_catalog() -> list[AgentRole]:
-    """Lazy catalog builder; ``register_all`` consumes the result."""
+def build_catalog() -> list[roles.AgentRole]:
+    """Lazily build and cache the agent catalog."""
     if AGENT_CATALOG:
         return AGENT_CATALOG
-    AGENT_CATALOG.extend(_roles.build())
+    AGENT_CATALOG.extend(roles.build_roles())
     return AGENT_CATALOG
 
 
 def register_all() -> None:
-    """Register every role's class with the agent registry."""
+    """Register every role's factory with the singleton agent registry."""
     from intelliqx_agents.registry import get_agent_registry
 
-    catalog = build_catalog()
-    reg = get_agent_registry()
-    for role in catalog:
-        reg.register(role.name, role.builder, meta=_meta_from(role))
+    registry = get_agent_registry()
+    for role in build_catalog():
+        registry.register(role.name, role.factory, meta=meta_for(role))
 
 
-def _meta_from(role: AgentRole) -> Any:
+def meta_for(role: roles.AgentRole) -> Any:
+    """Build the ``AgentMeta`` for a single role from the registry table."""
     from intelliqx_agents.base import AgentMeta
     from intelliqx_core.models import AgentCategory
 
-    desc = role.description
-    if isinstance(desc, (list, tuple)):
-        desc = " ".join(str(part) for part in desc)
     try:
         category = AgentCategory(role.category)
-    except ValueError:
-        category = AgentCategory.COORDINATION
-    return AgentMeta(name=role.name, category=category, version="1.0.0", description=str(desc))
+    except ValueError as exc:
+        raise ValueError(f"Role {role.name!r} has unknown category {role.category!r}") from exc
+    return AgentMeta(
+        name=role.name, category=category, version="1.0.0", description=role.description
+    )
 
 
 def register_compute_handlers() -> None:
-    """Register every role's ``run`` method with the in-process compute runtime.
-
-    Each handler invokes the Pydantic AI agent synchronously with the
-    request's input dict and returns the structured output as a JSON
-    dict.
-    """
+    """Register each role's run handler with the in-process compute runtime."""
+    from intelliqx_agents.base import RunContext, bind_run
     from intelliqx_compute.runtime import InvocationRequest, get_compute_runtime
 
-    catalog = build_catalog()
     runtime = get_compute_runtime()
-    for role in catalog:
-        builder = role.builder
+    for role in build_catalog():
+        builder = role.factory
 
-        async def handler(req: InvocationRequest, _builder=builder) -> dict[str, Any]:
-            from intelliqx_agents.base import RunContext, bind_run
-
-            run_id = req.metadata.get("run_id", "ad-hoc")
-            plan_id = req.metadata.get("plan_id", "")
+        async def handle(req: InvocationRequest, *, _builder=builder) -> dict[str, Any]:
             run_ctx = RunContext(
-                run_id=run_id,
-                plan_id=plan_id,
+                run_id=req.metadata.get("run_id", "ad-hoc"),
+                plan_id=req.metadata.get("plan_id", ""),
                 tenant_id=req.tenant_id,
                 agent_name=req.agent_name,
                 node_id=req.metadata.get("node_id"),
             )
-            agent = _builder()
+            agent: Agent[Any, Any] = _builder()
             with bind_run(run_ctx):
-                output = await agent.run(req.input, deps=None, message_history=[])
-            data = output.output if hasattr(output, "output") else output
-            if hasattr(data, "model_dump"):
-                data = data.model_dump()
-            return data
+                prompt = json.dumps(req.input, sort_keys=True, default=str)
+                result = await agent.run(prompt, deps=None, message_history=[])
+            return _serialise_agent_output(result)
 
-        runtime.register(role.name, handler)
+        runtime.register(role.name, handle)
+
+
+def _serialise_agent_output(result: Any) -> dict[str, Any]:
+    """Convert a Pydantic AI :class:`AgentRunResult` to a JSON-serialisable dict."""
+    data = result.output if hasattr(result, "output") else result
+    if hasattr(data, "model_dump"):
+        return data.model_dump()
+    if isinstance(data, str):
+        return {"result": data}
+    return {"result": data}
