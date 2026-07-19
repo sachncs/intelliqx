@@ -23,7 +23,7 @@ __all__ = [
     "register_compute_handlers",
 ]
 
-AGENT_CATALOG: list[tuple[str, Any]] = []
+AGENT_CATALOG: list[AgentRole] = []
 
 
 @dataclass(frozen=True)
@@ -46,7 +46,7 @@ class AgentRole:
     builder: type[Agent[Any, Any]]
 
 
-def build_catalog() -> list[tuple[str, Any]]:
+def build_catalog() -> list[AgentRole]:
     """Lazy catalog builder; ``register_all`` consumes the result."""
     if AGENT_CATALOG:
         return AGENT_CATALOG
@@ -66,13 +66,16 @@ def register_all() -> None:
 
 def _meta_from(role: AgentRole) -> Any:
     from intelliqx_agents.base import AgentMeta
+    from intelliqx_core.models import AgentCategory
 
     desc = role.description
     if isinstance(desc, (list, tuple)):
         desc = " ".join(str(part) for part in desc)
-    return AgentMeta(
-        name=role.name, category=role.category, version="1.0.0", description=str(desc)
-    )
+    try:
+        category = AgentCategory(role.category)
+    except ValueError:
+        category = AgentCategory.COORDINATION
+    return AgentMeta(name=role.name, category=category, version="1.0.0", description=str(desc))
 
 
 def register_compute_handlers() -> None:

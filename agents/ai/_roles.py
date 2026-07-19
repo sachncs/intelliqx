@@ -339,10 +339,7 @@ def build() -> list[Any]:
         agent = factory()
         roles.append(
             AgentRole(
-                name=name,
-                category=category,
-                description=agent._instructions,
-                builder=factory,
+                name=name, category=category, description=agent._instructions, builder=factory
             )
         )
     return roles

@@ -11,11 +11,14 @@ for isolation.
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
-from intelliqx_agents.base import AgentBase, AgentFactory
+from intelliqx_agents.base import AgentMeta
 
 __all__ = ["AgentRegistry", "get_agent_registry", "register_agent", "reset_agent_registry"]
+
+FactoryT = TypeVar("FactoryT", bound=Callable[[], Any])
 
 
 class AgentRegistry:
@@ -29,29 +32,24 @@ class AgentRegistry:
     __slots__ = ("factories", "meta")
 
     def __init__(self) -> None:
-        self.factories: dict[str, AgentFactory] = {}
+        self.factories: dict[str, Callable[[], Any]] = {}
         self.meta: dict[str, Any] = {}
 
-    def register(self, name: str, factory: AgentFactory, *, meta: Any | None = None) -> None:
-        """Register a factory for ``name``.
+    def register(self, name: str, factory: FactoryT, *, meta: AgentMeta | None = None) -> None:
+        """Register ``factory`` for ``name``.
 
         Args:
             name: The agent's registry key.
-            factory: A zero-arg callable that returns a new
-                :class:`AgentBase` instance.
-            meta: Optional :class:`intelliqx_agents.base.AgentMeta` (or
-                anything else) attached to the registration for
-                later inspection.
+            factory: A zero-arg callable that returns a new agent
+                instance (any Pydantic AI agent or AgentBase).
+            meta: Optional :class:`AgentMeta` attached to the
+                registration for later inspection.
         """
         self.factories[name] = factory
         self.meta[name] = meta
 
-    def create(self, name: str) -> AgentBase:
-        """Construct a fresh agent instance for ``name``.
-
-        Raises:
-            KeyError: If no factory is registered for ``name``.
-        """
+    def create(self, name: str) -> Any:
+        """Construct a fresh agent instance for ``name``."""
         if name not in self.factories:
             raise KeyError(f"Agent not registered: {name!r}")
         return self.factories[name]()
@@ -76,7 +74,7 @@ def get_agent_registry() -> AgentRegistry:
     return SINGLETON
 
 
-def register_agent(name: str, factory: AgentFactory, *, meta: Any | None = None) -> None:
+def register_agent(name: str, factory: Callable[[], Any], *, meta: AgentMeta | None = None) -> None:
     """Register ``factory`` for ``name`` in the singleton registry."""
     get_agent_registry().register(name, factory, meta=meta)
 

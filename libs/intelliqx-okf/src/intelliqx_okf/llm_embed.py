@@ -25,9 +25,7 @@ class LLMEmbedder(Embedder):
     def __init__(self, client: LLMClient) -> None:
         self._client = client
         self.name: str = (
-            getattr(client, "model", None)
-            or getattr(client, "DEFAULT_MODEL", None)
-            or "fake"
+            getattr(client, "model", None) or getattr(client, "DEFAULT_MODEL", None) or "fake"
         )
         raw_dim = getattr(client, "embed_dim", None) or getattr(client, "dim", 768)
         self.dim: int = int(raw_dim or 768)

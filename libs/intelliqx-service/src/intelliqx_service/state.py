@@ -81,7 +81,7 @@ class StateStore:
     def __init__(self, path: str | Path) -> None:
         self._path = str(path)
         self._is_memory = self._path == ":memory:"
-        self._conn = sqlite3.connect(
+        self._conn = sqlite3.connect(  # type: ignore[call-overload]
             self._path, check_same_thread=False, uri=self._path if self._is_memory else None
         )
         self._conn.row_factory = sqlite3.Row
