@@ -69,7 +69,7 @@ docker compose up -d
 ```bash
 git clone https://github.com/sachncs/intelliqx.git
 cd intelliqx
-uv sync --all-packages       # 15 libraries + 29 agents + dev tools
+uv sync --all-packages       # 16 workspace packages (no intelliqx-llm, no intelliqx-vector) + dev tools
 ```
 
 ### With Docker
@@ -139,31 +139,34 @@ get_logger(__name__).info("{}", asyncio.run(get_compute_runtime().invoke(req)))
 "
 ```
 
-### Running against MiniMax
+### Running against any OpenAI-compatible endpoint
 
 ```bash
-# Get an API key from https://api.minimax.io
-export INTELLIQX_LLM_BACKEND=minimax
-export MINIMAX_API_KEY=sk-...
-# Optional: override the base URL (default https://api.minimax.io/v1)
-export MINIMAX_API_BASE=https://api.minimax.io/v1
+# Get an API key from your provider (OpenAI, MiniMax, vLLM, Ollama, etc.)
+export INTELLIQX_OPENAI_BASE_URL=https://api.minimax.io/v1
+export INTELLIQX_OPENAI_API_KEY=sk-...
+export INTELLIQX_MODEL=openai/gpt-4o-mini
+export INTELLIQX_EMBEDDING_MODEL=text-embedding-3-small
+export INTELLIQX_EMBEDDING_DIM=1536
 
 uv run python -c "
 import asyncio
-from intelliqx_llm import get_llm_client
-from intelliqx_llm.client import CompletionRequest
+from intelliqx_ai.runtime import build_agent
+from pydantic_ai import Agent
 from intelliqx_observability.logging import configure_logging, get_logger
 
 async def main():
-    client = get_llm_client()
-    req = CompletionRequest(
-        model='minimax/MiniMax-M2.1',
-        messages=[{'role': 'user', 'content': 'Hello!'}],
+    configure_logging(json_logs=True, component='llm-example')
+    agent = build_agent(
+        name='demo',
+        output_type=str,
+        instructions='Be concise.',
+        agent_config=None,
     )
-    resp = await client.complete(req)
-    get_logger(__name__).info("{}", resp.content)
+    result = await agent.run('Hello!')
+    get_logger(__name__).info('{}', result.output)
 
-configure_logging(json_logs=False, component='llm-example')
+import asyncio
 asyncio.run(main())
 "
 ```

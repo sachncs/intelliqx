@@ -348,14 +348,14 @@ def _row_to_concept_payload(row: sqlite3.Row) -> dict:
 def open_index(path: str = ":memory:", *, embed: Embedder | None = None) -> Index:
     """Open the default :class:`Index` for the application.
 
-    ``embed`` defaults to the active LLM-backed
-    :data:`Embedder`. Path defaults to the in-memory database;
-    production uses ``$INTELLIQX_OKF_DB`` or a deployment-supplied
-    file.
+    ``embed`` defaults to the Pydaxis-AI-backed
+    :data:`Embedder` returned by :func:`intelliqx_ai.runtime.build_embedder`.
+    Path defaults to the in-memory database; production uses
+    ``$INTELLIQX_OKF_DB`` or a deployment-supplied file.
     """
-    from intelliqx_okf.llm_embed import LLMEmbedder
+    from intelliqx_okf.llm_embed import PydaxisAIEmbedder
 
-    resolved = embed if embed is not None else LLMEmbedder.from_default()
+    resolved = embed if embed is not None else PydaxisAIEmbedder.from_default()
     return Index(path, embed=resolved)
 
 

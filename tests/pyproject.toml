@@ -15,7 +15,6 @@ dependencies = [
     "intelliqx-storage",
     "intelliqx-kg",
     "intelliqx-state",
-    "intelliqx-llm",
     "intelliqx-compute",
     "intelliqx-observability",
     "intelliqx-tools",
@@ -23,6 +22,7 @@ dependencies = [
     "intelliqx-tenant",
     "intelliqx-sdk",
     "intelliqx-okf",
+    "intelliqx-ai",
 ]
 
 [tool.uv.sources]
@@ -31,7 +31,6 @@ intelliqx-events = { workspace = true }
 intelliqx-storage = { workspace = true }
 intelliqx-kg = { workspace = true }
 intelliqx-state = { workspace = true }
-intelliqx-llm = { workspace = true }
 intelliqx-compute = { workspace = true }
 intelliqx-observability = { workspace = true }
 intelliqx-tools = { workspace = true }
@@ -39,6 +38,7 @@ intelliqx-agents = { workspace = true }
 intelliqx-tenant = { workspace = true }
 intelliqx-sdk = { workspace = true }
 intelliqx-okf = { workspace = true }
+intelliqx-ai = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

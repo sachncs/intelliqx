@@ -12,7 +12,8 @@ import pytest
 
 # Set sane defaults before any application code is imported so the
 # in-process adapters behave the same way in every test session.
-os.environ.setdefault("INTELLIQX_LLM_BACKEND", "fake")
+os.environ.setdefault("INTELLIQX_OPENAI_BASE_URL", "http://test")
+os.environ.setdefault("INTELLIQX_OPENAI_API_KEY", "test-key")
 os.environ.setdefault("INTELLIQX_OBJECT_STORE", "memory")
 os.environ.setdefault("INTELLIQX_OTEL", "0")
 
@@ -29,7 +30,6 @@ def reset_singletons():
     from intelliqx_events.bus import reset_event_bus
     from intelliqx_events.schemas import EventRegistry
     from intelliqx_kg.graph import reset_kg
-    from intelliqx_llm.client import reset_llm_client
     from intelliqx_observability.metrics import reset_metrics
     from intelliqx_observability.tracing import reset_tracer
     from intelliqx_state.store import reset_state_store
@@ -39,7 +39,6 @@ def reset_singletons():
     reset_compute_runtime()
     reset_event_bus()
     reset_kg()
-    reset_llm_client()
     reset_metrics()
     reset_tracer()
     reset_state_store()

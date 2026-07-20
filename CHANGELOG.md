@@ -17,7 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   package (Zilliz zvec) which had no live importers; the platform
   uses only `asg017/sqlite-vec` for vector storage. Removed zvec
   references from `intelliqx_storage.store` and the OKF module
-  docstring.
+  docstring. Removed the `intelliqx-llm` package and its four test
+  files; OKF now uses Pydaxis-AI's `Embedder` directly via
+  `intelliqx_ai.runtime.build_embedder`. Updated
+  `tests/conftest.py` to set `INTELLIQX_OPENAI_*` instead of the old
+  LLM-backend env vars, and updated `.env.example`, `Makefile`, and
+  the README's MiniMax section to match.
 * **Semi-private symbols made public.** Renamed 10 underscore-prefixed
   helper functions that were imported by tests: `extract_imports`,
   `extract_requirements`, `shared_keywords`, `pixel_diff_pct`,

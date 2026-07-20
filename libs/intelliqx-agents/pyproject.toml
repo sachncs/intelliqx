@@ -7,7 +7,6 @@ dependencies = [
     "pydantic>=2.8",
     "intelliqx-core",
     "intelliqx-events",
-    "intelliqx-llm",
     "intelliqx-state",
     "intelliqx-observability",
     "intelliqx-compute",
@@ -16,7 +15,6 @@ dependencies = [
 [tool.uv.sources]
 intelliqx-core = { workspace = true }
 intelliqx-events = { workspace = true }
-intelliqx-llm = { workspace = true }
 intelliqx-state = { workspace = true }
 intelliqx-observability = { workspace = true }
 intelliqx-compute = { workspace = true }

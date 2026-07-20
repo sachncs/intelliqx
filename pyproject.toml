@@ -1,6 +1,6 @@
 [project]
 name = "intelliqx"
-version = "0.2.0"
+version = "0.3.0-rc1"
 description = "Autonomous QA Intelligence Platform"
 requires-python = ">=3.12,<3.13"
 readme = "README.md"
@@ -10,7 +10,6 @@ dependencies = [
     "intelliqx-storage",
     "intelliqx-kg",
     "intelliqx-state",
-    "intelliqx-llm",
     "intelliqx-compute",
     "intelliqx-observability",
     "intelliqx-tools",
@@ -29,7 +28,6 @@ intelliqx-events = { workspace = true }
 intelliqx-storage = { workspace = true }
 intelliqx-kg = { workspace = true }
 intelliqx-state = { workspace = true }
-intelliqx-llm = { workspace = true }
 intelliqx-compute = { workspace = true }
 intelliqx-observability = { workspace = true }
 intelliqx-tools = { workspace = true }
@@ -47,7 +45,6 @@ members = [
     "libs/intelliqx-storage",
     "libs/intelliqx-kg",
     "libs/intelliqx-state",
-    "libs/intelliqx-llm",
     "libs/intelliqx-compute",
     "libs/intelliqx-observability",
     "libs/intelliqx-tools",
@@ -94,11 +91,17 @@ markers = [
 
 [tool.coverage.run]
 source = ["libs", "agents"]
+branch = true
 omit = ["*/tests/*", "*/__init__.py"]
 
 [tool.coverage.report]
 show_missing = true
 skip_covered = false
+fail_under = 95
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+]
 
 [tool.black]
 line-length = 100

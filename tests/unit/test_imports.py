@@ -10,7 +10,6 @@ LIBS = [
     "intelliqx_storage",
     "intelliqx_kg",
     "intelliqx_state",
-    "intelliqx_llm",
     "intelliqx_compute",
     "intelliqx_observability",
     "intelliqx_tools",

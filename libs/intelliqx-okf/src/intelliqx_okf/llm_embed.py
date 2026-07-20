@@ -1,51 +1,53 @@
-"""LLM-backed :class:`Embedder` adapter.
+"""Pydaxis-AI-backed :class:`Embedder` adapter for the OKF vector path.
 
-Production embedder. The default test embedder is
-:data:`FakeEmbedder`. Call :func:`LLMEmbedder.from_default` or pass an
-explicit :class:`Embedder` when constructing the
-:class:`~intelliqx_okf.index.Index`.
-
-The adapter forwards to the existing LLM client and converts the
-async ``client.embed`` call into the single-string
-:func:`Embedder.embed` API used by :class:`~intelliqx_okf.index.Index`.
+The production embedder wraps a Pydaxis-AI ``EmbeddingModel`` returned
+by :func:`intelliqx_ai.runtime.build_embedder`. The OKF ``Index`` only
+calls the sync :meth:`Embedder.embed` contract; the Pydaxis-AI
+``EmbeddingModel.embed`` method is async, so we drive it from the
+current running loop when present and via ``asyncio.run`` otherwise.
+Tests pass a :class:`FakeEmbedder` (from :mod:`tests.okf._embed`)
+which does not depend on a network.
 """
 
 from __future__ import annotations
 
 import asyncio
+from typing import TYPE_CHECKING
 
-from intelliqx_llm.client import LLMClient, get_llm_client
-
+from intelliqx_ai.runtime import build_embedder
 from intelliqx_okf.embed import Embedder
 
+if TYPE_CHECKING:
+    from pydantic_ai.embeddings import EmbeddingModel
 
-class LLMEmbedder(Embedder):
-    """Adapt an :class:`LLMClient` to the OKF :class:`Embedder` protocol."""
 
-    def __init__(self, client: LLMClient) -> None:
-        self._client = client
-        self.name: str = (
-            getattr(client, "model", None) or getattr(client, "DEFAULT_MODEL", None) or "fake"
-        )
-        raw_dim = getattr(client, "embed_dim", None) or getattr(client, "dim", 768)
-        self.dim: int = int(raw_dim or 768)
+class PydaxisAIEmbedder(Embedder):
+    """Adapt a Pydaxis-AI :class:`EmbeddingModel` to the OKF :class:`Embedder` protocol."""
+
+    def __init__(self, model: "EmbeddingModel | None" = None, *, name: str = "pydaxis-ai") -> None:
+        self._model = model if model is not None else build_embedder()
+        self.name = name
+        # ``model.max_input_tokens`` is the supported Pydaxis-AI hook
+        # for the size limit; we keep it as a class attribute and read
+        # lazily because the embedder can be patched in tests.
+        self.dim = int(getattr(self._model, "dimensions", 0) or 0)
 
     @classmethod
-    def from_default(cls) -> LLMEmbedder:
-        return cls(get_llm_client())
+    def from_default(cls) -> "PydaxisAIEmbedder":
+        """Build the production Pydaxis-AI embedding model for the OKF vector path."""
+        return cls(build_embedder())
 
     def embed(self, text: str) -> list[float]:
-        coro = self._client.embed([text], model="auto")
+        """Return the embedding vector for a single text string."""
+        coro = self._model.embed(text, input_type="document")
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            vectors = asyncio.run(coro)
-        else:  # pragma: no cover - defensive: callers run from async
+            result = asyncio.run(coro)
+        else:
             future = asyncio.run_coroutine_threadsafe(coro, loop)
-            vectors = future.result()
-        if not vectors:
-            return [0.0] * self.dim
-        return list(vectors[0])
+            result = future.result()
+        return list(result.embeddings[0])
 
 
-__all__ = ["LLMEmbedder"]
+__all__ = ["PydaxisAIEmbedder"]

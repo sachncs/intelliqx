@@ -15,12 +15,15 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from pydantic_ai import Agent
+from pydantic_ai.embeddings import EmbeddingModel
 from pydantic_ai.models import Model
 
 DEFAULT_MODEL = "openai:gpt-4o-mini"
 BASE_URL_ENV = "INTELLIQX_OPENAI_BASE_URL"
 API_KEY_ENV = "INTELLIQX_OPENAI_API_KEY"
 MODEL_ENV = "INTELLIQX_MODEL"
+EMBEDDING_DIM_ENV = "INTELLIQX_EMBEDDING_DIM"
+DEFAULT_EMBEDDING_DIM = 1536
 
 
 @dataclass(frozen=True)
@@ -66,6 +69,117 @@ def _openai_chat_model(model_name: str) -> Model:
     )
 
 
+class OpenAIHTTPEmbeddings(EmbeddingModel):
+    """OpenAI-compatible HTTP embedding model for the OKF vector path.
+
+    Calls ``POST {base_url}/v1/embeddings`` synchronously via
+    ``httpx.Client`` so it works from the OKF's sync ``Embedder.embed``
+    contract. The same model name and base URL are used as the chat
+    path, so any OpenAI-compatible provider works.
+
+    Attributes:
+        model_name: The embedding model name passed in the request.
+        base_url: The OpenAI-compatible root (no trailing slash).
+    """
+
+    def __init__(self, model_name: str, *, base_url: str | None = None) -> None:
+        self._model_name = model_name
+        self._base_url = (base_url or os.environ.get(BASE_URL_ENV) or "").rstrip("/")
+        self._api_key = _read_api_key()
+        # Lazy client so import-time does not require the SDK at test
+        # boundaries that override the embedder.
+        self._client: Any = None
+
+    @property
+    def model_name(self) -> str:
+        return self._model_name
+
+    @property
+    def base_url(self) -> str:
+        return self._base_url
+
+    @property
+    def max_input_tokens(self) -> int:
+        return 8192
+
+    @property
+    def system(self) -> str:
+        return "openai"
+
+    async def embed(
+        self,
+        inputs: str | list[str],
+        *,
+        input_type: str = "document",
+        settings: Any = None,
+    ) -> Any:
+        from pydantic_ai.embeddings.result import EmbeddingResult
+
+        texts = [inputs] if isinstance(inputs, str) else list(inputs)
+        vectors = self._client_post("embeddings", {"model": self._model_name, "input": texts})
+        return EmbeddingResult(
+            embeddings=[list(v) for v in vectors],
+            model=self._model_name,
+            usage={"prompt_tokens": 0, "completion_tokens": 0},
+        )
+
+    def count_tokens(self, text: str) -> int:
+        return max(1, len(text.split()))
+
+    def prepare_embed(
+        self,
+        inputs: str | list[str],
+        settings: Any = None,
+    ) -> tuple[list[str], Any]:
+        texts = [inputs] if isinstance(inputs, str) else list(inputs)
+        return texts, settings
+
+    def _client_post(self, path: str, body: dict[str, Any]) -> list[Any]:
+        if not self._base_url:
+            raise RuntimeError(
+                f"{BASE_URL_ENV} is required to call the OpenAI embeddings endpoint."
+            )
+        import httpx
+
+        if self._client is None:
+            self._client = httpx.Client(
+                headers={"Authorization": f"Bearer {self._api_key}"},
+                timeout=30.0,
+            )
+        response = self._client.post(f"{self._base_url}/{path}", json=body)
+        response.raise_for_status()
+        return [item["embedding"] for item in response.json()["data"]]
+
+
+def build_embedder(
+    *, model_name: str | None = None, dim: int | None = None
+) -> EmbeddingModel:
+    """Build the production Pydaxis-AI embedding model for the OKF vector path.
+
+    Args:
+        model_name: Override for the embedding model name. Defaults to
+            ``text-embedding-3-small`` which most OpenAI-compatible
+            providers support.
+        dim: Optional explicit dimension (Pydaxis-AI ``OpenAIHTTPEmbeddings``
+            infers it from the response).
+
+    Raises:
+        RuntimeError: when ``INTELLIQX_OPENAI_API_KEY`` is not set.
+    """
+    del dim  # Pydaxis-AI's HTTP-based embedder infers the dimension.
+    name = model_name or os.environ.get("INTELLIQX_EMBEDDING_MODEL", "text-embedding-3-small")
+    return OpenAIHTTPEmbeddings(name)
+
+
+def _parse_int(raw: str | None, default: int) -> int:
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return int(raw)
+    except ValueError as exc:
+        raise ValueError(f"expected integer, got {raw!r}") from exc
+
+
 def build_agent(
     *, name: str, output_type: Any, instructions: str, agent_config: AgentConfig | None = None
 ) -> Agent[Any, Any]:
@@ -100,8 +214,12 @@ def build_agent(
 __all__ = [
     "API_KEY_ENV",
     "BASE_URL_ENV",
+    "DEFAULT_EMBEDDING_DIM",
     "DEFAULT_MODEL",
+    "EMBEDDING_DIM_ENV",
     "MODEL_ENV",
     "AgentConfig",
+    "EmbeddingModel",
     "build_agent",
+    "build_embedder",
 ]

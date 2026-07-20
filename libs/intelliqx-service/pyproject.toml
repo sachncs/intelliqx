@@ -14,7 +14,7 @@ dependencies = [
     "intelliqx-state",
     "intelliqx-storage",
     "intelliqx-okf",
-    "intelliqx-llm",
+    "intelliqx-ai",
 ]
 
 [tool.uv.sources]
@@ -25,7 +25,7 @@ intelliqx-compute = { workspace = true }
 intelliqx-state = { workspace = true }
 intelliqx-storage = { workspace = true }
 intelliqx-okf = { workspace = true }
-intelliqx-llm = { workspace = true }
+intelliqx-ai = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

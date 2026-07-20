@@ -7,15 +7,15 @@ dependencies = [
     "pydantic>=2.8",
     "pyyaml>=6.0",
     "intelliqx-core",
-    "intelliqx-llm",
     "intelliqx-observability",
+    "intelliqx-ai",
     "sqlite-vec>=0.1.9",
 ]
 
 [tool.uv.sources]
 intelliqx-core = { workspace = true }
-intelliqx-llm = { workspace = true }
 intelliqx-observability = { workspace = true }
+intelliqx-ai = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
