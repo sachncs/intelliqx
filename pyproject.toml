@@ -1,0 +1,124 @@
+[project]
+name = "intelliqx"
+version = "0.3.0-rc1"
+description = "Autonomous QA Intelligence Platform"
+requires-python = ">=3.12,<3.13"
+readme = "README.md"
+dependencies = [
+    "intelliqx-core",
+    "intelliqx-events",
+    "intelliqx-storage",
+    "intelliqx-kg",
+    "intelliqx-state",
+    "intelliqx-compute",
+    "intelliqx-observability",
+    "intelliqx-tools",
+    "intelliqx-agents",
+    "intelliqx-tenant",
+    "intelliqx-sdk",
+    "intelliqx-okf",
+    "intelliqx-graph",
+    "tqdm>=4.66",
+    "pydantic-ai-slim[openai]>=0.0.30",
+]
+
+[tool.uv.sources]
+intelliqx-core = { workspace = true }
+intelliqx-events = { workspace = true }
+intelliqx-storage = { workspace = true }
+intelliqx-kg = { workspace = true }
+intelliqx-state = { workspace = true }
+intelliqx-compute = { workspace = true }
+intelliqx-observability = { workspace = true }
+intelliqx-tools = { workspace = true }
+intelliqx-agents = { workspace = true }
+intelliqx-tenant = { workspace = true }
+intelliqx-sdk = { workspace = true }
+agents = { workspace = true }
+intelliqx-okf = { workspace = true }
+intelliqx-graph = { workspace = true }
+
+[tool.uv.workspace]
+members = [
+    "libs/intelliqx-core",
+    "libs/intelliqx-events",
+    "libs/intelliqx-storage",
+    "libs/intelliqx-kg",
+    "libs/intelliqx-state",
+    "libs/intelliqx-compute",
+    "libs/intelliqx-observability",
+    "libs/intelliqx-tools",
+    "libs/intelliqx-agents",
+    "libs/intelliqx-tenant",
+    "libs/intelliqx-sdk",
+    "agents",
+    "libs/intelliqx-okf",
+    "libs/intelliqx-graph",
+    "libs/intelliqx-ai",
+    "libs/intelliqx-service",
+    "tests",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "T20"]
+ignore = ["E501", "UP042", "UP046", "B905", "RUF005"]
+external = ["VU", "VUE"]
+
+[tool.mypy]
+python_version = "3.12"
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+pythonpath = ["."]
+markers = [
+    "unit: unit tests",
+    "integration: integration tests",
+    "contract: contract tests",
+    "e2e: end-to-end tests",
+    "slow: slow tests",
+]
+
+[tool.coverage.run]
+source = ["libs", "agents"]
+branch = true
+omit = ["*/tests/*", "*/__init__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 95
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+skip_magic_trailing_comma = true
+skip_string_normalization = true
+
+[tool.vulture]
+min_confidence = 80
+
+[dependency-groups]
+dev = [
+    "fastapi>=0.139.0",
+    "uvicorn>=0.51.0",
+    "ruff>=0.15",
+    "mypy>=1.18",
+    "black>=26.0",
+    "vulture>=2.16",
+    "types-networkx>=3.4",
+]

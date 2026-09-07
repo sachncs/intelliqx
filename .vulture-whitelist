@@ -1,0 +1,3 @@
+depth  # noqa - reserved for future multi-hop traversal in intelliqx_kg.graph.neighbors
+keys  # noqa - mark intelliqx_state.store.StateStore.keys as async generator via AsyncIterator return type
+list  # noqa - mark intelliqx_storage.store.ObjectStore.list as async generator via AsyncIterator return type

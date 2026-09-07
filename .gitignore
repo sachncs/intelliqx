@@ -1,0 +1,29 @@
+# IntelliqX — local environments
+.venv/
+.python-version.bak
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Test artifacts
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
+
+# Build outputs
+build/
+dist/
+*.egg-info/
+
+# Local overrides
+.env
+.env.local

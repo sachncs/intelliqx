@@ -1,0 +1,38 @@
+"""Object storage abstraction for IntelliqX.
+
+A thin async wrapper over the in-process object stores, plus a
+filesystem-backed implementation for local dev. All implementations
+share the same minimal interface:
+
+* ``put(key, data, *, content_type=None)`` — write bytes
+* ``get(key)`` → ``bytes`` (raises :class:`NotFoundError` if missing)
+* ``exists(key)`` → ``bool``
+* ``delete(key)`` — idempotent
+* ``list(prefix)`` → async iterator of keys
+* ``size(key)`` → ``int`` (default implementation: ``len(get(key))``)
+
+**Namespace conventions** are the caller's responsibility: every key
+written by IntelliqX is prefixed with the tenant id (``{tenant_id}/...``).
+Tenants are *not* enforced by the store itself; the
+:class:`intelliqx_tenant.IsolationEnforcer` provides runtime checks.
+"""
+
+from intelliqx_storage.base import ObjectStore
+from intelliqx_storage.store import (
+    STORAGE_BACKEND_REGISTRY,
+    InMemoryObjectStore,
+    LocalFileSystemObjectStore,
+    get_object_store,
+    list_storage_backends,
+    register_storage_backend,
+)
+
+__all__ = [
+    "STORAGE_BACKEND_REGISTRY",
+    "InMemoryObjectStore",
+    "LocalFileSystemObjectStore",
+    "ObjectStore",
+    "get_object_store",
+    "list_storage_backends",
+    "register_storage_backend",
+]
