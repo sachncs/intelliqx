@@ -48,7 +48,7 @@ RUN_TTL_ENV = "INTELLIQX_RUN_TTL"
 POLL_INTERVAL_SECONDS = 0.5
 INVOCATION_TIMEOUT_SECONDS = 300
 
-DEFAULT_TOKEN = "dev-token-change-me"
+MIN_TOKEN_LENGTH = 32
 DEFAULT_STATE_PATH = ":memory:"
 DEFAULT_WORKER_COUNT = 1
 DEFAULT_MAX_RETRIES = 1
@@ -79,8 +79,15 @@ class Settings:
     def from_env(cls, env: dict[str, str] | None = None) -> Settings:
         """Build a :class:`Settings` from ``os.environ`` (or a test mapping)."""
         src = env if env is not None else os.environ
+        token = src.get(API_TOKEN_ENV, "").strip()
+        if len(token) < MIN_TOKEN_LENGTH:
+            raise RuntimeError(
+                f"{API_TOKEN_ENV} must be set to a value of at least "
+                f"{MIN_TOKEN_LENGTH} characters; refusing to start with a "
+                "weak or default token."
+            )
         return cls(
-            token=src.get(API_TOKEN_ENV, DEFAULT_TOKEN),
+            token=token,
             state_path=Path(src.get(STATE_DB_ENV) or DEFAULT_STATE_PATH),
             worker_count=_parse_int(src.get(WORKER_COUNT_ENV), DEFAULT_WORKER_COUNT),
             max_retries=_parse_int(src.get(MAX_RETRIES_ENV), DEFAULT_MAX_RETRIES),

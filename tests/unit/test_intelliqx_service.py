@@ -21,7 +21,7 @@ def _token_header() -> dict[str, str]:
 def app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     db = tmp_path / "state.db"
     okf = tmp_path / "okf.db"
-    monkeypatch.setenv("INTELLIQX_API_TOKEN", "test-token")
+    monkeypatch.setenv("INTELLIQX_API_TOKEN", "test-token-with-enough-length-for-service-32")
     monkeypatch.setenv("INTELLIQX_STATE_DB", str(db))
     monkeypatch.setenv("INTELLIQX_OKF_DB", str(okf))
     monkeypatch.setenv("INTELLIQX_WORKERS", "1")
@@ -99,3 +99,26 @@ async def test_full_run_lifecycle(app) -> None:
             payload = response.json()
             assert payload["status"] == RunStatus.SUCCEEDED.value
             assert payload["output"] == {"echo": {"k": 1}}
+
+
+def test_settings_from_env_rejects_missing_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Settings.from_env must refuse to start without INTELLIQX_API_TOKEN.
+
+    Regression test for the \"dev-token-change-me\" fallback that the
+    audit found: a deployment forgetting to set the env var used to
+    ship with a publicly known bearer token. The service must now
+    raise instead.
+    """
+    from intelliqx_service.app import Settings
+
+    monkeypatch.delenv("INTELLIQX_API_TOKEN", raising=False)
+    with pytest.raises(RuntimeError, match="INTELLIQX_API_TOKEN"):
+        Settings.from_env({})
+
+
+def test_settings_from_env_rejects_short_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A short token must be rejected as well — they are guessable."""
+    from intelliqx_service.app import Settings
+
+    with pytest.raises(RuntimeError, match="INTELLIQX_API_TOKEN"):
+        Settings.from_env({"INTELLIQX_API_TOKEN": "tooshort"})
