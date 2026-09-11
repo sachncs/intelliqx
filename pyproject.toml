@@ -87,10 +87,7 @@ addopts = "-ra --strict-markers"
 pythonpath = ["."]
 markers = [
     "unit: unit tests",
-    "integration: integration tests",
     "contract: contract tests",
-    "e2e: end-to-end tests",
-    "slow: slow tests",
 ]
 
 [tool.coverage.run]

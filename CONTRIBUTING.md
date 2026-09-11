@@ -10,7 +10,7 @@ standards.
 
 - **Python 3.12+** (3.13 is not yet supported — see `pyproject.toml`)
 - **[uv](https://docs.astral.sh/uv/)** (workspace + lockfile manager)
-- **Docker** (optional, for the local infra profile and end-to-end tests)
+- **Docker** (optional, for the local infra profile)
 
 ### Clone and install
 
@@ -44,7 +44,7 @@ All four must pass before you open a PR.
 intelliqx/
 ├── libs/                  14 independent libraries (one package per concern)
 ├── agents/                29 agent implementations
-├── tests/                 unit, integration, contract, e2e
+├── tests/                 unit, contract
 ├── docs/                  ADRs, architecture, per-phase plans
 ├── .github/workflows/     CI definitions
 └── pyproject.toml         Workspace + dev dependency definitions
