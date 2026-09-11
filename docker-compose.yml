@@ -38,9 +38,11 @@ services:
     image: minio/minio:RELEASE.2024-06-29T01-20-47Z
     container_name: intelliqx-minio
     command: ["server", "/data", "--console-address", ":9001"]
+    env_file:
+      - .env.compose
     environment:
-      MINIO_ROOT_USER: intelliqx
-      MINIO_ROOT_PASSWORD: intelliqx-secret
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER must be set in .env.compose}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD must be set in .env.compose}
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -55,8 +57,8 @@ services:
     container_name: intelliqx-litellm
     command: ["--config", "/app/config.yaml", "--port", "4000"]
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-fake}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-sk-ant-fake}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     volumes:
       - ./infra/local/litellm.yaml:/app/config.yaml:ro
     ports:
@@ -97,8 +99,10 @@ services:
   grafana:
     image: grafana/grafana:10.4.2
     container_name: intelliqx-grafana
+    env_file:
+      - .env.compose
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: intelliqx
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:?GF_SECURITY_ADMIN_PASSWORD must be set in .env.compose}
     ports:
       - "3000:3000"
     profiles: ["observability"]

@@ -75,11 +75,17 @@ uv sync --all-packages       # 16 workspace packages (no intelliqx-llm, no intel
 ### With Docker
 
 ```bash
+cp .env.compose.example .env.compose
+# edit .env.compose and replace every "replace-me-..." value
 docker compose up -d         # local adapters
 make docker-up
 ```
 
 **Requirements**: Python 3.12, [uv](https://docs.astral.sh/uv/).
+
+Docker Compose refuses to start if MinIO or Grafana credentials are
+unset; copy `.env.compose.example` to `.env.compose` and fill the
+placeholders before `docker compose up`.
 
 ---
 
