@@ -11,7 +11,7 @@
 | Area | Deliverable |
 |---|---|
 | Monorepo | `uv` workspace with `libs/`, `agents/`, `tests/`, `docs/`, `infra/local/` |
-| Shared libs | `intelliqx-core`, `intelliqx-agents`, `intelliqx-events`, `intelliqx-storage`, `intelliqx-vector` (zvec + sqlite-vec), `intelliqx-kg` (DuckDB+Parquet), `intelliqx-llm`, `intelliqx-state`, `intelliqx-compute`, `intelliqx-observability`, `intelliqx-tools`, `intelliqx-okf` (OKF bundles + catalog) |
+| Shared libs | `intelliqx-core`, `intelliqx-agents`, `intelliqx-events`, `intelliqx-storage`, `intelliqx-kg` (DuckDB+Parquet), `intelliqx-state`, `intelliqx-compute`, `intelliqx-observability`, `intelliqx-tools`, `intelliqx-okf` (OKF bundles + catalog), `intelliqx-ai` (Pydantic AI runtime) |
 | Local infra | `docker-compose.yml` (Redpanda, Redis, MinIO, LiteLLM, Temporal, Jaeger, Prometheus, Grafana) and in-process test adapters |
 | CI | GitHub Actions: lint (ruff), typecheck (mypy), unit tests (pytest), contract tests |
 | Schemas | Event JSON Schemas, OpenAPI 3.1, KG parquet schema v1 |
@@ -26,7 +26,7 @@
 - **ADR-0009**: Local testing via in-process adapters.
 - **ADR-0010**: Pydantic v2 for value objects.
 - **ADR-0011**: OKF catalog with hybrid retrieval.
-- **ADR-0012**: litellm-based LLM abstraction with the Fake and MiniMax backends.
+- **ADR-0012**: Pydantic-AI based LLM abstraction. The platform uses a single OpenAI-compatible chat path selected via `INTELLIQX_MODEL` / `INTELLIQX_OPENAI_BASE_URL`.
 
 ## 0.3 Deliverables checklist
 
@@ -36,10 +36,9 @@
 - [x] `intelliqx-core` (Pydantic models, enums, errors, event base)
 - [x] `intelliqx-events` (EventBus interface + in-memory impl)
 - [x] `intelliqx-storage` (ObjectStore interface + in-memory + local filesystem impls)
-- [x] `intelliqx-vector` (VectorIndex interface + zvec impl + persistence)
 - [x] `intelliqx-kg` (KG query API on DuckDB+Parquet)
 - [x] `intelliqx-state` (in-memory impl)
-- [x] `intelliqx-llm` (LLMClient interface + Fake + MiniMax adapters)
+- [x] `intelliqx-ai` (Pydantic-AI runtime: `build_agent`, `build_embedder`)
 - [x] `intelliqx-compute` (ComputeRuntime interface + in-process impl)
 - [x] `intelliqx-observability` (OTel + structured logging)
 - [x] `intelliqx-agents` (AgentBase + decorators)
@@ -64,7 +63,7 @@
 
 - Any concrete agent implementation (deferred to Phases 3–6).
 - External deployment infrastructure.
-- Real LLM calls in tests (use `intelliqx-llm.fake`).
+- Real LLM calls in tests (use `pydantic_ai.models.test.TestModel`).
 
 ## 0.6 Risks
 

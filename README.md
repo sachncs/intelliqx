@@ -148,10 +148,10 @@ get_logger(__name__).info("{}", asyncio.run(get_compute_runtime().invoke(req)))
 ### Running against any OpenAI-compatible endpoint
 
 ```bash
-# Get an API key from your provider (OpenAI, MiniMax, vLLM, Ollama, etc.)
-export INTELLIQX_OPENAI_BASE_URL=https://api.minimax.io/v1
+# Get an API key from your provider (OpenAI, Anthropic via proxy, vLLM, Ollama, etc.)
+export INTELLIQX_OPENAI_BASE_URL=https://api.openai.com/v1
 export INTELLIQX_OPENAI_API_KEY=sk-...
-export INTELLIQX_MODEL=openai/gpt-4o-mini
+export INTELLIQX_MODEL=openai:gpt-4o-mini
 export INTELLIQX_EMBEDDING_MODEL=text-embedding-3-small
 export INTELLIQX_EMBEDDING_DIM=1536
 
@@ -346,7 +346,7 @@ Breaking changes use the `!` suffix (`feat!:`) and are documented in
 | State          | in-memory state store                                    |
 | Events         | in-process Pub/Sub-style bus                            |
 | Storage        | in-memory + filesystem object store                     |
-| LLM            | [litellm](https://litellm.ai) (Fake, MiniMax)           |
+| LLM            | [Pydantic AI](https://ai.pydantic.dev/) (OpenAI-compatible) |
 | Lint           | [ruff](https://docs.astral.sh/ruff/)                    |
 | Format         | [ruff](https://docs.astral.sh/ruff/) (ruff format)      |
 | Type Check     | [mypy](https://mypy-lang.org/) (strict)                 |
