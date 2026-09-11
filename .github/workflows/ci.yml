@@ -6,7 +6,6 @@ on:
   pull_request:
 
 env:
-  INTELLIQX_LLM_BACKEND: fake
   INTELLIQX_OBJECT_STORE: memory
   INTELLIQX_OTEL: "0"
 
