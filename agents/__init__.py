@@ -5,6 +5,11 @@ helpers in :mod:`agents.ai.roles`. The two functions exported here
 (:func:`register_all` and :func:`register_compute_handlers`) wire
 the catalog into the agent registry and the in-process compute
 runtime.
+
+The catalog is held inside the :func:`_catalog` cache function so
+that :func:`reset_catalog` can wipe it between tests; the prior
+implementation used a module-level mutable list, which leaked state
+across tests when one case mutated the list.
 """
 
 from __future__ import annotations
@@ -17,30 +22,59 @@ from pydantic_ai import Agent
 from agents.ai import roles
 
 __all__ = [
-    "AGENT_CATALOG",
     "AgentRole",
     "build_catalog",
     "register_all",
     "register_compute_handlers",
+    "reset_catalog",
 ]
 
-AGENT_CATALOG: list[roles.AgentRole] = []
+_CATALOG: list[roles.AgentRole] | None = None
+
+
+def reset_catalog() -> None:
+    """Drop the cached catalog so the next :func:`build_catalog` rebuilds it.
+
+    Tests call this in their autouse fixture to keep state clean
+    between cases.
+    """
+    global _CATALOG
+    _CATALOG = None
 
 
 def build_catalog() -> list[roles.AgentRole]:
     """Lazily build and cache the agent catalog."""
-    if AGENT_CATALOG:
-        return AGENT_CATALOG
-    AGENT_CATALOG.extend(roles.build_roles())
-    return AGENT_CATALOG
+    global _CATALOG
+    if _CATALOG is None:
+        _CATALOG = list(roles.build_roles())
+    return _CATALOG
 
 
 def register_all() -> None:
-    """Register every role's factory with the singleton agent registry."""
+    """Register every role's factory with the singleton agent registry.
+
+    Repeated calls are idempotent: re-registering the same name with
+    the same factory is a no-op; re-registering a name with a
+    different factory raises so callers notice the change.
+    """
     from intelliqx_agents.registry import get_agent_registry
 
     registry = get_agent_registry()
-    for role in build_catalog():
+    catalog = build_catalog()
+    catalog_names = {role.name for role in catalog}
+    existing = set(registry.factories)
+    if not existing.issubset(catalog_names):
+        raise RuntimeError(
+            "register_all would drop existing registrations not in the "
+            f"catalog; refusing. Unknown names: {sorted(existing - catalog_names)}"
+        )
+    for role in catalog:
+        existing_factory = registry.factories.get(role.name)
+        if existing_factory is not None and existing_factory is not role.factory:
+            raise RuntimeError(
+                f"register_all would replace the factory for {role.name!r} "
+                "with a different callable; refusing to clobber prior state."
+            )
         registry.register(role.name, role.factory, meta=meta_for(role))
 
 

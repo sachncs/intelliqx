@@ -26,6 +26,8 @@ def reset_singletons():
     registry) would leak state to the next test. We call every
     known ``reset_*`` helper here.
     """
+    from agents import reset_catalog
+    from intelliqx_agents.registry import reset_agent_registry
     from intelliqx_compute.runtime import reset_compute_runtime
     from intelliqx_events.bus import reset_event_bus
     from intelliqx_events.schemas import EventRegistry
@@ -36,6 +38,8 @@ def reset_singletons():
     from intelliqx_storage.store import reset_object_store
     from intelliqx_tools.manager import reset_tool_manager
 
+    reset_agent_registry()
+    reset_catalog()
     reset_compute_runtime()
     reset_event_bus()
     reset_kg()

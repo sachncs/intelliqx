@@ -160,3 +160,29 @@ def test_readme_agent_count_matches_registry() -> None:
         f"README does not advertise {expected} agents — "
         f"update the tagline and Features bullet when changing ROLE_TABLE."
     )
+
+
+def test_register_all_is_idempotent() -> None:
+    """Calling ``register_all`` twice must not change the registered set."""
+    from agents import register_all
+    from intelliqx_agents.registry import get_agent_registry, reset_agent_registry
+
+    reset_agent_registry()
+    register_all()
+    first = sorted(get_agent_registry().list())
+    register_all()
+    second = sorted(get_agent_registry().list())
+    assert first == second, "register_all changed the registry across calls"
+    reset_agent_registry()
+
+
+def test_reset_catalog_rebuilds_cached_state() -> None:
+    """``reset_catalog`` must drop the cached list so the next
+    :func:`agents.build_catalog` produces a fresh instance."""
+    from agents import build_catalog, reset_catalog
+
+    first = build_catalog()
+    reset_catalog()
+    second = build_catalog()
+    assert first is not second
+    assert [r.name for r in first] == [r.name for r in second]

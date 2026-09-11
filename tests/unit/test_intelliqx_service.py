@@ -63,7 +63,7 @@ async def test_full_run_lifecycle(app) -> None:
     from pydantic_ai import Agent
     from pydantic_ai.models.test import TestModel
 
-    from agents import AGENT_CATALOG, build_catalog
+    from agents import build_catalog
 
     class SmokeOut(BaseModel):
         echo: dict
@@ -74,8 +74,8 @@ async def test_full_run_lifecycle(app) -> None:
         instructions="echo",
     )
 
-    build_catalog()
-    for role in AGENT_CATALOG:
+    catalog = build_catalog()
+    for role in catalog:
         if role.name == "smoke":
             object.__setattr__(role, "factory", lambda *args, **kwargs: test_agent)
             break
