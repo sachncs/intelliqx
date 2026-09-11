@@ -374,8 +374,8 @@ Contributors are expected to follow the
 
 ## Security
 
-Report vulnerabilities to **sachncs@gmail.com** — please do not file
-public issues for security-sensitive bugs.
+Report vulnerabilities per [`SECURITY.md`](SECURITY.md) — please do not
+file public issues for security-sensitive bugs.
 
 ## License
 
