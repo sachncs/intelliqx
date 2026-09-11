@@ -198,13 +198,13 @@ class StateStore:
                 attempts = int(row["attempts"]) + 1
                 if attempts > int(row["max_retries"]):
                     self._conn.execute(
-                        "UPDATE runs SET status = ?, updated_at = ? " "WHERE rowid = ?",
+                        "UPDATE runs SET status = ?, updated_at = ? WHERE rowid = ?",
                         (RunStatus.FAILED.value, time.time(), row["rowid"]),
                     )
                     self._conn.commit()
                     return None
                 self._conn.execute(
-                    "UPDATE runs SET status = ?, attempts = ?, updated_at = ? " "WHERE rowid = ?",
+                    "UPDATE runs SET status = ?, attempts = ?, updated_at = ? WHERE rowid = ?",
                     (RunStatus.RUNNING.value, attempts, time.time(), row["rowid"]),
                 )
                 self._conn.commit()
@@ -255,7 +255,7 @@ class StateStore:
             self._conn.execute("BEGIN IMMEDIATE")
             try:
                 self._conn.execute(
-                    "UPDATE runs SET status = ?, attempts = ?, updated_at = ? " "WHERE run_id = ?",
+                    "UPDATE runs SET status = ?, attempts = ?, updated_at = ? WHERE run_id = ?",
                     (RunStatus.PENDING.value, next_attempt, time.time(), run_id),
                 )
                 self._conn.commit()

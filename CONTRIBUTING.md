@@ -20,8 +20,8 @@ cd intelliqx
 uv sync --all-packages
 ```
 
-The workspace installs all 14 libraries, the 29 agent implementations,
-and the dev dependency group (ruff, mypy, black, vulture, pytest).
+The workspace installs all 15 libraries, the 28 agent implementations,
+and the dev dependency group (ruff, mypy, vulture, pytest).
 
 ### Verify the install
 
@@ -31,7 +31,7 @@ uv run pytest tests/unit -q
 
 # Run the four CI checks
 uv run ruff check .
-uv run black --check .
+uv run ruff format --check .
 uv run mypy libs agents
 uv run vulture libs agents tests .vulture-whitelist
 ```
@@ -85,7 +85,7 @@ declared as a workspace dependency in the importer's `pyproject.toml`.
 
 ### Style
 
-- **Line length:** 100 (enforced by `black` and `ruff`).
+- **Line length:** 100 (enforced by `ruff format` and `ruff check`).
 - **Quotes:** double quotes.
 - **Naming:** Pydantic models `PascalCase`; modules and functions
   `snake_case`; private members use Python name-mangling
@@ -99,7 +99,7 @@ declared as a workspace dependency in the importer's `pyproject.toml`.
 ### Lint and type-check
 
 - `ruff check .` must pass.
-- `black --check .` must pass.
+- `ruff format --check .` must pass.
 - `mypy libs agents` must pass with the configured `strict_optional`,
   `warn_unused_ignores`, and `no_implicit_optional`.
 - `vulture libs agents tests .vulture-whitelist` must pass.

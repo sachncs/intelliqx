@@ -12,7 +12,5 @@ def get_backend(language: str) -> CodeBackend:
     key = language.lower().strip()
     cls = BACKENDS.get(key)
     if cls is None:
-        raise ValueError(
-            f"Unknown language {language!r}. " f"Available: {', '.join(sorted(BACKENDS))}"
-        )
+        raise ValueError(f"Unknown language {language!r}. Available: {', '.join(sorted(BACKENDS))}")
     return cls()

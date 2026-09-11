@@ -187,7 +187,7 @@ ROLE_TABLE: tuple[RoleSpec, ...] = (
         name="knowledge_rag",
         category="coordination",
         instructions=(
-            "Return the best matching knowledge snippets as a JSON " "{hits: [{id, text}]} object."
+            "Return the best matching knowledge snippets as a JSON {hits: [{id, text}]} object."
         ),
         output_model=_retrieval_result(),
     ),

@@ -164,8 +164,9 @@ def test_readme_agent_count_matches_registry() -> None:
 
 def test_register_all_is_idempotent() -> None:
     """Calling ``register_all`` twice must not change the registered set."""
-    from agents import register_all
     from intelliqx_agents.registry import get_agent_registry, reset_agent_registry
+
+    from agents import register_all
 
     reset_agent_registry()
     register_all()
