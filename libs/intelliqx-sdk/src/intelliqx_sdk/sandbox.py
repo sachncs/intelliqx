@@ -38,7 +38,6 @@ import resource
 import sys
 from contextlib import contextmanager
 
-
 _IS_DARWIN = sys.platform == "darwin"
 
 
