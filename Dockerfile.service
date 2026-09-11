@@ -24,8 +24,7 @@ RUN useradd --create-home --shell /bin/bash --uid 10001 intelliqx
 USER intelliqx
 WORKDIR /app
 COPY --from=deps --chown=intelliqx:intelliqx /app /app
-ENV INTELLIQX_API_TOKEN=change-me \
-    INTELLIQX_STATE_DB=/var/lib/intelliqx/state.db \
+ENV INTELLIQX_STATE_DB=/var/lib/intelliqx/state.db \
     INTELLIQX_OKF_DB=/var/lib/intelliqx/okf.db \
     INTELLIQX_WORKERS=1
 VOLUME ["/var/lib/intelliqx"]
