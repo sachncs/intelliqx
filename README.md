@@ -22,7 +22,7 @@ uv run pytest tests/unit tests/contract -q
 
 # Lint + typecheck + dead-code
 uv run ruff check .
-uv run black --check .
+uv run ruff format --check .
 uv run mypy libs agents
 uv run vulture libs agents tests .vulture-whitelist
 
@@ -266,7 +266,7 @@ tracked in [CHANGELOG.md](CHANGELOG.md); breaking changes use the `feat!:` /
 ## Development
 
 ```bash
-# Install with dev dependencies (ruff, mypy, black, vulture, pytest)
+# Install with dev dependencies (ruff, mypy, vulture, pytest)
 uv sync --all-packages
 
 # Run tests
@@ -276,7 +276,7 @@ uv run pytest tests/contract -q                        # Contract tests
 
 # Lint, format, type-check
 uv run ruff check .
-uv run black .
+uv run ruff format .
 uv run mypy libs agents
 
 # Dead-code detection
@@ -293,7 +293,7 @@ make help               # List all targets
 make install            # uv sync --all-packages
 make sync               # same
 make lint               # ruff check .
-make format             # black .
+make format             # ruff format .
 make typecheck          # mypy libs agents
 make vulture            # vulture libs agents tests .vulture-whitelist
 make test               # pytest
@@ -308,8 +308,8 @@ make clean              # rm -rf .venv build dist **/__pycache__ ...
 ### Code style
 
 - **Line length:** 100
-- **Formatter:** `black` (enforced in CI)
-- **Linter:** `ruff` (selected rules: `E`, `F`, `I`, `B`, `UP`, `SIM`, `RUF`, `T20`)
+- **Formatter:** `ruff format` (enforced in CI)
+- **Linter:** `ruff check` (selected rules: `E`, `F`, `I`, `B`, `UP`, `SIM`, `RUF`, `T20`)
 - **Type checker:** `mypy` (strict-optional, warn-unused-ignores, no-implicit-optional)
 - **Naming:** Pydantic models are `PascalCase`; modules and functions are `snake_case`; private members use Python name-mangling (`__name`).
 - **Async first:** every public I/O method is `async def`. Blocking SDK calls are offloaded via `asyncio.to_thread`.
@@ -347,7 +347,7 @@ Breaking changes use the `!` suffix (`feat!:`) and are documented in
 | Storage        | in-memory + filesystem object store                     |
 | LLM            | [litellm](https://litellm.ai) (Fake, MiniMax)           |
 | Lint           | [ruff](https://docs.astral.sh/ruff/)                    |
-| Format         | [black](https://black.readthedocs.io/)                  |
+| Format         | [ruff](https://docs.astral.sh/ruff/) (ruff format)      |
 | Type Check     | [mypy](https://mypy-lang.org/) (strict)                 |
 | Dead code      | [vulture](https://github.com/jendrikseipp/vulture)      |
 | Testing        | [pytest](https://docs.pytest.org/) + pytest-asyncio + pytest-cov |

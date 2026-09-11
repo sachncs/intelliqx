@@ -107,11 +107,7 @@ class OpenAIHTTPEmbeddings(EmbeddingModel):
         return "openai"
 
     async def embed(
-        self,
-        inputs: str | list[str],
-        *,
-        input_type: str = "document",
-        settings: Any = None,
+        self, inputs: str | list[str], *, input_type: str = "document", settings: Any = None
     ) -> Any:
         from pydantic_ai.embeddings.result import EmbeddingResult
 
@@ -126,11 +122,7 @@ class OpenAIHTTPEmbeddings(EmbeddingModel):
     def count_tokens(self, text: str) -> int:
         return max(1, len(text.split()))
 
-    def prepare_embed(
-        self,
-        inputs: str | list[str],
-        settings: Any = None,
-    ) -> tuple[list[str], Any]:
+    def prepare_embed(self, inputs: str | list[str], settings: Any = None) -> tuple[list[str], Any]:
         texts = [inputs] if isinstance(inputs, str) else list(inputs)
         return texts, settings
 
@@ -143,17 +135,14 @@ class OpenAIHTTPEmbeddings(EmbeddingModel):
 
         if self._client is None:
             self._client = httpx.Client(
-                headers={"Authorization": f"Bearer {self._api_key}"},
-                timeout=30.0,
+                headers={"Authorization": f"Bearer {self._api_key}"}, timeout=30.0
             )
         response = self._client.post(f"{self._base_url}/{path}", json=body)
         response.raise_for_status()
         return [item["embedding"] for item in response.json()["data"]]
 
 
-def build_embedder(
-    *, model_name: str | None = None, dim: int | None = None
-) -> EmbeddingModel:
+def build_embedder(*, model_name: str | None = None, dim: int | None = None) -> EmbeddingModel:
     """Build the production Pydaxis-AI embedding model for the OKF vector path.
 
     Args:

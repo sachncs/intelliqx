@@ -15,6 +15,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from intelliqx_ai.runtime import build_embedder
+
 from intelliqx_okf.embed import Embedder
 
 if TYPE_CHECKING:
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
 class PydaxisAIEmbedder(Embedder):
     """Adapt a Pydaxis-AI :class:`EmbeddingModel` to the OKF :class:`Embedder` protocol."""
 
-    def __init__(self, model: "EmbeddingModel | None" = None, *, name: str = "pydaxis-ai") -> None:
+    def __init__(self, model: EmbeddingModel | None = None, *, name: str = "pydaxis-ai") -> None:
         self._model = model if model is not None else build_embedder()
         self.name = name
         # ``model.max_input_tokens`` is the supported Pydaxis-AI hook
@@ -33,7 +34,7 @@ class PydaxisAIEmbedder(Embedder):
         self.dim = int(getattr(self._model, "dimensions", 0) or 0)
 
     @classmethod
-    def from_default(cls) -> "PydaxisAIEmbedder":
+    def from_default(cls) -> PydaxisAIEmbedder:
         """Build the production Pydaxis-AI embedding model for the OKF vector path."""
         return cls(build_embedder())
 
