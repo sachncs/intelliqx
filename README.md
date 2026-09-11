@@ -95,7 +95,7 @@ placeholders before `docker compose up`.
 
 ```bash
 # Run a single agent in-process
-uv run python -c "
+uv run python -c '
 import asyncio
 from agents import register_all
 from intelliqx_compute.runtime import InvocationRequest
@@ -103,13 +103,13 @@ from intelliqx_compute.runtime import InvocationRequest
 register_all()
 from intelliqx_compute.runtime import get_compute_runtime
 from intelliqx_observability.logging import configure_logging, get_logger
-req = InvocationRequest(agent_name='smoke', input={'marker': 'hello'}, tenant_id='t1')
-configure_logging(json_logs=False, component='quick-start')
+req = InvocationRequest(agent_name="smoke", input={"marker": "hello"}, tenant_id="t1")
+configure_logging(json_logs=False, component="quick-start")
 get_logger(__name__).info("{}", asyncio.run(get_compute_runtime().invoke(req)))
-"
+'
 
 # Run the full local test pipeline
-uv run pytest tests/unit tests/contract tests/integration -q
+uv run pytest tests/unit tests/contract -q
 
 # Start the local infrastructure for adapters
 docker compose up -d
@@ -131,7 +131,7 @@ uv sync --all-packages
 uv run pytest tests/unit -q
 
 # 3. Try a single agent in-process
-uv run python -c "
+uv run python -c '
 import asyncio
 from agents import register_all
 from intelliqx_compute.runtime import InvocationRequest
@@ -139,10 +139,10 @@ from intelliqx_compute.runtime import InvocationRequest
 register_all()
 from intelliqx_compute.runtime import get_compute_runtime
 from intelliqx_observability.logging import configure_logging, get_logger
-req = InvocationRequest(agent_name='smoke', input={'marker': 'hello'}, tenant_id='t1')
-configure_logging(json_logs=False, component='quick-start')
+req = InvocationRequest(agent_name="smoke", input={"marker": "hello"}, tenant_id="t1")
+configure_logging(json_logs=False, component="quick-start")
 get_logger(__name__).info("{}", asyncio.run(get_compute_runtime().invoke(req)))
-"
+'
 ```
 
 ### Running against any OpenAI-compatible endpoint
