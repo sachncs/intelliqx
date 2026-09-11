@@ -1,0 +1,38 @@
+name: Security report
+description: Privately report a security vulnerability
+title: "[security] "
+labels: ["security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Please do not file public issues for security-sensitive bugs.**
+        Use [GitHub's private vulnerability reporting](https://github.com/sachncs/intelliqx/security/advisories/new)
+        for this repository, or email sachncs@gmail.com. This template exists
+        for transparency only; once submitted here the report should be
+        treated as public.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Vulnerability summary
+      description: A short description of the vulnerability.
+      placeholder: Unauthenticated access to /v1/runs when INTELLIQX_API_TOKEN is unset.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      placeholder: |
+        - Which library is affected?
+        - What is the worst-case outcome?
+        - Is there a public exploit?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      render: shell
+    validations:
+      required: true
