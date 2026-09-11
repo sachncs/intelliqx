@@ -122,3 +122,16 @@ def test_settings_from_env_rejects_short_token(monkeypatch: pytest.MonkeyPatch) 
 
     with pytest.raises(RuntimeError, match="INTELLIQX_API_TOKEN"):
         Settings.from_env({"INTELLIQX_API_TOKEN": "tooshort"})
+
+
+@pytest.mark.asyncio
+async def test_metrics_endpoint_returns_prometheus(app) -> None:
+    """The service must expose /metrics in Prometheus text format."""
+    async with app.router.lifespan_context(app):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/metrics")
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/plain")
+        body = response.text
+        assert body.endswith("\n")

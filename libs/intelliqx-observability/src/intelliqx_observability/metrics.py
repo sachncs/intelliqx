@@ -285,3 +285,47 @@ def reset_metrics() -> None:
     if SINGLETON is not None:
         SINGLETON.reset()
     SINGLETON = None
+
+
+def render_prometheus() -> str:
+    """Render the current registry in Prometheus text-exposition format.
+
+    The format is the de-facto standard for ``/metrics`` scraping and
+    matches the structure produced by ``prometheus_client``:
+
+    * Counter: ``# TYPE <name> counter`` then ``<name>{labels} <value>``.
+    * Gauge: ``# TYPE <name> gauge`` then ``<name>{labels} <value>``.
+    * Histogram: ``# TYPE <name> summary`` then per-label-set
+      ``<name>_count / _sum / _min / _max / _p50 / _p95 / _p99``.
+
+    This is intentionally minimal — it omits HELP lines and the
+    bucket-based histogram type because the in-process :class:`Histogram`
+    tracks running percentiles rather than buckets. Switch to
+    OpenTelemetry's Prometheus exporter if bucket histograms are
+    required.
+    """
+    registry = get_metrics()
+    lines: list[str] = []
+    for name, counter in registry.counters.items():
+        lines.append(f"# TYPE {name} counter")
+        for label_key, value in counter.snapshot().items():
+            lines.append(f"{label_key} {value}")
+    for name, gauge in registry.gauges.items():
+        lines.append(f"# TYPE {name} gauge")
+        for label_key, value in gauge.snapshot().items():
+            lines.append(f"{label_key} {value}")
+    for name, histogram in registry.histograms.items():
+        lines.append(f"# TYPE {name} summary")
+        for label_key, stats in histogram.snapshot().items():
+            open_brace = label_key.find("{")
+            if open_brace == -1:
+                base = label_key
+                labels = ""
+            else:
+                base = label_key[:open_brace]
+                labels = label_key[open_brace:]
+            lines.append(f"{base}_count{labels} {stats['count']}")
+            lines.append(f"{base}_sum{labels} {stats['sum']}")
+            for stat in ("min", "max", "p50", "p95", "p99"):
+                lines.append(f"{base}_{stat}{labels} {stats[stat]}")
+    return "\n".join(lines) + "\n"

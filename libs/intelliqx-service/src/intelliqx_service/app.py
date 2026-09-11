@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from intelliqx_compute.runtime import (
     InvocationRequest,
     InvocationResponse,
@@ -273,6 +273,12 @@ def create_app() -> FastAPI:
         except sqlite3.Error as exc:
             return JSONResponse(status_code=503, content={"status": "error", "error": str(exc)})
         return JSONResponse(content={"status": "ok"})
+
+    @app.get("/metrics")
+    async def metrics() -> Response:
+        from intelliqx_observability.metrics import render_prometheus
+
+        return Response(content=render_prometheus(), media_type="text/plain; version=0.0.4")
 
     @app.post("/v1/runs", dependencies=[Depends(require_token)])
     async def submit_run(request: Request) -> JSONResponse:

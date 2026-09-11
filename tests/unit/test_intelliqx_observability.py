@@ -2,7 +2,7 @@
 
 import pytest
 from intelliqx_observability.logging import configure_logging, get_logger, reset_logging
-from intelliqx_observability.metrics import Counter, Gauge, Histogram, MetricsRegistry
+from intelliqx_observability.metrics import Counter, Gauge, Histogram, MetricsRegistry, get_metrics, render_prometheus, reset_metrics
 from intelliqx_observability.tracing import Tracer, get_tracer, reset_tracer
 
 
@@ -86,3 +86,23 @@ def test_get_tracer_singleton():
     a = get_tracer()
     b = get_tracer()
     assert a is b
+
+
+@pytest.mark.unit
+def test_render_prometheus_emits_counter_gauge_histogram():
+    reset_metrics()
+    registry = get_metrics()
+    registry.counter("agent_invocations_total", "test").inc(amount=3, agent="smoke")
+    registry.gauge("queue_depth", "test").set(7)
+    registry.histogram("agent_latency_ms", "test").observe(12.0, agent="smoke")
+    registry.histogram("agent_latency_ms", "test").observe(48.0, agent="smoke")
+    output = render_prometheus()
+    assert "# TYPE agent_invocations_total counter" in output
+    assert 'agent_invocations_total{agent=smoke}' in output
+    assert "# TYPE queue_depth gauge" in output
+    assert "queue_depth{} 7" in output
+    assert "# TYPE agent_latency_ms summary" in output
+    assert "agent_latency_ms_count" in output
+    assert "agent_latency_ms_sum" in output
+    assert "agent_latency_ms_p95" in output
+    reset_metrics()
