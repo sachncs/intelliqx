@@ -29,7 +29,7 @@ Each phase:
 
 - **Storage**: in-memory object store + zvec (vector) + Parquet+DuckDB (KG).
 - **Events**: in-process Pub/Sub-style bus with DLQ semantics.
-- **LLM**: Fake (default) or MiniMax via litellm — selected via `intelliqx-llm` (see ADR-0012).
+- **LLM**: Single OpenAI-compatible chat path through `intelliqx_ai.runtime.build_agent` (see ADR-0012).
 
 ## Top-Level Decisions Locked
 
