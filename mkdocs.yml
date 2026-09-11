@@ -1,0 +1,51 @@
+site_name: intelliqx
+site_description: Autonomous QA Intelligence Platform — agent-native test automation for software teams.
+site_url: https://sachncs.github.io/intelliqx/
+repo_url: https://github.com/sachncs/intelliqx
+repo_name: sachncs/intelliqx
+docs_dir: docs
+site_dir: site
+use_directory_urls: true
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+nav:
+  - Home: index.md
+  - Architecture:
+    - Agent catalog: architecture/agent-catalog.md
+    - Event taxonomy: architecture/event-taxonomy.md
+    - Cost model: architecture/cost-model.md
+  - ADRs:
+    - 0001: adr/0001-python-uv-monorepo.md
+    - 0003: adr/0003-zvec-vector-store.md
+    - 0004: adr/0004-kg-parquet-duckdb.md
+    - 0005: adr/0005-pubsub-event-bus.md
+    - 0007: adr/0007-agent-base.md
+    - 0008: adr/0008-multi-tenancy.md
+    - 0009: adr/0009-in-process-adapters.md
+    - 0010: adr/0010-pydantic-v2.md
+    - 0011: adr/0011-okf-catalog-hybrid-retrieval.md
+    - 0012: adr/0012-pydantic-ai-llm-abstraction.md
+  - Phases:
+    - Overview: phases/README.md
+    - Phase 0: phases/phase-0-foundations.md
+    - Phase 3: phases/phase-3-intelligence-core.md
+    - Phase 4: phases/phase-4-execution.md
+    - Phase 5: phases/phase-5-governance-v1-ga.md
+    - Phase 6: phases/phase-6-v2-expansion.md
+plugins:
+  - search
