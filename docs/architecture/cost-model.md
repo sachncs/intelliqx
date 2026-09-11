@@ -1,13 +1,11 @@
 # IntelliqX Cost Model
 
 Per-invocation USD cost estimates used by the Planner to enforce
-the ``cost_ceiling_usd`` goal constraint. Values live in
-`node_cost` in `agents/coordination/planner.py`; they are tuned
-for typical LLM pricing and are *estimates*, not billable
-amounts. MiniMax-M2.1 sits at the same price band
-(per the [litellm MiniMax provider docs](https://docs.litellm.ai/docs/providers/minimax))
-so the same estimates apply when
-`INTELLIQX_LLM_BACKEND=minimax`.
+the ``cost_ceiling_usd`` goal constraint. Values live in the
+`ROLE_TABLE` rows in `agents/ai/roles.py` and are tuned for
+typical LLM pricing; they are *estimates*, not billable amounts.
+The current LLM backend is a single OpenAI-compatible chat path
+selected via `INTELLIQX_MODEL` (see [ADR-0012](../adr/0012-litellm-llm-abstraction.md)).
 
 ## Reference table
 

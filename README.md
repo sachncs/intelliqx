@@ -220,18 +220,12 @@ See [`.env.example`](.env.example) for a full template.
 
 ```
 intelliqx/
-├── libs/                14 independent libraries (intelliqx-core, intelliqx-events, ...)
-├── agents/              29 agent implementations, grouped by category
-│   ├── coordination/    Planner, Orchestrator, Memory, Knowledge/RAG, Tool Manager, Smoke
-│   ├── intelligence/    Requirements Intel, Code Intel, Risk, Test Design, Test Data, Coverage, Critic, Learning, Prompt Mgmt
-│   ├── execution/       Environment, Design Intel, Execution, Self-Healing, Failure Analysis, Visual Regression, A11y, Perf, Security, Cost Opt
-│   └── governance/      Observability, Reporting, Governance & Compliance, Release Readiness
+├── libs/                15 independent libraries (intelliqx-core, intelliqx-events, ...)
+├── agents/              28 agent implementations, grouped by category in ROLE_TABLE
+│   └── ai/roles.py      Single source of truth: the ROLE_TABLE tuple of RoleSpec rows
 ├── schemas/             Event JSON Schemas, KG schema
-├── dashboards/          Dashboard definitions
-├── prompts/             Prompt templates
-├── services/            HTTP / WebSocket entrypoints
 ├── infra/local/         Local Prometheus / LiteLLM config
-├── tests/               unit, integration, contract, e2e
+├── tests/               unit, contract
 ├── docs/                ADRs, architecture, per-phase plans
 └── .github/             CI, templates
 ```

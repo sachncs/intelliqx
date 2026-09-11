@@ -61,12 +61,13 @@ class HealthStatus(str, Enum):
 class AgentCategory(str, Enum):
     """Functional category of an IntelliqX agent.
 
-    Categories are descriptive — they map 1-to-1 to the four top-level
-    agent directories (``agents/coordination``, ``agents/intelligence``,
-    ``agents/execution``, ``agents/governance``) and replace the older
-    numeric ``tier`` field. Order in the enum mirrors the platform's
-    dependency graph: coordination orchestrates everything, then
-    intelligence decides, execution runs, and governance observes.
+    Categories are descriptive — every ``RoleSpec`` row in
+    :mod:`agents.ai.roles` carries one of these values, and the
+    AgentCatalog groups rows by category. The enum replaces the
+    older numeric ``tier`` field. Order in the enum mirrors the
+    platform's dependency graph: coordination orchestrates
+    everything, then intelligence decides, execution runs, and
+    governance observes.
     """
 
     COORDINATION = "coordination"
