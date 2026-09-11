@@ -139,3 +139,24 @@ def test_role_has_no_adk_or_agentbase_reference() -> None:
     source = inspect.getsource(module)
     for forbidden in ("AgentBase", "google.adk", "adk_agents", "META"):
         assert forbidden not in source
+
+
+def test_readme_agent_count_matches_registry() -> None:
+    """The README's agent count must match ``len(ROLE_TABLE)``.
+
+    Drift between docs and code is the regression we are guarding
+    against; if you add or remove a role, update the README too.
+    """
+    import re
+    from pathlib import Path
+
+    from agents.ai.roles import ROLE_TABLE
+
+    readme = Path(__file__).resolve().parents[2] / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    expected = len(ROLE_TABLE)
+    pattern = re.compile(rf"\b{expected}\b\s+(?:specialised|specialized)\s+agents", re.IGNORECASE)
+    assert pattern.search(text), (
+        f"README does not advertise {expected} agents — "
+        f"update the tagline and Features bullet when changing ROLE_TABLE."
+    )
