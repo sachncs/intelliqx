@@ -177,22 +177,16 @@ asyncio.run(main())
 
 | Setting | Env Variable | Default | Description |
 |---------|--------------|---------|-------------|
-| LLM backend | `INTELLIQX_LLM_BACKEND` | `fake` | `fake`, or `minimax` |
+| Chat model | `INTELLIQX_MODEL` | `openai:gpt-4o-mini` | Pydantic AI chat model name |
+| OpenAI base URL | `INTELLIQX_OPENAI_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible chat endpoint |
+| OpenAI API key | `INTELLIQX_OPENAI_API_KEY` | — | Required for live chat calls |
+| Embedding model | `INTELLIQX_EMBEDDING_MODEL` | `text-embedding-3-small` | Pydantic AI embedding model name |
+| Embedding dim | `INTELLIQX_EMBEDDING_DIM` | `1536` | Embedding vector size |
 | Object store | `INTELLIQX_OBJECT_STORE` | `memory` | `memory`, or `fs:/path/to/dir` |
 | State backend | `INTELLIQX_STATE_BACKEND` | `memory` | `memory` |
 | Event bus backend | `INTELLIQX_EVENT_BUS_BACKEND` | `memory` | `memory` |
-| Vector backend | `INTELLIQX_VECTOR_BACKEND` | `memory` | `memory`, `sqlite_vec`, or `zvec` |
-| Vector dim | `INTELLIQX_VECTOR_DIM` | `768` | Embedding dimension |
 | OTel tracing | `INTELLIQX_OTEL` | `0` | Set to `1` to enable OTel tracing |
 | JSON logs | `INTELLIQX_LOGS_JSON` | `0` | Set to `1` for JSON log output |
-| MiniMax API key | `MINIMAX_API_KEY` | — | Required for `minimax` backend |
-
-### LLM backend behaviour
-
-| `INTELLIQX_LLM_BACKEND` | Behaviour |
-|-------------------------|-----------|
-| `fake` (default) | Deterministic hash-based responses (no network) |
-| `minimax` | [MiniMax](https://api.minimax.io) via litellm — set `MINIMAX_API_KEY` |
 
 See [`.env.example`](.env.example) for a full template.
 
