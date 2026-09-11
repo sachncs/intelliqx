@@ -28,7 +28,10 @@ RUN uv sync --frozen --no-dev --all-packages || uv sync --no-dev --all-packages
 # Copy source
 COPY . .
 
-# Default entrypoint runs any agent module passed as arg
+# Smoke import + register to fail the build if the workspace is broken.
 ENV PATH="/app/.venv/bin:$PATH"
+RUN python -c "from agents import register_all; register_all()"
+
+# Default entrypoint runs any agent module passed as arg
 ENTRYPOINT ["python", "-m"]
-CMD ["intelliqx_agents.runtime"]
+CMD ["agents"]
