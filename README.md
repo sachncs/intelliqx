@@ -202,17 +202,16 @@ See [`.env.example`](.env.example) for a full template.
 
 | Symbol | Type | Description |
 |--------|------|-------------|
-| `agents.register_all()` | function | Register all 29 agent implementations in the registry |
+| `agents.register_all()` | function | Register all 28 agent implementations in the registry |
 | `intelliqx_compute.runtime.get_compute_runtime()` | function | Return the active compute runtime |
 | `intelliqx_compute.runtime.InvocationRequest` | class | Request payload for agent invocation |
-| `intelliqx_llm.get_llm_client()` | function | Return the active LLM client |
-| `intelliqx_llm.client.CompletionRequest` | class | LLM completion request (model, messages, …) |
-| `intelliqx_llm.client.CompletionResponse` | class | LLM completion response |
+| `intelliqx_ai.runtime.build_agent()` | function | Construct a Pydantic AI agent for a role |
+| `intelliqx_ai.runtime.build_embedder()` | function | Construct the OKF vector-path embedder |
 | `intelliqx_storage` | package | Object store abstractions (in-memory / filesystem) |
 | `intelliqx_events` | package | Event bus abstractions (in-memory) |
 | `intelliqx_state` | package | Shared-state abstractions (in-memory) |
-| `intelliqx_vector` | package | Vector search backend (zvec / sqlite-vec / in-memory) |
 | `intelliqx_kg` | package | Knowledge graph (Parquet + DuckDB) |
+| `intelliqx_okf` | package | OKF catalog (SQLite + FTS5 + sqlite-vec) |
 
 ---
 
