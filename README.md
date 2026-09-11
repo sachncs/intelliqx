@@ -18,7 +18,7 @@ agent code is portable across process and container boundaries.
 uv sync --all-packages
 
 # Run the full local test pipeline
-uv run pytest tests/unit tests/contract tests/integration -q
+uv run pytest tests/unit tests/contract -q
 
 # Lint + typecheck + dead-code
 uv run ruff check .
@@ -243,8 +243,6 @@ Decision Records.
 uv run pytest -q                                # All suites
 uv run pytest tests/unit -q                     # Unit only
 uv run pytest tests/contract -q                 # Contract tests
-uv run pytest tests/integration -q              # Integration
-uv run pytest -m e2e -q                         # End-to-end
 ```
 
 ---
@@ -275,8 +273,6 @@ uv sync --all-packages
 uv run pytest -q                                       # All suites
 uv run pytest tests/unit -q                            # Unit only
 uv run pytest tests/contract -q                        # Contract tests
-uv run pytest tests/integration -q                     # Integration
-uv run pytest -m e2e -q                                 # End-to-end
 
 # Lint, format, type-check
 uv run ruff check .
@@ -303,8 +299,6 @@ make vulture            # vulture libs agents tests .vulture-whitelist
 make test               # pytest
 make test-unit          # pytest tests/unit -q
 make test-contract      # pytest tests/contract -q
-make test-integration   # pytest tests/integration -q
-make test-e2e           # pytest tests/e2e -q -m e2e
 make run-agent AGENT=execution/execution
 make docker-up          # docker compose up -d
 make docker-down        # docker compose down
