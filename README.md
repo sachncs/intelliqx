@@ -243,6 +243,7 @@ Decision Records.
 uv run pytest -q                                # All suites
 uv run pytest tests/unit -q                     # Unit only
 uv run pytest tests/contract -q                 # Contract tests
+make coverage                                   # Coverage gate (70% floor)
 ```
 
 ---
