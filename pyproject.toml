@@ -18,6 +18,8 @@ dependencies = [
     "intelliqx-sdk",
     "intelliqx-okf",
     "intelliqx-graph",
+    "intelliqx-ai",
+    "intelliqx-service",
     "tqdm>=4.66",
     "pydantic-ai-slim[openai]>=0.0.30",
 ]
@@ -37,6 +39,8 @@ intelliqx-sdk = { workspace = true }
 agents = { workspace = true }
 intelliqx-okf = { workspace = true }
 intelliqx-graph = { workspace = true }
+intelliqx-ai = { workspace = true }
+intelliqx-service = { workspace = true }
 
 [tool.uv.workspace]
 members = [

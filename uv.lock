@@ -351,6 +351,7 @@ version = "0.3.0rc1"
 source = { virtual = "." }
 dependencies = [
     { name = "intelliqx-agents" },
+    { name = "intelliqx-ai" },
     { name = "intelliqx-compute" },
     { name = "intelliqx-core" },
     { name = "intelliqx-events" },
@@ -359,6 +360,7 @@ dependencies = [
     { name = "intelliqx-observability" },
     { name = "intelliqx-okf" },
     { name = "intelliqx-sdk" },
+    { name = "intelliqx-service" },
     { name = "intelliqx-state" },
     { name = "intelliqx-storage" },
     { name = "intelliqx-tenant" },
@@ -381,6 +383,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "intelliqx-agents", editable = "libs/intelliqx-agents" },
+    { name = "intelliqx-ai", editable = "libs/intelliqx-ai" },
     { name = "intelliqx-compute", editable = "libs/intelliqx-compute" },
     { name = "intelliqx-core", editable = "libs/intelliqx-core" },
     { name = "intelliqx-events", editable = "libs/intelliqx-events" },
@@ -389,6 +392,7 @@ requires-dist = [
     { name = "intelliqx-observability", editable = "libs/intelliqx-observability" },
     { name = "intelliqx-okf", editable = "libs/intelliqx-okf" },
     { name = "intelliqx-sdk", editable = "libs/intelliqx-sdk" },
+    { name = "intelliqx-service", editable = "libs/intelliqx-service" },
     { name = "intelliqx-state", editable = "libs/intelliqx-state" },
     { name = "intelliqx-storage", editable = "libs/intelliqx-storage" },
     { name = "intelliqx-tenant", editable = "libs/intelliqx-tenant" },
