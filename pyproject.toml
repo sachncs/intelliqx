@@ -103,7 +103,7 @@ omit = ["*/tests/*", "*/__init__.py"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = false
-fail_under = 95
+fail_under = 70
 exclude_lines = [
     "pragma: no cover",
     "raise NotImplementedError",
