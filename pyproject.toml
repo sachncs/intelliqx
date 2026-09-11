@@ -1,7 +1,7 @@
 [project]
 name = "intelliqx"
 version = "0.3.0-rc1"
-description = "Autonomous QA Intelligence Platform"
+description = "Autonomous QA Intelligence Platform — agent-native test automation for software teams."
 requires-python = ">=3.12,<3.13"
 readme = "README.md"
 dependencies = [
