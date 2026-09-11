@@ -2,8 +2,8 @@
 
 This document describes the event topics the Coordination agents publish
 and consume. Every event is an instance of a class defined in
-`agents/coordination/events.py` and carries an
-:class:`intelliqx_core.events.EventMetadata` envelope.
+`intelliqx_events.schemas` (the registered event schemas) and carries
+an :class:`intelliqx_core.events.EventMetadata` envelope.
 
 ## Event topics
 

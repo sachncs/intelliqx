@@ -4,51 +4,67 @@ This is the canonical list of every agent shipped with the platform,
 by category. Use it as a reference when wiring plans or selecting
 capabilities.
 
-| Category | Agent | Module | META description |
-|---|---|---|---|
-| coordination | `planner` | `agents.coordination.planner` | Decomposes a Goal into an ExecutionPlan (DAG of agent invocations). |
-| coordination | `orchestrator` | `agents.coordination.orchestrator` | Executes a plan DAG, handling retries, parallelism, and audit. |
-| coordination | `memory_manager` | `agents.coordination.memory_manager` | Unified memory API: working, episodic, semantic, code memories. |
-| coordination | `knowledge_rag` | `agents.coordination.knowledge_rag` | Hybrid four-source retriever: vector + KG + lexical + OKF catalog (RRF). |
-| coordination | `tool_manager` | `agents.coordination.tool_manager` | Universal tool gateway (MCP-compatible). |
-| coordination | `smoke` | `agents.coordination.smoke` | Test-only stub agent used for E2E pipeline smoke tests. |
-| intelligence | `requirements_intel` | `agents.intelligence.requirements_intel` | Parses a PRD into structured requirements + traceability matrix. |
-| intelligence | `code_intel` | `agents.intelligence.code_intel` | Builds impact + dependency graphs from code. |
-| intelligence | `risk_assessment` | `agents.intelligence.risk_assessment` | Computes a release risk score from requirements, code impact, and history. |
-| intelligence | `test_design` | `agents.intelligence.test_design` | Generates functional, boundary, negative tests from requirements. |
-| intelligence | `test_data` | `agents.intelligence.test_data` | Generates synthetic test data, privacy-safe by default. |
-| intelligence | `coverage_analysis` | `agents.intelligence.coverage_analysis` | Aggregates requirement, test, and code coverage. |
-| intelligence | `critic` | `agents.intelligence.critic` | Validates agent outputs for correctness, consistency, hallucination. |
-| intelligence | `learning` | `agents.intelligence.learning` | Improves prompts, plans, and healing from history. |
-| intelligence | `prompt_management` | `agents.intelligence.prompt_management` | Manages prompt versions and A/B tests. |
-| execution | `environment` | `agents.execution.environment` | Provisions an ephemeral test environment. |
-| execution | `design_intel` | `agents.execution.design_intel` | Extracts semantic UI graph from DOM snapshots. |
-| execution | `execution` | `agents.execution.execution` | Runs structured test specs against an environment. |
-| execution | `self_healing` | `agents.execution.self_healing` | Repairs broken selectors by inspecting DOM. |
-| execution | `failure_analysis` | `agents.execution.failure_analysis` | Classifies test failures (infra / product / flake). |
-| execution | `visual_regression` | `agents.execution.visual_regression` | Pixel + perceptual diff for visual regression. |
-| execution | `accessibility` | `agents.execution.accessibility` | WCAG 2.2 AA / keyboard / ARIA / contrast checks. |
-| execution | `performance` | `agents.execution.performance` | Runs load/stress/spike tests with SLO checks. |
-| execution | `security` | `agents.execution.security` | SAST, secret detection, dependency scan, DAST. |
-| execution | `cost_optimization` | `agents.execution.cost_optimization` | Recommends compute right-sizing and scheduling. |
-| governance | `observability` | `agents.governance.observability` | Aggregates metrics and checks SLA compliance. |
-| governance | `reporting` | `agents.governance.reporting` | Generates executive + engineering reports. |
-| governance | `governance_compliance` | `agents.governance.governance_compliance` | RBAC, ABAC, audit trail, human approvals. |
-| governance | `release_readiness` | `agents.governance.release_readiness` | Produces Go / Conditional Go / No-Go recommendation. |
+The agent catalog is a single flat `ROLE_TABLE` tuple in
+`agents/ai/roles.py`. Each row of the table is a `RoleSpec` whose
+`name`, `category`, `instructions`, and `output_model` describe one
+role. The `AgentCategory` enum (`coordination`, `intelligence`,
+`execution`, `governance`) groups the rows for documentation but the
+runtime treats every row uniformly.
+
+| Category | Agent | RoleSpec entry |
+|---|---|---|
+| coordination | `planner` | `ROLE_TABLE[*].name == "planner"` |
+| coordination | `orchestrator` | `ROLE_TABLE[*].name == "orchestrator"` |
+| coordination | `knowledge_rag` | `ROLE_TABLE[*].name == "knowledge_rag"` |
+| coordination | `tool_manager` | `ROLE_TABLE[*].name == "tool_manager"` |
+| coordination | `smoke` | `ROLE_TABLE[*].name == "smoke"` |
+| intelligence | `requirements_intel` | `ROLE_TABLE[*].name == "requirements_intel"` |
+| intelligence | `code_intel` | `ROLE_TABLE[*].name == "code_intel"` |
+| intelligence | `risk_assessment` | `ROLE_TABLE[*].name == "risk_assessment"` |
+| intelligence | `test_design` | `ROLE_TABLE[*].name == "test_design"` |
+| intelligence | `test_data` | `ROLE_TABLE[*].name == "test_data"` |
+| intelligence | `coverage_analysis` | `ROLE_TABLE[*].name == "coverage_analysis"` |
+| intelligence | `critic` | `ROLE_TABLE[*].name == "critic"` |
+| intelligence | `learning` | `ROLE_TABLE[*].name == "learning"` |
+| intelligence | `prompt_management` | `ROLE_TABLE[*].name == "prompt_management"` |
+| execution | `environment` | `ROLE_TABLE[*].name == "environment"` |
+| execution | `design_intel` | `ROLE_TABLE[*].name == "design_intel"` |
+| execution | `execution` | `ROLE_TABLE[*].name == "execution"` |
+| execution | `self_healing` | `ROLE_TABLE[*].name == "self_healing"` |
+| execution | `failure_analysis` | `ROLE_TABLE[*].name == "failure_analysis"` |
+| execution | `visual_regression` | `ROLE_TABLE[*].name == "visual_regression"` |
+| execution | `accessibility` | `ROLE_TABLE[*].name == "accessibility"` |
+| execution | `performance` | `ROLE_TABLE[*].name == "performance"` |
+| execution | `security` | `ROLE_TABLE[*].name == "security"` |
+| execution | `cost_optimization` | `ROLE_TABLE[*].name == "cost_optimization"` |
+| governance | `observability` | `ROLE_TABLE[*].name == "observability"` |
+| governance | `reporting` | `ROLE_TABLE[*].name == "reporting"` |
+| governance | `governance_compliance` | `ROLE_TABLE[*].name == "governance_compliance"` |
+| governance | `release_readiness` | `ROLE_TABLE[*].name == "release_readiness"` |
 
 ## How agents are registered
 
 The :func:`agents.register_all` function in `agents/__init__.py` is
-the single source of truth for the registry. It imports each
-agent class, instantiates a factory closure, and calls
-:meth:`AgentRegistry.register` with the agent's :class:`AgentMeta`.
-The function is idempotent and safe to call from anywhere.
+the single source of truth for the registry. It iterates the
+`ROLE_TABLE` in `agents/ai/roles.py`, builds an `AgentMeta` for each
+row, and calls :meth:`AgentRegistry.register` with the agent's
+factory closure. The function is idempotent and safe to call from
+anywhere.
 
 The :func:`agents.register_compute_handlers` function performs the
 same registrations against the
 :class:`intelliqx_compute.runtime.InProcessComputeRuntime` so the
 Orchestrator can dispatch to any agent by name. Tests call both
 functions in a conftest fixture.
+
+## Adding a new agent
+
+1. Add a new `RoleSpec` row to `ROLE_TABLE` in `agents/ai/roles.py`
+   using the appropriate `category` value.
+2. Add a unit test in `tests/unit/test_agent_roles.py` that
+   constructs the agent and asserts the configured output type.
+3. Add the row to the table above.
+4. Open a PR — the test and catalog entry are required for merge.
 
 ## Category responsibilities
 
