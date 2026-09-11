@@ -9,12 +9,12 @@
   </p>
 </p>
 
-**intelliqx** is a Python platform that runs 29 specialised agents
+**intelliqx** is a Python platform that runs 28 specialised agents
 that plan, generate, execute, and govern software tests. The same
 agent code is portable across process and container boundaries.
 
 ```bash
-# Install everything (15 libraries + 29 agents + dev tools)
+# Install everything (15 libraries + agents + tests + dev tools)
 uv sync --all-packages
 
 # Run the full local test pipeline
@@ -34,8 +34,8 @@ docker compose up -d
 
 ## Features
 
-- **29 Agents Across 4 Categories** — Coordination (Planner,
-  Orchestrator, Memory, RAG, Tool Manager), Intelligence
+- **28 Agents Across 4 Categories** — Coordination (Planner,
+  Orchestrator, Smoke, Knowledge/RAG, Tool Manager), Intelligence
   (Requirements, Code, Risk, Test Design, Test Data, Coverage,
   Critic, Learning, Prompt Mgmt), Execution (Environment, Execution,
   Self-Healing, Failure Analysis, Design Intel, Visual, A11y, Perf,
