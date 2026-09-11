@@ -5,7 +5,7 @@ the ``cost_ceiling_usd`` goal constraint. Values live in the
 `ROLE_TABLE` rows in `agents/ai/roles.py` and are tuned for
 typical LLM pricing; they are *estimates*, not billable amounts.
 The current LLM backend is a single OpenAI-compatible chat path
-selected via `INTELLIQX_MODEL` (see [ADR-0012](../adr/0012-litellm-llm-abstraction.md)).
+selected via `INTELLIQX_MODEL` (see [ADR-0012](../adr/0012-pydantic-ai-llm-abstraction.md)).
 
 ## Reference table
 
