@@ -158,4 +158,5 @@ every input/output model. See any agent file (e.g.
 
 ## Questions?
 
-Open an issue or email **sachncs@gmail.com**.
+Open an issue, or — for security-sensitive topics — follow
+[`SECURITY.md`](SECURITY.md).
