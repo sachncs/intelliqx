@@ -35,7 +35,11 @@ Security / trust boundary:
 from __future__ import annotations
 
 import resource
+import sys
 from contextlib import contextmanager
+
+
+_IS_DARWIN = sys.platform == "darwin"
 
 
 class SandboxViolation(Exception):
@@ -67,6 +71,13 @@ class Sandbox:
     def __init__(
         self, *, cpu_time_seconds: int = 60, memory_mb: int = 512, max_file_descriptors: int = 64
     ) -> None:
+        if _IS_DARWIN:
+            try:
+                soft_nofile, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
+            except (OSError, ValueError):  # pragma: no cover - depends on host
+                soft_nofile = 0
+            if soft_nofile and max_file_descriptors > soft_nofile:
+                max_file_descriptors = soft_nofile
         self.cpu_time_seconds = cpu_time_seconds
         self.memory_mb = memory_mb
         self.max_file_descriptors = max_file_descriptors
@@ -77,6 +88,12 @@ class Sandbox:
 
         The limits are restored to their previous values on exit,
         even when the wrapped code raises.
+
+        On macOS, ``RLIMIT_AS`` is advisory and ``RLIMIT_NOFILE``
+        cannot be raised past the system ceiling; the constructor's
+        :attr:`max_file_descriptors` default is therefore clamped
+        to the current soft limit when running on Darwin so the
+        constructor never raises on developer machines.
 
         Raises:
             SandboxViolation: If ``setrlimit`` itself fails (e.g.
